@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import type { Dispatch, SetStateAction } from 'react'
 import {
   Bot,
   CheckCircle2,
@@ -23,15 +24,70 @@ import type {
   HomeProps,
 } from './types'
 
-function ChunkVisualizer({ text, highlightKeywords = [] }: ChunkVisualizerProps) {
+const BENGALI_FONT_URL =
+  'https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap'
+const GEMINI_MODEL_ENDPOINT =
+  'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent'
+const GEMINI_HEADERS: HeadersInit = { 'Content-Type': 'application/json' }
+const KEYWORD_FRAGMENT = /[\p{L}\p{N}\p{M}]+/gu
+
+export const resetRagStepsState = (update: Dispatch<SetStateAction<RagStep[]>>) => {
+  update([])
+}
+
+export const createBanglaFontLink = (): HTMLLinkElement => {
+  const link = document.createElement('link')
+  link.href = BENGALI_FONT_URL
+  link.rel = 'stylesheet'
+  link.setAttribute('data-testid', 'bangla-font-link')
+  return link
+}
+
+export const extractSearchKeywords = (rawQuery: string): string[] => {
+  const matches = rawQuery.match(KEYWORD_FRAGMENT) ?? []
+  const normalized = matches
+    .map((word) => word.trim().toLowerCase())
+    .filter((word) => word.length > 2)
+
+  return Array.from(new Set(normalized))
+}
+
+export const splitArticleIntoSentences = (text: string): string[] => text.split(/(?<=[।?!])\s+/)
+
+export const buildGeminiPrompt = (contextText: string, question: string): string => `You are a helpful news assistant for Bangladeshi news. Answer the user's question based ONLY on the following context. If the answer is not in the context, say so.
+
+Context:
+${contextText}
+
+User Question: ${question}
+
+Answer in Bengali (or English if asked):`
+
+export const buildGeminiRequest = (apiKey: string, prompt: string) => ({
+  url: `${GEMINI_MODEL_ENDPOINT}?key=${apiKey}`,
+  init: {
+    method: 'POST',
+    headers: GEMINI_HEADERS,
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+    }),
+  } satisfies RequestInit,
+})
+
+export const collectUniqueSources = (chunks: RetrievedChunk[]): string[] =>
+  Array.from(new Set(chunks.map((chunk) => chunk.source)))
+
+export const buildContextText = (chunks: RetrievedChunk[]): string => chunks.map((chunk) => chunk.text).join('\n\n')
+
+export function ChunkVisualizer({ text, highlightKeywords = [] }: ChunkVisualizerProps) {
   const normalizedKeywords = highlightKeywords
     .map((keyword) => keyword.trim())
     .filter((keyword) => keyword.length > 0)
 
-  const chunks = text.split(/(?<=[।?!])\s+/)
+  const chunks = splitArticleIntoSentences(text)
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" data-testid="chunk-visualizer" data-keyword-count={normalizedKeywords.length}>
       {chunks.map((chunk, idx) => {
         const isRelevant = normalizedKeywords.some((keyword) =>
           chunk.toLowerCase().includes(keyword.toLowerCase()),
@@ -43,6 +99,8 @@ function ChunkVisualizer({ text, highlightKeywords = [] }: ChunkVisualizerProps)
             className={`p-3 text-sm rounded border ${
               isRelevant ? 'bg-emerald-50 border-emerald-200 shadow-sm' : 'bg-white border-slate-100'
             }`}
+            data-testid="chunk-card"
+            data-relevant={isRelevant ? 'true' : 'false'}
           >
             <div className="flex justify-between items-center mb-1">
               <span className="text-xs font-mono text-slate-400">
@@ -64,10 +122,7 @@ function ChunkVisualizer({ text, highlightKeywords = [] }: ChunkVisualizerProps)
 
 export default function Home({ articles }: HomeProps) {
   useEffect(() => {
-    const link = document.createElement('link')
-    link.href =
-      'https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap'
-    link.rel = 'stylesheet'
+    const link = createBanglaFontLink()
     document.head.appendChild(link)
 
     return () => {
@@ -92,6 +147,7 @@ export default function Home({ articles }: HomeProps) {
   const [isProcessing, setIsProcessing] = useState(false)
   const [ragSteps, setRagSteps] = useState<RagStep[]>([])
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
+  const apiKeyFieldId = 'gemini-api-key'
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -117,7 +173,7 @@ export default function Home({ articles }: HomeProps) {
     setChatHistory((prev) => [...prev, userMsg])
     setQuery('')
     setIsProcessing(true)
-    setRagSteps([])
+    resetRagStepsState(setRagSteps)
 
     addRagStep('Generating query embeddings...', 'processing')
     await new Promise((resolve) => setTimeout(resolve, 800))
@@ -125,15 +181,12 @@ export default function Home({ articles }: HomeProps) {
     addRagStep('Searching vector database (ChromaDB simulated)...', 'processing')
     await new Promise((resolve) => setTimeout(resolve, 800))
 
-    const searchKeywords = query
-      .split(/\s+/)
-      .map((word) => word.trim())
-      .filter((word) => word.length > 2)
+    const searchKeywords = extractSearchKeywords(query)
 
     const retrievedChunks: RetrievedChunk[] = []
 
     articles.forEach((article) => {
-      const sentences = article.content.split(/(?<=[।?!])\s+/)
+      const sentences = splitArticleIntoSentences(article.content)
 
       sentences.forEach((sentence) => {
         let score = 0
@@ -166,32 +219,17 @@ export default function Home({ articles }: HomeProps) {
 
     addRagStep('Sending context + query to LLM...', 'processing')
 
-    const uniqueSources = Array.from(new Set(topChunks.map((chunk) => chunk.source)))
+    const uniqueSources = collectUniqueSources(topChunks)
 
     try {
       let answer = ''
 
       if (apiKey) {
-        const contextText = topChunks.map((chunk) => chunk.text).join('\n\n')
-        const prompt = `You are a helpful news assistant for Bangladeshi news. Answer the user's question based ONLY on the following context. If the answer is not in the context, say so.
+        const contextText = buildContextText(topChunks)
+        const prompt = buildGeminiPrompt(contextText, userMsg.content)
+        const { url, init } = buildGeminiRequest(apiKey, prompt)
 
-Context:
-${contextText}
-
-User Question: ${userMsg.content}
-
-Answer in Bengali (or English if asked):`
-
-        const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt }] }],
-            }),
-          },
-        )
+        const response = await fetch(url, init)
 
         const data = (await response.json()) as GeminiResponse
 
@@ -260,7 +298,7 @@ Answer in Bengali (or English if asked):`
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 text-slate-900 font-sans">
-      <style>
+      <style data-testid="global-style-block">
         {`
           .font-bangla { font-family: 'Noto Sans Bengali', sans-serif; }
           ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -287,6 +325,7 @@ Answer in Bengali (or English if asked):`
               type="button"
               key={`article-${article.id}`}
               onClick={() => setSelectedArticle(article)}
+              data-testid={`article-card-${article.id}`}
               className={`w-full text-left p-4 rounded-lg border cursor-pointer transition-all hover:shadow-md ${
                 selectedArticle.id === article.id
                   ? 'bg-blue-50 border-blue-200 ring-1 ring-blue-100'
@@ -307,12 +346,16 @@ Answer in Bengali (or English if asked):`
 
         <div className="p-4 border-t border-slate-100 bg-slate-50">
           <h3 className="text-xs font-semibold text-slate-500 mb-3 uppercase">Article Preview</h3>
-          <div className="bg-white border border-slate-200 rounded-md p-3 h-48 overflow-y-auto">
+              <div
+                className="bg-white border border-slate-200 rounded-md p-3 h-48 overflow-y-auto"
+                data-testid="article-preview-panel"
+              >
             <div className="flex justify-end mb-2">
               <div className="flex bg-slate-100 p-0.5 rounded-lg">
                 <button
                   type="button"
                   onClick={() => setViewMode('text')}
+                      data-testid="view-toggle-text"
                   className={`px-2 py-1 text-[10px] font-medium rounded-md transition-all ${
                     viewMode === 'text' ? 'bg-white shadow text-slate-800' : 'text-slate-500 hover:text-slate-700'
                   }`}
@@ -322,6 +365,7 @@ Answer in Bengali (or English if asked):`
                 <button
                   type="button"
                   onClick={() => setViewMode('chunks')}
+                      data-testid="view-toggle-chunks"
                   className={`px-2 py-1 text-[10px] font-medium rounded-md transition-all ${
                     viewMode === 'chunks'
                       ? 'bg-white shadow text-blue-600'
@@ -334,11 +378,13 @@ Answer in Bengali (or English if asked):`
                 </button>
               </div>
             </div>
-            {viewMode === 'text' ? (
-              <p className="font-bangla text-sm text-slate-700 leading-relaxed">{selectedArticle.content}</p>
-            ) : (
-              <ChunkVisualizer text={selectedArticle.content} highlightKeywords={[]} />
-            )}
+            <div data-testid="article-preview-body">
+              {viewMode === 'text' ? (
+                <p className="font-bangla text-sm text-slate-700 leading-relaxed">{selectedArticle.content}</p>
+              ) : (
+                <ChunkVisualizer text={selectedArticle.content} highlightKeywords={[]} />
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -359,9 +405,11 @@ Answer in Bengali (or English if asked):`
           <button
             type="button"
             onClick={() => setShowSettings((prev) => !prev)}
+            data-testid="settings-toggle"
             className={`p-2 rounded-full transition-colors ${
               showSettings ? 'bg-slate-100 text-emerald-600' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
             }`}
+            aria-label="Toggle settings"
           >
             <Settings size={20} />
           </button>
@@ -372,9 +420,12 @@ Answer in Bengali (or English if asked):`
             <h3 className="text-sm font-semibold text-slate-700 mb-2">Configuration</h3>
             <div className="space-y-3">
               <div>
-                <label className="text-xs text-slate-500 block mb-1">Gemini API Key (Optional)</label>
+                <label htmlFor={apiKeyFieldId} className="text-xs text-slate-500 block mb-1">
+                  Gemini API Key (Optional)
+                </label>
                 <input
                   type="password"
+                  id={apiKeyFieldId}
                   value={apiKey}
                   onChange={(event) => setApiKey(event.target.value)}
                   placeholder="Enter key to generate real answers..."
@@ -391,13 +442,24 @@ Answer in Bengali (or English if asked):`
             <div
               key={msg.id}
               className={`flex gap-4 max-w-3xl mx-auto ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
+              data-testid="chat-message"
+              data-role={msg.role}
+              data-message-id={msg.id}
+              data-message-type={msg.type}
+              data-sources={msg.sources?.join('|') ?? ''}
             >
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                   msg.role === 'user' ? 'bg-slate-200' : 'bg-emerald-100 text-emerald-600'
                 }`}
+                data-testid="chat-avatar"
+                data-role={msg.role}
               >
-                {msg.role === 'user' ? <div className="w-4 h-4 bg-slate-400 rounded-full" /> : <Bot size={18} />}
+                {msg.role === 'user' ? (
+                  <div className="w-4 h-4 bg-slate-400 rounded-full" data-testid="user-indicator" />
+                ) : (
+                  <Bot size={18} data-testid="assistant-icon" />
+                )}
               </div>
 
               <div className="flex-1 space-y-2">
@@ -407,6 +469,8 @@ Answer in Bengali (or English if asked):`
                       ? 'bg-slate-800 text-white rounded-tr-none'
                       : 'bg-white border border-slate-100 text-slate-700 rounded-tl-none'
                   }`}
+                  data-testid="chat-bubble"
+                  data-role={msg.role}
                 >
                   {msg.type === 'text' || msg.type === 'answer' ? (
                     <div className="font-bangla whitespace-pre-wrap">{msg.content}</div>
@@ -416,7 +480,10 @@ Answer in Bengali (or English if asked):`
                 </div>
 
                 {msg.retrieved && msg.retrieved.length > 0 && (
-                  <div className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-3 animate-in fade-in slide-in-from-top-2">
+                  <div
+                    className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-3 animate-in fade-in slide-in-from-top-2"
+                    data-testid="retrieval-context"
+                  >
                     <div className="flex items center gap-2 mb-2">
                       <Cpu size={14} className="text-emerald-600" />
                       <span className="text-xs font-bold text-emerald-800 uppercase tracking-wide">
@@ -428,6 +495,9 @@ Answer in Bengali (or English if asked):`
                         <div
                           key={`${msg.id}-chunk-${chunkIndex}`}
                           className="text-xs bg-white p-2 rounded border border-emerald-100 shadow-sm opacity-90 hover:opacity-100 transition-opacity"
+                          data-testid="retrieved-chunk"
+                          data-source={chunk.source}
+                          data-score={chunk.score}
                         >
                           <p className="font-bangla text-slate-600 mb-1">"...{chunk.text}..."</p>
                           <div className="flex justify-between items-center text-[10px] text-emerald-600/70 font-mono">
@@ -444,17 +514,30 @@ Answer in Bengali (or English if asked):`
           ))}
 
           {isProcessing && (
-            <div className="max-w-3xl mx-auto pl-12">
+            <div className="max-w-3xl mx-auto pl-12" data-testid="rag-steps-panel">
               <div className="space-y-2">
                 {ragSteps.map((step) => (
                   <div
                     key={step.id}
                     className="flex items-center gap-3 text-xs animate-in slide-in-from-left-4 fade-in duration-300"
+                    data-testid="rag-step"
+                    data-status={step.status}
+                    data-step-id={step.id}
                   >
-                    {step.status === 'processing' && <Loader2 size={12} className="animate-spin text-blue-500" />}
-                    {step.status === 'success' && <CheckCircle2 size={12} className="text-emerald-500" />}
-                    {step.status === 'warning' && <div className="w-3 h-3 rounded-full bg-amber-400" />}
-                    <span className={step.status === 'success' ? 'text-slate-600 font-medium' : 'text-slate-400'}>
+                    {step.status === 'processing' && (
+                      <Loader2 data-testid="rag-icon-processing" size={12} className="animate-spin text-blue-500" />
+                    )}
+                    {step.status === 'success' && (
+                      <CheckCircle2 data-testid="rag-icon-success" size={12} className="text-emerald-500" />
+                    )}
+                    {step.status === 'warning' && (
+                      <div data-testid="rag-icon-warning" className="w-3 h-3 rounded-full bg-amber-400" />
+                    )}
+                    <span
+                      className={step.status === 'success' ? 'text-slate-600 font-medium' : 'text-slate-400'}
+                      data-testid="rag-step-text"
+                      data-status={step.status}
+                    >
                       {step.text}
                     </span>
                   </div>
@@ -480,6 +563,7 @@ Answer in Bengali (or English if asked):`
               type="button"
               onClick={handleSearch}
               disabled={isProcessing || !query.trim()}
+              aria-label="Run search"
               className="absolute right-2 top-2 p-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-md"
             >
               <Search size={18} />

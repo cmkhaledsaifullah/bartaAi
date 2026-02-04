@@ -15,6 +15,10 @@
 | `npm run build` | Generate an optimized production build in `dist/`. |
 | `npm run preview` | Serve the production build locally to mirror hosted behavior. |
 | `npm run lint` | Run ESLint across the project. |
+| `npm run test` | Execute the Vitest suite in watch mode. |
+| `npm run test:coverage` | Run Vitest once with Istanbul coverage (HTML + text reports under `coverage/`). |
+| `npm run test:mutation` | Launch Stryker mutation testing against `src/Home.tsx`. |
+| `npm run ci` | Convenience script used by GitHub Actions (lint → coverage → mutation). |
 
 ## Local Development
 
@@ -71,6 +75,12 @@ Adjust the structure as the app grows (e.g., add `features/`, `components/`, or 
 
 - ESLint is configured via `eslint.config.js`. Extend as needed for stricter rules.
 - Add your preferred testing stack (Vitest, Jest, Playwright) when you introduce runtime or UI tests.
+- Vitest already powers the unit tests for `Home.tsx`; run `npm run test:coverage` to generate HTML and text coverage.
+- Mutation coverage is enforced with [Stryker](https://stryker-mutator.io/); run `npm run test:mutation` to see surviving mutants in `reports/mutation`.
+
+## Continuous Integration
+
+GitHub Actions (`.github/workflows/ci.yml`) installs dependencies, lints, executes the coverage suite, and then runs Stryker to enforce mutation quality. Coverage and mutation reports are uploaded as artifacts for each run.
 
 ## Deploying to a Traditional Server
 
