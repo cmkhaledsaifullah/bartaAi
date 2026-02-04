@@ -1,6 +1,6 @@
-# BartaAI React Starter
+# BartaAI
 
-Opinionated Vite + React + TypeScript setup that runs locally with Vite's dev server and ships a static bundle ready for any static host or file server.
+বার্তাAI একটি বুদ্ধিমান এআই-চালিত অ্যাপ, যা বাংলাদেশের বিশ্বস্ত সংবাদ প্রবন্ধগুলোকে জ্ঞানভিত্তি হিসেবে ব্যবহার করে। এই অ্যাপে ব্যবহারকারীরা যেকোনো সাম্প্রতিক বা গুরুত্বপূর্ণ বিষয় নিয়ে প্রশ্ন করতে পারেন এবং খবরের প্রেক্ষাপটে সঠিক উত্তর পেতে পারেন। বার্তাAI জটিল সংবাদকে সহজ ও বোধগম্য ভাষায় ব্যাখ্যা করে, যাতে তথ্য বোঝা হয় দ্রুত ও স্পষ্টভাবে। প্রতিটি উত্তরই যাচাইকৃত সংবাদ উৎস থেকে নেওয়া তথ্যের উপর ভিত্তি করে তৈরি হওয়ায় বিশ্বাসযোগ্যতা বজায় থাকে। বার্তাAI — খবর থেকে উত্তর আপনাকে খবর পড়ার বাইরে গিয়ে খবর বুঝতে, বিশ্লেষণ করতে এবং সিদ্ধান্ত নিতে সহায়তা করে।
 
 ## Prerequisites
 
@@ -38,13 +38,34 @@ Opinionated Vite + React + TypeScript setup that runs locally with Vite's dev se
 
 ```
 src/
-├─ App.tsx          # Main UI shell with quick-start guidance
-├─ App.css          # Custom styling for the landing screen
-├─ main.tsx         # React entry point
-└─ assets/          # Static assets (favicons, SVGs, etc.)
+├─ App.tsx          # Root wrapper + mock article seed + prop wiring
+├─ Home.tsx         # BanglaNews RAG explorer UI (chat, chunk visualizer, Gemini hook)
+├─ types.ts         # Shared type declarations (articles, chat, RAG pipeline)
+├─ App.css          # Supplemental utility classes (line clamp, animations)
+├─ index.css        # Tailwind entry point + global tokens
+└─ main.tsx         # React entry point
 ```
 
 Adjust the structure as the app grows (e.g., add `features/`, `components/`, or `routes/`).
+
+### Data & Type Flow
+
+- `App.tsx` now hosts the `MOCK_ARTICLES` array so you can swap in live data sources (REST, Firestore, etc.) without touching the presentation layer.
+- `Home.tsx` receives the articles via props and only contains UI logic/state, making it easy to reuse in other shells.
+- All domain models—articles, retrieved chunks, chat messages, Gemini responses, and prop types—live in `src/types.ts` for a single source of truth when expanding the RAG pipeline.
+
+## BanglaNews RAG Explorer Overview
+
+- Three mock Bangla news articles simulate a knowledge base, with sidebar previews and chunk toggles.
+- Chat panel shows user/bot turns plus retrieved chunks, and a live pipeline list tracks RAG steps.
+- Optional Gemini API key field triggers real responses via `gemini-2.5-flash-preview-09-2025`; without a key the UI falls back to scripted answers.
+- Example prompts (“মেট্রোরেল…”, “How is Bangladesh doing in Cricket?”) help demo the flow instantly.
+
+## Styling Stack
+
+- Tailwind CSS 3 drives layout/typography via utility classes; `src/index.css` wires in `@tailwind` directives.
+- `src/App.css` only defines helper utilities (line clamp + motion presets) to keep Tailwind as the primary styling mechanism.
+- Lucide icons supply the visual language for sections (database, CPU, bot avatar, etc.).
 
 ## Testing & Linting
 
