@@ -1,0 +1,117 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap');
+
+:root {
+  font-family: 'Space Grotesk', 'DM Sans', system-ui, sans-serif;
+  color: #f4f4f2;
+  background-color: #050506;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #192033, #04050a 65%);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.app {
+  min-height: 100vh;
+  padding: 3.5rem clamp(1.5rem, 5vw, 4rem) 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+.hero {
+  max-width: 720px;
+}
+
+.eyebrow {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+  color: #9cb7ff;
+}
+
+h1 {
+  margin: 0 0 1rem;
+  font-size: clamp(2.5rem, 5vw, 3.5rem);
+  line-height: 1.2;
+}
+
+.hero p {
+  margin: 0;
+  color: #c4c6d4;
+  font-size: 1.1rem;
+}
+
+.commands {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.commands article {
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  background: rgba(9, 12, 26, 0.8);
+  backdrop-filter: blur(8px);
+}
+
+.commands .label {
+  color: #9cb7ff;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.commands code {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.deployment {
+  border-radius: 1.25rem;
+  padding: 2rem;
+  background: linear-gradient(135deg, rgba(35, 59, 108, 0.7), rgba(15, 26, 54, 0.85));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.deployment h2 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.deployment ul {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: #d8dae6;
+}
+
+.deployment li + li {
+  margin-top: 0.6rem;
+}
+
+@media (max-width: 640px) {
+  .app {
+    padding: 2.5rem 1.25rem 3rem;
+  }
+}
