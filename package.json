@@ -8,10 +8,13 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "preview:serve": "vite preview --port 4173 --host 127.0.0.1",
     "test": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:mutation": "stryker run",
-    "ci": "npm run lint && npm run test:coverage && npm run test:mutation"
+    "test:e2e:run": "vitest run --config vitest.e2e.config.ts",
+    "test:e2e": "npm run build && start-server-and-test preview:serve http://127.0.0.1:4173 test:e2e:run",
+    "ci": "npm run lint && npm run test:coverage && npm run test:mutation && npm run test:e2e"
   },
   "dependencies": {
     "lucide-react": "^0.563.0",
@@ -40,6 +43,9 @@
     "@testing-library/jest-dom": "^6.6.3",
     "@vitest/coverage-v8": "^2.1.9",
     "@stryker-mutator/core": "^9.5.1",
-    "@stryker-mutator/vitest-runner": "^9.5.1"
+    "@stryker-mutator/vitest-runner": "^9.5.1",
+    "@types/selenium-webdriver": "^4.1.25",
+    "selenium-webdriver": "^4.27.0",
+    "start-server-and-test": "^2.0.10"
   }
 }
