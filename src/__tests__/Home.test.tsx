@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { act } from 'react'
 import { describe, it, expect, vi, afterEach } from 'vitest'
+import type { Mock } from 'vitest'
 import Home, { ChunkVisualizer } from '../Home'
 import {
   buildContextText,
@@ -678,7 +679,7 @@ describe('Home', () => {
       expect.objectContaining({ method: 'POST' }),
     )
 
-    const [, options] = (global.fetch as vi.Mock).mock.calls[0]
+    const [, options] = (global.fetch as Mock).mock.calls[0]
     const payload = JSON.parse((options?.body as string) ?? '{}')
 
     expect(options?.headers).toEqual({ 'Content-Type': 'application/json' })

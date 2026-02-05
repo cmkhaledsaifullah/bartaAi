@@ -14,11 +14,14 @@
 | `npm run dev` | Start the Vite dev server with hot reloading. Use `-- --host` to expose to your LAN. |
 | `npm run build` | Generate an optimized production build in `dist/`. |
 | `npm run preview` | Serve the production build locally to mirror hosted behavior. |
+| `npm run preview:serve` | Helper used by e2e/CI to run preview on `127.0.0.1:4173`. |
 | `npm run lint` | Run ESLint across the project. |
 | `npm run test` | Execute the Vitest suite in watch mode. |
 | `npm run test:coverage` | Run Vitest once with Istanbul coverage (HTML + text reports under `coverage/`). |
 | `npm run test:mutation` | Launch Stryker mutation testing against `src/Home.tsx`. |
-| `npm run ci` | Convenience script used by GitHub Actions (lint → coverage → mutation). |
+| `npm run test:e2e:run` | Execute the Vitest+Selenium WebDriver suite (expects an app already running). |
+| `npm run test:e2e` | Build the app, start the preview server, then launch Chromedriver-backed e2e specs. |
+| `npm run ci` | Convenience script used by GitHub Actions (lint → coverage → mutation → e2e). |
 
 ## Local Development
 
@@ -74,13 +77,13 @@ Adjust the structure as the app grows (e.g., add `features/`, `components/`, or 
 ## Testing & Linting
 
 - ESLint is configured via `eslint.config.js`. Extend as needed for stricter rules.
-- Add your preferred testing stack (Vitest, Jest, Playwright) when you introduce runtime or UI tests.
-- Vitest already powers the unit tests for `Home.tsx`; run `npm run test:coverage` to generate HTML and text coverage.
+- Vitest powers the unit tests (see `npm run test`/`npm run test:coverage`) and enforces 95% thresholds across statements/branches/functions/lines.
+- End-to-end coverage uses Selenium WebDriver + headless Chrome, orchestrated through Vitest (`npm run test:e2e`). Selenium Manager automatically provisions the matching Chromedriver, so you only need a local Chrome install. Override the target URL with `E2E_BASE_URL` if you serve the app elsewhere.
 - Mutation coverage is enforced with [Stryker](https://stryker-mutator.io/); run `npm run test:mutation` to see surviving mutants in `reports/mutation`.
 
 ## Continuous Integration
 
-GitHub Actions (`.github/workflows/ci.yml`) installs dependencies, lints, executes the coverage suite, and then runs Stryker to enforce mutation quality. Coverage and mutation reports are uploaded as artifacts for each run.
+GitHub Actions (`.github/workflows/ci.yml`) now provisions Chrome, installs dependencies, lints, executes the coverage suite, runs Stryker, and finally exercises the Selenium WebDriver e2e flow. Coverage, mutation, and any generated reports continue to upload as artifacts so pull requests can inspect failures without rerunning locally.
 
 ## Deploying to a Traditional Server
 
