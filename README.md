@@ -58,7 +58,7 @@ Adjust the structure as the app grows (e.g., add `features/`, `components/`, or 
 - `Home.tsx` receives the articles via props and only contains UI logic/state, making it easy to reuse in other shells.
 - All domain models—articles, retrieved chunks, chat messages, Gemini responses, and prop types—live in `src/types.ts` for a single source of truth when expanding the RAG pipeline.
 
-## BanglaNews RAG Explorer Overview
+## BartaAI Overview
 
 - Three mock Bangla news articles simulate a knowledge base, with sidebar previews and chunk toggles.
 - Chat panel shows user/bot turns plus retrieved chunks, and a live pipeline list tracks RAG steps.
