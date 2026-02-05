@@ -6,6 +6,11 @@ export default {
   coverageAnalysis: 'perTest',
   ignoreStatic: true,
   timeoutMS: 60000,
+  thresholds: {
+    high: 95,
+    low: 90,
+    break: 90,
+  },
   vitest: {
     configFile: 'vite.config.ts',
   },
