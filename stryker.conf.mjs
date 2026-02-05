@@ -12,6 +12,6 @@ export default {
     break: 90,
   },
   vitest: {
-    configFile: 'vite.config.ts',
+    configFile: 'vitest.config.ts',
   },
 }

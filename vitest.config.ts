@@ -1,10 +1,10 @@
+/* eslint-disable @typescript-eslint/triple-slash-reference */
 /// <reference types="vitest/config" />
-import { defineConfig } from 'vite'
+import { mergeConfig } from 'vite'
 import { configDefaults } from 'vitest/config'
-import react from '@vitejs/plugin-react'
+import baseConfig from './vite.config'
 
-export default defineConfig({
-  plugins: [react()],
+export default mergeConfig(baseConfig, {
   test: {
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
@@ -15,7 +15,7 @@ export default defineConfig({
       reporter: ['text', 'json-summary', 'html'],
       reportsDirectory: './coverage',
       include: ['src/**/*.{ts,tsx}'],
-      exclude: ['src/main.tsx'],
+      exclude: ['src/main.tsx', 'src/e2e/**'],
       thresholds: {
         statements: 95,
         branches: 95,
