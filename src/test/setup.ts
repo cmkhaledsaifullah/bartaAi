@@ -7,6 +7,5 @@ Object.defineProperty(window.HTMLElement.prototype, 'scrollIntoView', {
 })
 
 // Help React understand that we're running inside an act-enabled environment.
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-expect-error -- flag is intentionally assigned on the global scope
 globalThis.IS_REACT_ACT_ENVIRONMENT = true

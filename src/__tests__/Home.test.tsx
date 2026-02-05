@@ -1,16 +1,16 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { act } from 'react'
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import Home, {
+import Home, { ChunkVisualizer } from '../Home'
+import {
+  buildContextText,
   buildGeminiPrompt,
   buildGeminiRequest,
-  ChunkVisualizer,
-  extractSearchKeywords,
   collectUniqueSources,
-  buildContextText,
+  extractSearchKeywords,
   resetRagStepsState,
   splitArticleIntoSentences,
-} from '../Home'
+} from '../homeHelpers'
 import type { Article } from '../types'
 
 const MOCK_ARTICLES: Article[] = [
