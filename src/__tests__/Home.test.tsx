@@ -378,19 +378,19 @@ describe('Home', () => {
     renderHome()
 
     const input = screen.getByPlaceholderText(QUESTION_PLACEHOLDER) as HTMLInputElement
-    fireEvent.click(screen.getByRole('button', { name: /Example 1: Metro Rail/i }))
+    fireEvent.click(screen.getByRole('button', { name: /মেট্রোরেল নিয়ে আপডেট কি\?/i }))
 
     expect(input.value).toBe('মেট্রোরেল নিয়ে আপডেট কি?')
 
-    fireEvent.click(screen.getByRole('button', { name: /Example 2: Cricket/i }))
+    fireEvent.click(screen.getByRole('button', { name: /How is Bangladesh doing in Cricket\?/i }))
     expect(input.value).toBe('How is Bangladesh doing in Cricket?')
   })
 
   it('exposes both localized example prompt labels', () => {
     renderHome()
 
-    expect(screen.getByRole('button', { name: /Example 1: Metro Rail/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Example 2: Cricket/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /মেট্রোরেল নিয়ে আপডেট কি\?/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /How is Bangladesh doing in Cricket\?/i })).toBeInTheDocument()
   })
 
   it('keeps the search action disabled for empty or whitespace-only queries', () => {
