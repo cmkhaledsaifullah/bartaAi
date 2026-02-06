@@ -1,3 +1,5 @@
+import type { MutableRefObject } from 'react'
+
 export type Article = {
   id: number
   source: string
@@ -49,9 +51,34 @@ export type GeminiResponse = {
   }
 }
 
-export type ChunkVisualizerProps = {
+export type ChunkCardsProps = {
   text: string
   highlightKeywords?: string[]
+}
+
+export type ChunkVisualizerProps = {
+  articles: Article[]
+  selectedArticle: Article
+  viewMode: ViewMode
+  highlightKeywords?: string[]
+  onSelectArticle: (article: Article) => void
+  onViewModeChange: (mode: ViewMode) => void
+}
+
+export type PromptProps = {
+  chatHistory: ChatMessage[]
+  showSettings: boolean
+  onToggleSettings: () => void
+  apiKey: string
+  onApiKeyChange: (value: string) => void
+  query: string
+  isProcessing: boolean
+  placeholder: string
+  exampleQuestions: string[]
+  onQueryChange: (value: string) => void
+  onSubmit: () => void
+  ragSteps: RagStep[]
+  messagesEndRef: MutableRefObject<HTMLDivElement | null>
 }
 
 export type HomeProps = {
