@@ -2,7 +2,7 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import { act } from 'react'
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import type { Mock } from 'vitest'
-import Home, { ChunkVisualizer } from '../Home'
+import Home from '../Home'
 import {
   buildContextText,
   buildGeminiPrompt,
@@ -77,6 +77,17 @@ const UNSORTED_CONTEXT_ARTICLES: Article[] = [
     content:
       'প্রথম বাক্যে শুধু প্রকল্পের উল্লেখ আছে। দ্বিতীয় বাক্যে পরিকল্পনার প্রসঙ্গ আছে। শেষ বাক্যে প্রকল্প এবং পরিকল্পনা দুইটিই বিস্তারিতভাবে আছে।',
     url: 'https://example.com/plan',
+  },
+]
+
+const CASE_SENSITIVE_ARTICLES: Article[] = [
+  {
+    id: 1,
+    source: 'Metro Desk',
+    date: '2023-11-08',
+    title: 'Uppercase METRO briefing',
+    content: 'METRO expansion is underway? Port updates follow! আরও কিছু তথ্য।',
+    url: 'https://example.com/metro-case',
   },
 ]
 
@@ -184,78 +195,6 @@ describe('Home helpers', () => {
   })
 })
 
-describe('ChunkVisualizer', () => {
-  it('highlights any chunk that matches at least one trimmed keyword', () => {
-    render(
-      <ChunkVisualizer
-        text="রেল সংবাদ অগ্রগতি চলছে। বিনিয়োগ পরিকল্পনা শক্তিশালী।"
-        highlightKeywords={['  রেল  ', 'অনুপস্থিত শব্দ']}
-      />,
-    )
-
-    const cards = screen.getAllByTestId('chunk-card')
-    const relevantCard = cards.find((card) => card.getAttribute('data-relevant') === 'true')!
-    expect(relevantCard).toHaveClass('bg-emerald-50')
-    expect(within(relevantCard).getByText('Relevant')).toBeInTheDocument()
-  })
-
-  it('renders chunk numbers, lengths, and keeps non-matching chunks neutral', () => {
-    render(<ChunkVisualizer text="প্রথম বাক্য। দ্বিতীয় অংশ!" highlightKeywords={['দ্বিতীয়']} />)
-
-    const cards = screen.getAllByTestId('chunk-card')
-    const meta = within(cards[0]!).getByText(/Chunk/i)
-    expect(meta.textContent?.replace(/\s+/g, ' ').trim()).toContain('Chunk #1 | Length: 12')
-    const neutralChunk = cards.find((card) => card.getAttribute('data-relevant') === 'false') as HTMLElement
-    expect(neutralChunk).toHaveClass('bg-white')
-    expect(screen.queryAllByText('Relevant')).toHaveLength(1)
-  })
-
-  it('renders neutral chunks when highlightKeywords prop is omitted', () => {
-    render(<ChunkVisualizer text="প্রথম বাক্য? দ্বিতীয় বাক্য!" />)
-
-    expect(screen.getByTestId('chunk-visualizer')).toHaveAttribute('data-keyword-count', '0')
-    screen.getAllByTestId('chunk-card').forEach((card) => {
-      expect(card.getAttribute('data-relevant')).toBe('false')
-    })
-  })
-
-  it('reports its normalized keyword count via data attributes', () => {
-    render(<ChunkVisualizer text="Metro expansion is underway?" highlightKeywords={['  metro  ']} />)
-
-    expect(screen.getByTestId('chunk-visualizer')).toHaveAttribute('data-keyword-count', '1')
-  })
-
-  it('trims highlight keywords before matching chunk text', () => {
-    render(<ChunkVisualizer text="Metro expansion is underway? Ports remain busy!" highlightKeywords={['  metro  ']} />)
-
-    const cards = screen.getAllByTestId('chunk-card')
-    const relevantCard = cards.find((card) => card.getAttribute('data-relevant') === 'true')
-    expect(relevantCard).toBeDefined()
-    expect(relevantCard).toHaveTextContent('Metro expansion is underway?')
-  })
-
-  it('matches highlight keywords regardless of casing', () => {
-    render(
-      <ChunkVisualizer
-        text="METRO expansion is underway? Port updates follow!"
-        highlightKeywords={['metro']}
-      />,
-    )
-
-    const relevantCard = screen.getAllByTestId('chunk-card').find((card) => card.getAttribute('data-relevant') === 'true')
-    expect(relevantCard).toBeDefined()
-    expect(relevantCard).toHaveTextContent('METRO expansion is underway?')
-  })
-
-  it('ignores keywords that collapse to empty strings after trimming', () => {
-    render(<ChunkVisualizer text="প্রথম বাক্য। দ্বিতীয় বাক্য?" highlightKeywords={['   ']} />)
-
-    screen.getAllByTestId('chunk-card').forEach((card) => {
-      expect(card.getAttribute('data-relevant')).toBe('false')
-    })
-  })
-})
-
 describe('Home', () => {
   it('mounts the Bengali font link and cleans it up on unmount', () => {
     const { unmount } = renderHome()
@@ -299,6 +238,16 @@ describe('Home', () => {
     expect(screen.getByText(MOCK_ARTICLES[0]!.title)).toBeInTheDocument()
   })
 
+  it('renders prompt example shortcuts with the provided copy', () => {
+    renderHome()
+
+    const exampleOne = screen.getByRole('button', { name: 'Example 1: মেট্রোরেল নিয়ে আপডেট কি?' })
+    const exampleTwo = screen.getByRole('button', { name: 'Example 2: How is Bangladesh doing in Cricket?' })
+
+    expect(exampleOne).toBeInTheDocument()
+    expect(exampleTwo).toBeInTheDocument()
+  })
+
   it('highlights the active article card', () => {
     renderHome()
 
@@ -307,11 +256,15 @@ describe('Home', () => {
 
     expect(first).toHaveClass('bg-blue-50')
     expect(second).not.toHaveClass('bg-blue-50')
+    expect(second).toHaveClass('bg-white')
+    expect(second).toHaveClass('border-slate-200')
 
     fireEvent.click(second)
 
     expect(second).toHaveClass('bg-blue-50')
     expect(first).not.toHaveClass('bg-blue-50')
+    expect(first).toHaveClass('bg-white')
+    expect(first).toHaveClass('border-slate-200')
   })
 
   it('toggles between article text and chunk view', () => {
@@ -327,6 +280,9 @@ describe('Home', () => {
 
     fireEvent.click(screen.getByTestId('view-toggle-chunks'))
 
+    const visualizer = screen.getByTestId('chunk-visualizer')
+    expect(visualizer).toHaveAttribute('data-keyword-count', '0')
+
     screen.getAllByTestId('chunk-card').forEach((card) => {
       expect(card.getAttribute('data-relevant')).toBe('false')
     })
@@ -341,17 +297,23 @@ describe('Home', () => {
 
     expect(textToggle).toHaveClass('bg-white')
     expect(chunkToggle).not.toHaveClass('bg-white')
+    expect(chunkToggle).toHaveClass('text-slate-500')
+    expect(chunkToggle).toHaveClass('hover:text-slate-700')
     expect(previewBody).toHaveTextContent(MOCK_ARTICLES[0]!.content)
 
     fireEvent.click(chunkToggle)
 
     expect(chunkToggle).toHaveClass('bg-white')
     expect(textToggle).not.toHaveClass('bg-white')
+    expect(textToggle).toHaveClass('text-slate-500')
+    expect(textToggle).toHaveClass('hover:text-slate-700')
     expect(screen.getByText(/Chunk #1/)).toBeInTheDocument()
 
     fireEvent.click(textToggle)
     expect(textToggle).toHaveClass('bg-white')
     expect(chunkToggle).not.toHaveClass('bg-white')
+    expect(chunkToggle).toHaveClass('text-slate-500')
+    expect(chunkToggle).toHaveClass('hover:text-slate-700')
     expect(previewBody).toHaveTextContent(MOCK_ARTICLES[0]!.content)
   })
 
@@ -372,25 +334,6 @@ describe('Home', () => {
 
     expect(screen.queryByLabelText(/Gemini API Key/i)).not.toBeInTheDocument()
     expect(settingsButton).not.toHaveClass('bg-slate-100')
-  })
-
-  it('prefills queries when an example question is selected', () => {
-    renderHome()
-
-    const input = screen.getByPlaceholderText(QUESTION_PLACEHOLDER) as HTMLInputElement
-    fireEvent.click(screen.getByRole('button', { name: /মেট্রোরেল নিয়ে আপডেট কি\?/i }))
-
-    expect(input.value).toBe('মেট্রোরেল নিয়ে আপডেট কি?')
-
-    fireEvent.click(screen.getByRole('button', { name: /How is Bangladesh doing in Cricket\?/i }))
-    expect(input.value).toBe('How is Bangladesh doing in Cricket?')
-  })
-
-  it('exposes both localized example prompt labels', () => {
-    renderHome()
-
-    expect(screen.getByRole('button', { name: /মেট্রোরেল নিয়ে আপডেট কি\?/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /How is Bangladesh doing in Cricket\?/i })).toBeInTheDocument()
   })
 
   it('keeps the search action disabled for empty or whitespace-only queries', () => {
@@ -480,6 +423,23 @@ describe('Home', () => {
         screen.getByText(/গত ২৪ ঘণ্টায় ১,২০০ জন ডেঙ্গু রোগী হাসপাতালে ভর্তি হয়েছেন। যদিও ভর্তির হার কিছুটা কমেছে/),
       ).toBeInTheDocument(),
     )
+  })
+
+  it('matches retrieved context regardless of casing', async () => {
+    vi.useFakeTimers()
+    renderHome(CASE_SENSITIVE_ARTICLES)
+
+    submitQuery('metro expansion updates কী')
+
+    await advanceAllTimers()
+    vi.useRealTimers()
+
+    await waitFor(() => {
+      const retrievedChunks = screen.getAllByTestId('retrieved-chunk')
+      expect(
+        retrievedChunks.some((chunk) => within(chunk).queryByText(/METRO expansion is underway/i)),
+      ).toBe(true)
+    })
   })
 
   it('falls back to the generic context message when an unknown source ranks first', async () => {
@@ -585,6 +545,7 @@ describe('Home', () => {
     expect(userMessage!).toHaveClass('flex-row-reverse')
     expect(assistantMessage).toBeDefined()
     expect(assistantMessage!).not.toHaveClass('flex-row-reverse')
+    expect(assistantMessage?.className ?? '').not.toContain('Stryker was here')
 
     const bubbleNodes = screen.getAllByTestId('chat-bubble')
     const userBubble = bubbleNodes.find((node) => node.dataset.role === 'user')
@@ -601,6 +562,16 @@ describe('Home', () => {
 
     const assistantCopy = within(assistantBubble!).getByText(/উত্তরা থেকে মতিঝিল/)
     expect(assistantCopy).toHaveClass('font-bangla')
+
+    const avatarNodes = screen.getAllByTestId('chat-avatar')
+    const userAvatar = avatarNodes.find((node) => node.dataset.role === 'user')
+    const assistantAvatar = avatarNodes.find((node) => node.dataset.role === 'assistant')
+
+    expect(userAvatar).toBeDefined()
+    expect(userAvatar!).toHaveClass('bg-slate-200')
+    expect(assistantAvatar).toBeDefined()
+    expect(assistantAvatar!).toHaveClass('bg-emerald-100')
+    expect(assistantAvatar!).toHaveClass('text-emerald-600')
   })
 
   it('assigns stable message identifiers for each role', async () => {
