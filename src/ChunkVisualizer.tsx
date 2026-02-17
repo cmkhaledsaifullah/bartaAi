@@ -1,4 +1,4 @@
-import { Database, Split } from 'lucide-react'
+import { ChevronDown, Database, Split } from 'lucide-react'
 import { splitArticleIntoSentences } from './homeHelpers'
 import type { ChunkCardsProps, ChunkVisualizerProps } from './types'
 
@@ -9,23 +9,70 @@ export default function ChunkVisualizer({
   highlightKeywords = [],
   onSelectArticle,
   onViewModeChange,
+  isCollapsed,
+  onToggleCollapse,
 }: ChunkVisualizerProps) {
+  if (isCollapsed) {
+    return (
+      <div
+        className="order-2 md:order-1 flex flex-col gap-3 md:gap-0 md:row-span-3 md:h-full md:justify-start md:items-start md:py-4 md:col-start-1 md:col-end-2 mb-4 md:mb-0"
+        data-testid="knowledge-panel"
+        role="complementary"
+      >
+        <button
+          type="button"
+          onClick={onToggleCollapse}
+          className="md:hidden w-full rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 shadow-sm flex items-center justify-between"
+          aria-expanded="false"
+        >
+          <div className="flex items-center gap-2 text-orange-800">
+            <Database size={18} className="text-orange-500" />
+            <h2 className="font-semibold text-sm uppercase tracking-wide">Knowledge Base</h2>
+          </div>
+          <ChevronDown size={18} className="text-emerald-600" />
+        </button>
+
+        <button
+          type="button"
+          onClick={onToggleCollapse}
+          className="hidden md:flex flex-col items-center justify-center rounded-2xl border border-orange-200 bg-orange-50 shadow-sm hover:border-emerald-300 hover:bg-white transition-colors px-3 py-4 w-full"
+          aria-expanded="false"
+          style={{ writingMode: 'vertical-lr' }}
+        >
+          <span className="flex items-center gap-2 text-orange-800">
+            <Database size={18} className="text-orange-500 rotate-90" />
+            <span className="font-semibold text-sm uppercase tracking-wide">Knowledge Base</span>
+          </span>
+        </button>
+      </div>
+    )
+  }
+
   return (
-    <aside
-      className="order-2 md:order-1 bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col overflow-hidden md:row-span-3"
+    <div
+      className="order-2 md:order-1 bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col overflow-hidden md:row-span-3 md:h-full md:col-start-1 md:col-end-2"
       data-testid="knowledge-panel"
+      role="complementary"
     >
-      <div className="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
-        <div className="flex items-center gap-2 text-slate-700">
-          <Database size={18} />
+      <button
+        type="button"
+        onClick={onToggleCollapse}
+        className="w-full text-left p-4 border-b border-orange-100 bg-orange-50 flex justify-between items-center cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
+        aria-label="Collapse knowledge panel"
+        aria-expanded="true"
+      >
+        <div className="flex items-center gap-2 text-orange-800">
+          <Database size={18} className="text-orange-500" />
           <h2 className="font-semibold text-sm uppercase tracking-wide">Knowledge Base</h2>
         </div>
-        <div className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full font-medium">
-          {articles.length} Articles
+        <div className="flex items-center gap-2">
+          <div className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full font-medium">
+            {articles.length} Articles
+          </div>
         </div>
-      </div>
+      </button>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 sm:space-y-4">
+      <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3 sm:space-y-4">
         {articles.map((article) => {
           const isSelected = selectedArticle.id === article.id
           return (
@@ -92,7 +139,7 @@ export default function ChunkVisualizer({
           </div>
         </div>
       </div>
-    </aside>
+    </div>
   )
 }
 

@@ -16,6 +16,7 @@ export default function Prompt({
   onSubmit,
   ragSteps,
   messagesEndRef,
+  isKnowledgeCollapsed,
 }: PromptProps) {
   const apiKeyFieldId = 'gemini-api-key'
 
@@ -40,12 +41,16 @@ export default function Prompt({
 
   const isSubmitDisabled = isProcessing || !query.trim()
 
+  const desktopSpanClasses = isKnowledgeCollapsed ? 'md:col-start-2 md:col-end-3' : 'md:col-start-3 md:col-end-4'
+
   return (
-    <section
-      className="order-1 md:order-2 md:col-start-2 bg-white/90 border border-slate-200 rounded-2xl shadow-xl flex flex-col relative overflow-hidden"
+    <div
+      className={`order-1 md:order-2 ${desktopSpanClasses} md:row-span-3 md:h-full md:max-h-full bg-white/90 border border-slate-200 rounded-2xl shadow-xl flex flex-col relative overflow-hidden`}
       data-testid="chat-panel"
+      data-knowledge-collapsed={isKnowledgeCollapsed ? 'true' : 'false'}
+      role="region"
     >
-      <header className="bg-white border-b border-slate-200 px-4 sm:px-6 py-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <header className="bg-white border-b border-slate-200 px-4 sm:px-6 py-4 flex flex-row items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="bg-emerald-600 p-2 rounded-lg text-white shadow-lg">
             <Newspaper size={20} />
@@ -61,7 +66,7 @@ export default function Prompt({
           type="button"
           onClick={onToggleSettings}
           data-testid="settings-toggle"
-          className={`self-start sm:self-auto p-2 rounded-full transition-colors ${
+          className={`p-2 rounded-full transition-colors ${
             showSettings ? 'bg-slate-100 text-emerald-600' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
           }`}
           aria-label="Toggle settings"
@@ -92,7 +97,7 @@ export default function Prompt({
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto px-3 py-4 sm:px-6 sm:py-6 space-y-6 bg-slate-50/60">
+      <div className="flex-1 min-h-0 overflow-y-auto px-3 py-4 sm:px-6 sm:py-6 space-y-6 bg-slate-50/60">
         {chatHistory.map((msg) => (
           <div
             key={msg.id}
@@ -235,6 +240,6 @@ export default function Prompt({
           ))}
         </div>
       </div>
-    </section>
+    </div>
   )
 }

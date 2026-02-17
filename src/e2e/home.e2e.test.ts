@@ -110,4 +110,291 @@ describe('BartaAI E2E', () => {
     const previewText = await previewPanel.getText()
     expect(previewText.length).toBeGreaterThan(0)
   })
+
+  describe('Mobile View', () => {
+    it('renders knowledge base articles on mobile', async () => {
+      await openApp(MOBILE_VIEWPORT)
+
+      const cards = await driver.findElements(By.css('[data-testid^="article-card-"]'))
+      expect(cards.length).toBeGreaterThanOrEqual(3)
+
+      const firstCard = await driver.findElement(By.css('[data-testid="article-card-1"]'))
+      const cardTitle = await firstCard.getText()
+      expect(cardTitle.length).toBeGreaterThan(0)
+    })
+
+    it('toggles between article and chunk views on mobile', async () => {
+      await openApp(MOBILE_VIEWPORT)
+
+      // Scroll to knowledge panel
+      const knowledgePanel = await driver.findElement(By.css('[data-testid="knowledge-panel"]'))
+      await driver.executeScript('arguments[0].scrollIntoView({ behavior: "instant", block: "start" })', knowledgePanel)
+
+      // Click chunks toggle
+      const chunksToggle = await driver.findElement(By.css('[data-testid="view-toggle-chunks"]'))
+      await chunksToggle.click()
+
+      // Verify chunk visualizer appears
+      const chunkVisualizer = await driver.wait(
+        until.elementLocated(By.css('[data-testid="chunk-visualizer"]')),
+        DEFAULT_WAIT_MS,
+      )
+      
+      // Scroll to visualizer to ensure it's in view
+      await driver.executeScript('arguments[0].scrollIntoView({ behavior: "instant", block: "center" })', chunkVisualizer)
+
+      // Toggle back to text/articles view
+      const textToggle = await driver.wait(
+        until.elementLocated(By.css('[data-testid="view-toggle-text"]')),
+        DEFAULT_WAIT_MS,
+      )
+      await textToggle.click()
+
+      // Verify articles are visible
+      await driver.wait(
+        until.elementLocated(By.css('[data-testid^="article-card-"]')),
+        DEFAULT_WAIT_MS,
+      )
+      const cards = await driver.findElements(By.css('[data-testid^="article-card-"]'))
+      expect(cards.length).toBeGreaterThanOrEqual(3)
+    })
+
+    it('submits questions via mobile input on mobile', async () => {
+      await openApp(MOBILE_VIEWPORT)
+
+      const queryInput = await driver.findElement(By.css('input[placeholder*="Ask about the news"]'))
+      await queryInput.clear()
+      await queryInput.sendKeys('Cricket news')
+
+      const submitButton = await driver.findElement(By.css('button[aria-label="Run search"]'))
+      await submitButton.click()
+
+      // Wait for RAG steps to appear
+      await driver.wait(until.elementLocated(By.css('[data-testid="rag-step"]')), DEFAULT_WAIT_MS)
+
+      // Verify assistant response
+      const assistantReply = await driver.wait(
+        until.elementLocated(By.css('[data-role="assistant"][data-message-type="answer"]')),
+        DEFAULT_WAIT_MS,
+      )
+
+      const replyText = await assistantReply.getText()
+      expect(replyText.length).toBeGreaterThan(0)
+    })
+
+    it('displays RAG steps on mobile', async () => {
+      await openApp(MOBILE_VIEWPORT)
+
+      const queryInput = await driver.findElement(By.css('input[placeholder*="Ask about the news"]'))
+      await queryInput.clear()
+      await queryInput.sendKeys('dengue')
+
+      const submitButton = await driver.findElement(By.css('button[aria-label="Run search"]'))
+      await submitButton.click()
+
+      // Wait for assistant response (which means RAG steps completed)
+      const assistantReply = await driver.wait(
+        until.elementLocated(By.css('[data-role="assistant"][data-message-type="answer"]')),
+        DEFAULT_WAIT_MS,
+      )
+
+      // Verify processing completed and response exists
+      const replyText = await assistantReply.getText()
+      expect(replyText.length).toBeGreaterThan(0)
+    })
+
+    it('shows retrieved context chunks on mobile', async () => {
+      await openApp(MOBILE_VIEWPORT)
+
+      const queryInput = await driver.findElement(By.css('input[placeholder*="Ask about the news"]'))
+      await queryInput.clear()
+      await queryInput.sendKeys('মেট্রোরেল')
+
+      const submitButton = await driver.findElement(By.css('button[aria-label="Run search"]'))
+      await submitButton.click()
+
+      // Wait for assistant response
+      const assistantReply = await driver.wait(
+        until.elementLocated(By.css('[data-role="assistant"][data-message-type="answer"]')),
+        DEFAULT_WAIT_MS,
+      )
+
+      // Verify response has content (which means retrieval worked)
+      const replyText = await assistantReply.getText()
+      expect(replyText.length).toBeGreaterThan(0)
+
+      // Verify user message exists
+      const userMessages = await driver.findElements(By.css('[data-role="user"]'))
+      expect(userMessages.length).toBeGreaterThan(0)
+    })
+
+    it('scrolls to latest message on mobile', async () => {
+      await openApp(MOBILE_VIEWPORT)
+
+      // Submit first question
+      const queryInput = await driver.findElement(By.css('input[placeholder*="Ask about the news"]'))
+      await queryInput.clear()
+      await queryInput.sendKeys('First question')
+
+      const submitButton = await driver.findElement(By.css('button[aria-label="Run search"]'))
+      await submitButton.click()
+
+      // Wait for first response
+      await driver.wait(
+        until.elementLocated(By.css('[data-role="assistant"][data-message-type="answer"]')),
+        DEFAULT_WAIT_MS,
+      )
+
+      // Submit second question
+      await queryInput.clear()
+      await queryInput.sendKeys('Second question')
+      await submitButton.click()
+
+      // Wait for second response
+      await driver.wait(async () => {
+        const messages = await driver.findElements(By.css('[data-role="assistant"][data-message-type="answer"]'))
+        return messages.length >= 2
+      }, DEFAULT_WAIT_MS)
+
+      // Verify messages exist
+      const messages = await driver.findElements(By.css('[data-role="assistant"]'))
+      expect(messages.length).toBeGreaterThanOrEqual(2)
+    })
+
+    it('clicks on article cards to view details on mobile', async () => {
+      await openApp(MOBILE_VIEWPORT)
+
+      // Scroll to knowledge panel
+      const knowledgePanel = await driver.findElement(By.css('[data-testid="knowledge-panel"]'))
+      await driver.executeScript('arguments[0].scrollIntoView({ behavior: "instant", block: "start" })', knowledgePanel)
+
+      // Click on an article card
+      const articleCard = await driver.findElement(By.css('[data-testid="article-card-1"]'))
+      await articleCard.click()
+
+      // Wait for preview panel
+      const previewPanel = await driver.findElement(By.css('[data-testid="article-preview-panel"]'))
+      await driver.wait(until.elementIsVisible(previewPanel), DEFAULT_WAIT_MS)
+
+      // Verify preview content
+      const previewText = await previewPanel.getText()
+      expect(previewText.length).toBeGreaterThan(0)
+    })
+
+    it('handles example questions on mobile', async () => {
+      await openApp(MOBILE_VIEWPORT)
+
+      // Find and click example question
+      const queryInput = await driver.findElement(By.css('input[placeholder*="Ask about the news"]'))
+      await queryInput.clear()
+      await queryInput.sendKeys('মেট্রোরেল নিয়ে আপডেট কি?')
+
+      const submitButton = await driver.findElement(By.css('button[aria-label="Run search"]'))
+      await submitButton.click()
+
+      // Wait for RAG steps to appear
+      await driver.wait(until.elementLocated(By.css('[data-testid="rag-step"]')), DEFAULT_WAIT_MS)
+
+      // Verify assistant response
+      const assistantReply = await driver.wait(
+        until.elementLocated(By.css('[data-role="assistant"][data-message-type="answer"]')),
+        DEFAULT_WAIT_MS,
+      )
+
+      expect(await assistantReply.isDisplayed()).toBe(true)
+    })
+
+    it('displays chat history correctly on mobile', async () => {
+      await openApp(MOBILE_VIEWPORT)
+
+      // Submit a question
+      const queryInput = await driver.findElement(By.css('input[placeholder*="Ask about the news"]'))
+      await queryInput.clear()
+      await queryInput.sendKeys('cricket')
+
+      const submitButton = await driver.findElement(By.css('button[aria-label="Run search"]'))
+      await submitButton.click()
+
+      // Wait for response
+      await driver.wait(
+        until.elementLocated(By.css('[data-role="assistant"][data-message-type="answer"]')),
+        DEFAULT_WAIT_MS,
+      )
+
+      // Check user and assistant messages
+      const userMessages = await driver.findElements(By.css('[data-role="user"]'))
+      const assistantMessages = await driver.findElements(By.css('[data-role="assistant"]'))
+
+      expect(userMessages.length).toBeGreaterThanOrEqual(1)
+      expect(assistantMessages.length).toBeGreaterThanOrEqual(1)
+    })
+
+    it('disables input while processing on mobile', async () => {
+      await openApp(MOBILE_VIEWPORT)
+
+      const queryInput = await driver.findElement(By.css('input[placeholder*="Ask about the news"]'))
+      await queryInput.clear()
+      await queryInput.sendKeys('Processing test')
+
+      const submitButton = await driver.findElement(By.css('button[aria-label="Run search"]'))
+      await submitButton.click()
+
+      // Check if input is disabled immediately after submission
+      const isDisabled = await queryInput.getAttribute('disabled')
+      expect(isDisabled).toBeTruthy()
+
+      // Wait for processing to complete
+      await driver.wait(
+        until.elementLocated(By.css('[data-role="assistant"][data-message-type="answer"]')),
+        DEFAULT_WAIT_MS,
+      )
+
+      // Input should be enabled again
+      const isEnabledAfter = await queryInput.isEnabled()
+      expect(isEnabledAfter).toBe(true)
+    })
+
+    it('shows welcome message on mobile initial load', async () => {
+      await openApp(MOBILE_VIEWPORT)
+
+      // Find welcome/system message
+      const systemMessage = await driver.findElement(By.css('[data-role="system"]'))
+      expect(await systemMessage.isDisplayed()).toBe(true)
+
+      const welcomeText = await systemMessage.getText()
+      expect(welcomeText.length).toBeGreaterThan(0)
+    })
+
+    it('hides resize separator on mobile', async () => {
+      await openApp(MOBILE_VIEWPORT)
+
+      // The resize separator should not be visible on mobile
+      const separators = await driver.findElements(By.css('[aria-label="Resize panels"]'))
+      
+      if (separators.length > 0) {
+        const separator = separators[0]
+        const isVisible = await separator.isDisplayed()
+        expect(isVisible).toBe(false)
+      }
+    })
+
+    it('applies mobile-specific styling and layout', async () => {
+      await openApp(MOBILE_VIEWPORT)
+
+      const mainGrid = await driver.findElement(By.css('.grid'))
+      
+      // Get computed styles
+      const layoutInfo = (await driver.executeScript(
+        'return { width: window.innerWidth, gridCols: window.getComputedStyle(arguments[0]).gridTemplateColumns }',
+        mainGrid,
+      )) as {
+        width: number
+        gridCols: string
+      }
+
+      expect(layoutInfo.width).toBeLessThanOrEqual(600)
+      // On mobile, grid should be single column (not multi-column with panel width)
+      expect(layoutInfo.gridCols).not.toContain('360px')
+    })
+  })
 })

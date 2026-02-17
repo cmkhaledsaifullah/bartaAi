@@ -22,7 +22,7 @@ const ARTICLES: Article[] = [
   },
 ]
 
-const renderSidebar = (overrides: Partial<{ viewMode: ViewMode }> = {}) => {
+const renderSidebar = (overrides: Partial<{ viewMode: ViewMode; isCollapsed: boolean }> = {}) => {
   const props = {
     articles: ARTICLES,
     selectedArticle: ARTICLES[0]!,
@@ -30,6 +30,8 @@ const renderSidebar = (overrides: Partial<{ viewMode: ViewMode }> = {}) => {
     highlightKeywords: ['metro'],
     onSelectArticle: vi.fn(),
     onViewModeChange: vi.fn(),
+    isCollapsed: false,
+    onToggleCollapse: vi.fn(),
     ...overrides,
   }
 
@@ -71,6 +73,33 @@ describe('ChunkVisualizer sidebar', () => {
 
     expect(screen.getByTestId('chunk-visualizer')).toBeInTheDocument()
     expect(screen.getAllByTestId('chunk-card').length).toBeGreaterThan(0)
+  })
+
+  it('renders collapsed mobile button when isCollapsed is true', () => {
+    const props = renderSidebar({ isCollapsed: true })
+
+    const buttons = screen.getAllByRole('button', { expanded: false })
+    const mobileButton = buttons.find((btn) => btn.classList.contains('md:hidden'))
+    
+    expect(mobileButton).toBeDefined()
+    expect(mobileButton).toHaveClass('md:hidden')
+    expect(within(mobileButton!).getByText('Knowledge Base')).toBeInTheDocument()
+
+    fireEvent.click(mobileButton!)
+    expect(props.onToggleCollapse).toHaveBeenCalled()
+  })
+
+  it('renders collapsed desktop button when isCollapsed is true', () => {
+    const props = renderSidebar({ isCollapsed: true })
+
+    const desktopButtons = screen.getAllByRole('button', { expanded: false })
+    const desktopButton = desktopButtons.find((btn) => btn.classList.contains('md:flex'))
+    
+    expect(desktopButton).toBeDefined()
+    expect(desktopButton).toHaveClass('hidden', 'md:flex')
+    
+    fireEvent.click(desktopButton!)
+    expect(props.onToggleCollapse).toHaveBeenCalled()
   })
 })
 
