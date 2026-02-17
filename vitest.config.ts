@@ -9,7 +9,7 @@ export default mergeConfig(baseConfig, {
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
     restoreMocks: true,
-    exclude: [...configDefaults.exclude, 'src/e2e/**'],
+    exclude: [...configDefaults.exclude, 'src/e2e/**', '.stryker-tmp/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json-summary', 'html'],
