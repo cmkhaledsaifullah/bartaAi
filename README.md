@@ -45,12 +45,15 @@
 
 ```
 src/
-├─ App.tsx          # Root wrapper + mock article seed + prop wiring
-├─ Home.tsx         # BanglaNews RAG explorer UI (chat, chunk visualizer, Gemini hook)
-├─ types.ts         # Shared type declarations (articles, chat, RAG pipeline)
-├─ App.css          # Supplemental utility classes (line clamp, animations)
-├─ index.css        # Tailwind entry point + global tokens
-└─ main.tsx         # React entry point
+├─ App.tsx               # Root wrapper + mock article seed + prop wiring
+├─ Home.tsx              # BanglaNews RAG explorer UI (chat, chunk visualizer, Gemini hook)
+├─ ChunkVisualizer.tsx   # Component for visualizing retrieved chunks
+├─ Prompt.tsx            # Prompt input component with suggestions
+├─ homeHelpers.ts        # Helper functions for RAG pipeline (keywords, context, Gemini API)
+├─ types.ts              # Shared type declarations (articles, chat, RAG pipeline)
+├─ App.css               # Supplemental utility classes (line clamp, animations)
+├─ index.css             # Tailwind entry point + global tokens
+└─ main.tsx              # React entry point
 ```
 
 Adjust the structure as the app grows (e.g., add `features/`, `components/`, or `routes/`).
