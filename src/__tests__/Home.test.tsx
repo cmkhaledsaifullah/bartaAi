@@ -2014,8 +2014,8 @@ describe('Home', () => {
     // Try to move without starting resize
     fireEvent(document, new MouseEvent('mousemove', { clientX: 500, bubbles: true }))
     
-    let gridElement = container.querySelector('.grid')
-    let style = gridElement?.getAttribute('style')
+    const gridElement = container.querySelector('.grid')
+    const style = gridElement?.getAttribute('style')
     // Should stay at 360px since !isResizing check prevents update
     expect(style).toContain('360px')
   })

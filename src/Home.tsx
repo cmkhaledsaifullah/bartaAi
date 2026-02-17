@@ -263,7 +263,7 @@ export default function Home({ articles }: HomeProps) {
       document.body.style.cursor = ''
       document.body.style.userSelect = ''
     }
-  }, [isResizing])
+  }, [isResizing, resizeStartX, resizeStartWidth])
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
