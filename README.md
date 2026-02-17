@@ -90,10 +90,21 @@ Adjust the structure as the app grows (e.g., add `features/`, `components/`, or 
 Runs on every push and pull request to `main`. Provisions Chrome, installs dependencies, lints, executes the coverage suite, runs Stryker mutation testing, and exercises the Selenium WebDriver e2e flow. Coverage, mutation, and generated reports upload as artifacts for inspection.
 
 ### CD Pipeline (`.github/workflows/cd.yml`)
-Automatically deploys to GitHub Pages on every push to `main`. The workflow:
-1. Builds the production bundle (`dist/`)
-2. Uploads the build artifacts
-3. Deploys to GitHub Pages environment
+Automatically deploys to GitHub Pages on every push to `main`. The workflow runs in three stages:
+
+1. **Test Stage**: Runs the complete test suite as integration tests
+   - Linting
+   - Unit tests with coverage
+   - Mutation testing
+   - End-to-end tests with Selenium
+   - Uploads test reports as artifacts
+2. **Build Stage**: Only runs if all tests pass
+   - Builds the production bundle (`dist/`)
+   - Prepares artifacts for deployment
+3. **Deploy Stage**: Only runs if build succeeds
+   - Deploys to GitHub Pages environment
+
+This ensures only fully tested code reaches production.
 
 #### GitHub Pages Setup
 To enable deployment:

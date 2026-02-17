@@ -17,9 +17,54 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Integration testing job
+  pre-deploy-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Setup Chrome
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests with coverage
+        run: npm run test:coverage
+
+      - name: Mutation testing
+        run: npm run test:mutation
+
+      - name: End-to-end tests
+        run: npm run test:e2e
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            coverage
+            reports/mutation
+            .stryker-tmp
+          if-no-files-found: ignore
+
   # Build job
   build:
     runs-on: ubuntu-latest
+    needs: pre-deploy-tests
     steps:
       - name: Checkout
         uses: actions/checkout@v4
