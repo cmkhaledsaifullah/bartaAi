@@ -84,11 +84,35 @@ Adjust the structure as the app grows (e.g., add `features/`, `components/`, or 
 - End-to-end coverage uses Selenium WebDriver + headless Chrome, orchestrated through Vitest (`npm run test:e2e`). Selenium Manager automatically provisions the matching Chromedriver, so you only need a local Chrome install. Override the target URL with `E2E_BASE_URL` if you serve the app elsewhere.
 - Mutation coverage is enforced with [Stryker](https://stryker-mutator.io/); run `npm run test:mutation` to see surviving mutants in `reports/mutation`.
 
-## Continuous Integration
+## Continuous Integration & Deployment
 
-GitHub Actions (`.github/workflows/ci.yml`) now provisions Chrome, installs dependencies, lints, executes the coverage suite, runs Stryker, and finally exercises the Selenium WebDriver e2e flow. Coverage, mutation, and any generated reports continue to upload as artifacts so pull requests can inspect failures without rerunning locally.
+### CI Pipeline (`.github/workflows/ci.yml`)
+Runs on every push and pull request to `main`. Provisions Chrome, installs dependencies, lints, executes the coverage suite, runs Stryker mutation testing, and exercises the Selenium WebDriver e2e flow. Coverage, mutation, and generated reports upload as artifacts for inspection.
 
-## Deploying to a Traditional Server
+### CD Pipeline (`.github/workflows/cd.yml`)
+Automatically deploys to GitHub Pages on every push to `main`. The workflow:
+1. Builds the production bundle (`dist/`)
+2. Uploads the build artifacts
+3. Deploys to GitHub Pages environment
+
+#### GitHub Pages Setup
+To enable deployment:
+1. Go to your repository Settings → Pages
+2. Under "Build and deployment", set Source to **GitHub Actions**
+3. Push to `main` branch to trigger the first deployment
+4. Your app will be available at `https://<username>.github.io/<repo-name>/`
+
+If deploying to a repository subdirectory (e.g., `https://<username>.github.io/bartaAi/`), update `vite.config.ts`:
+```typescript
+export default defineConfig({
+  base: '/bartaAi/', // Match your repository name
+  // ... rest of config
+})
+```
+
+## Deploying to Other Platforms
+
+### Traditional Server
 
 1. Copy the `dist/` folder to your server.
 2. Configure your web server to serve `index.html` for unknown paths to support SPA routing.
