@@ -1,5 +1,6 @@
 import type { ChangeEvent, KeyboardEvent } from 'react'
-import { Bot, CheckCircle2, Cpu, Loader2, Newspaper, Search, Settings } from 'lucide-react'
+import { useEffect, useRef } from 'react'
+import { Bot, CheckCircle2, Cpu, Loader2, Search, Settings } from 'lucide-react'
 import type { PromptProps } from './types'
 
 export default function Prompt({
@@ -19,6 +20,27 @@ export default function Prompt({
   isKnowledgeCollapsed,
 }: PromptProps) {
   const apiKeyFieldId = 'gemini-api-key'
+  const settingsRef = useRef<HTMLDivElement>(null)
+  const settingsButtonRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        showSettings &&
+        settingsRef.current &&
+        settingsButtonRef.current &&
+        !settingsRef.current.contains(event.target as Node) &&
+        !settingsButtonRef.current.contains(event.target as Node)
+      ) {
+        onToggleSettings()
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showSettings, onToggleSettings])
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     onQueryChange(event.target.value)
@@ -52,8 +74,8 @@ export default function Prompt({
     >
       <header className="bg-white border-b border-slate-200 px-4 sm:px-6 py-4 flex flex-row items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="bg-emerald-600 p-2 rounded-lg text-white shadow-lg">
-            <Newspaper size={20} />
+          <div className="w-10 h-10">
+            <img src="/logo.svg" alt="BartaAI Logo" className="w-full h-full object-contain" />
           </div>
           <div>
             <h1 className="font-bold text-slate-800 text-lg">
@@ -64,6 +86,7 @@ export default function Prompt({
         </div>
         <button
           type="button"
+          ref={settingsButtonRef}
           onClick={onToggleSettings}
           data-testid="settings-toggle"
           className={`p-2 rounded-full transition-colors ${
@@ -76,7 +99,10 @@ export default function Prompt({
       </header>
 
       {showSettings && (
-        <div className="absolute top-[4.5rem] right-4 sm:right-6 w-full max-w-xs bg-white border border-slate-200 shadow-xl rounded-xl p-4 z-20 animate-in fade-in slide-in-from-top-2">
+        <div
+          ref={settingsRef}
+          className="absolute top-[4.5rem] right-4 sm:right-6 w-full max-w-xs bg-white border border-slate-200 shadow-xl rounded-xl p-4 z-20 animate-in fade-in slide-in-from-top-2"
+        >
           <h3 className="text-sm font-semibold text-slate-700 mb-2">Configuration</h3>
           <div className="space-y-3">
             <div>
