@@ -143,4 +143,39 @@ describe('Prompt', () => {
     expect(chatPanel).toHaveClass('md:col-start-3', 'md:col-end-4')
     expect(chatPanel).toHaveAttribute('data-knowledge-collapsed', 'false')
   })
+
+  it('closes settings panel when clicking outside', () => {
+    const props = renderPrompt({ showSettings: true })
+
+    // Click outside the settings panel
+    fireEvent.mouseDown(document.body)
+    
+    expect(props.onToggleSettings).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not close settings panel when clicking inside the settings panel', () => {
+    const props = renderPrompt({ showSettings: true })
+
+    const apiInput = screen.getByLabelText(/Gemini API Key/i)
+    fireEvent.mouseDown(apiInput)
+    
+    expect(props.onToggleSettings).not.toHaveBeenCalled()
+  })
+
+  it('does not close settings panel when clicking the settings button', () => {
+    const props = renderPrompt({ showSettings: true })
+
+    const settingsButton = screen.getByTestId('settings-toggle')
+    fireEvent.mouseDown(settingsButton)
+    
+    expect(props.onToggleSettings).not.toHaveBeenCalled()
+  })
+
+  it('does not trigger click outside handler when settings are closed', () => {
+    const props = renderPrompt({ showSettings: false })
+
+    fireEvent.mouseDown(document.body)
+    
+    expect(props.onToggleSettings).not.toHaveBeenCalled()
+  })
 })
