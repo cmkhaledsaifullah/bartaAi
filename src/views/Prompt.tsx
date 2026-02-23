@@ -1,7 +1,7 @@
 import type { ChangeEvent, KeyboardEvent } from 'react'
 import { useEffect, useRef } from 'react'
 import { Bot, CheckCircle2, Cpu, Loader2, Search, Settings } from 'lucide-react'
-import type { PromptProps } from './types'
+import type { PromptProps } from '../types'
 
 export default function Prompt({
   chatHistory,
@@ -79,9 +79,8 @@ export default function Prompt({
           </div>
           <div>
             <h1 className="font-bold text-slate-800 text-lg">
-              <span className="text-emerald-600 font-light">বার্তাAI</span>
+              <span className="text-emerald-600 font-light">বার্তা Prompt</span>
             </h1>
-            <p className="text-[10px] text-slate-400 font-medium tracking-wide">খবর থেকে উত্তর</p>
           </div>
         </div>
         <button

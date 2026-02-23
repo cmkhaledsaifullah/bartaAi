@@ -1,8 +1,9 @@
 import { ChevronDown, Database, Split } from 'lucide-react'
-import { splitArticleIntoSentences } from './homeHelpers'
-import type { ChunkCardsProps, ChunkVisualizerProps } from './types'
+import { splitArticleIntoSentences } from '../homeHelpers'
+import type { ChunkCardsProps, KnowledgePanelProps } from '../types'
+import '../styles/KnowledgePanel.css'
 
-export default function ChunkVisualizer({
+export default function KnowledgePanel({
   articles,
   selectedArticle,
   viewMode,
@@ -11,11 +12,11 @@ export default function ChunkVisualizer({
   onViewModeChange,
   isCollapsed,
   onToggleCollapse,
-}: ChunkVisualizerProps) {
+}: KnowledgePanelProps) {
   if (isCollapsed) {
     return (
       <div
-        className="order-2 md:order-1 flex flex-col gap-3 md:gap-0 md:row-span-3 md:h-full md:justify-start md:items-start md:py-4 md:col-start-1 md:col-end-2 mb-4 md:mb-0"
+        className="order-2 md:order-1 flex flex-col gap-3 md:gap-0 md:row-span-3 md:h-full md:justify-start md:items-start md:pb-4 md:col-start-1 md:col-end-2 mb-4 md:mb-0"
         data-testid="knowledge-panel"
         role="complementary"
       >
@@ -27,7 +28,7 @@ export default function ChunkVisualizer({
         >
           <div className="flex items-center gap-2 text-orange-800">
             <Database size={18} className="text-orange-500" />
-            <h2 className="font-semibold text-sm uppercase tracking-wide">Knowledge Base</h2>
+            <h2 className="font-semibold text-sm uppercase tracking-wide">বার্তা ভাণ্ডার</h2>
           </div>
           <ChevronDown size={18} className="text-emerald-600" />
         </button>
@@ -35,13 +36,12 @@ export default function ChunkVisualizer({
         <button
           type="button"
           onClick={onToggleCollapse}
-          className="hidden md:flex flex-col items-center justify-center rounded-2xl border border-orange-200 bg-orange-50 shadow-sm hover:border-emerald-300 hover:bg-white transition-colors px-3 py-4 w-full"
+          className="hidden md:flex flex-col items-center justify-center rounded-2xl border border-orange-200 bg-orange-50 shadow-sm hover:border-emerald-300 hover:bg-white transition-colors px-3 py-4 w-full vertical-text"
           aria-expanded="false"
-          style={{ writingMode: 'vertical-lr' }}
         >
           <span className="flex items-center gap-2 text-orange-800">
             <Database size={18} className="text-orange-500 rotate-90" />
-            <span className="font-semibold text-sm uppercase tracking-wide">Knowledge Base</span>
+            <span className="font-semibold text-sm uppercase tracking-wide">বার্তা ভাণ্ডার</span>
           </span>
         </button>
       </div>
@@ -63,7 +63,7 @@ export default function ChunkVisualizer({
       >
         <div className="flex items-center gap-2 text-orange-800">
           <Database size={18} className="text-orange-500" />
-          <h2 className="font-semibold text-sm uppercase tracking-wide">Knowledge Base</h2>
+          <h2 className="font-semibold text-sm uppercase tracking-wide">বার্তা ভাণ্ডার</h2>
         </div>
         <div className="flex items-center gap-2">
           <div className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full font-medium">

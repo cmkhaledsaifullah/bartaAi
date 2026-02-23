@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import type { ComponentProps, MutableRefObject } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import Prompt from '../Prompt'
+import Prompt from '../views/Prompt'
 import type { ChatMessage, RagStep } from '../types'
 
 const PLACEHOLDER = 'Ask about the news (e.g., মেট্রোরেল বা ক্রিকেট সম্পর্কে কিছু বলুন)...'

@@ -1,5 +1,5 @@
 import Home from './Home'
-import type { Article } from './types'
+import type { Article } from '../types'
 
 const MOCK_ARTICLES: Article[] = [
   {

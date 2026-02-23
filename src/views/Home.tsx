@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import './App.css'
-import ChunkVisualizer from './ChunkVisualizer'
+import '../styles/App.css'
+import '../styles/Home.css'
+import KnowledgePanel from './KnowledgePanel'
 import Prompt from './Prompt'
 import {
   buildContextText,
@@ -11,7 +12,7 @@ import {
   extractSearchKeywords,
   resetRagStepsState,
   splitArticleIntoSentences,
-} from './homeHelpers'
+} from '../homeHelpers'
 import type {
   Article,
   ViewMode,
@@ -21,7 +22,9 @@ import type {
   RagStatus,
   GeminiResponse,
   HomeProps,
-} from './types'
+} from '../types'
+import Footer from './Footer'
+import Header from './Header'
 
 export default function Home({ articles }: HomeProps) {
   useEffect(() => {
@@ -56,6 +59,7 @@ export default function Home({ articles }: HomeProps) {
   const [resizeStartX, setResizeStartX] = useState(0)
   const [resizeStartWidth, setResizeStartWidth] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
+  const gridRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     const checkDesktop = () => {
@@ -69,6 +73,16 @@ export default function Home({ articles }: HomeProps) {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [chatHistory, isProcessing, ragSteps])
+
+  useEffect(() => {
+    if (gridRef.current) {
+      if (isDesktop && !isKnowledgeCollapsed) {
+        gridRef.current.style.setProperty('--panel-width', `${panelWidth}px`)
+      } else {
+        gridRef.current.style.removeProperty('--panel-width')
+      }
+    }
+  }, [panelWidth, isDesktop, isKnowledgeCollapsed])
 
   const addRagStep = (text: string, status: RagStatus) => {
     setRagSteps((prev) => [...prev, { text, status, id: `step-${Date.now()}-${Math.random()}` }])
@@ -219,10 +233,6 @@ export default function Home({ articles }: HomeProps) {
     ? 'md:grid-cols-[48px_minmax(0,1fr)] lg:grid-cols-[56px_minmax(0,1fr)] xl:grid-cols-[64px_minmax(0,1fr)]'
     : ''
 
-  const gridStyle = isDesktop && !isKnowledgeCollapsed
-    ? { gridTemplateColumns: `${panelWidth}px 16px minmax(0, 1fr)` }
-    : {}
-
   const toggleKnowledgePanel = () => {
     setIsKnowledgeCollapsed((prev) => !prev)
   }
@@ -267,21 +277,12 @@ export default function Home({ articles }: HomeProps) {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
-      <style data-testid="global-style-block">
-        {`
-          .font-bangla { font-family: 'Noto Sans Bengali', sans-serif; }
-          ::-webkit-scrollbar { width: 8px; height: 8px; }
-          ::-webkit-scrollbar-track { background: #f1f1f1; }
-          ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-          ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        `}
-      </style>
-
+      <Header />
       <div
-        className={`mx-auto max-w-7xl px-4 py-4 sm:px-6 md:px-8 lg:px-12 min-h-screen md:min-h-[100dvh] md:h-[100dvh] grid gap-4 md:gap-y-6 ${isKnowledgeCollapsed ? '' : 'md:gap-x-0'} md:grid-rows-[auto_minmax(0,1fr)_auto] ${desktopColumnClasses}`}
-        style={gridStyle}
+        ref={gridRef}
+        className={`home-grid mx-auto max-w-7xl px-4 py-4 sm:px-6 md:px-8 lg:px-12 min-h-screen md:min-h-[100dvh] md:h-[100dvh] grid gap-4 md:gap-y-6 ${isKnowledgeCollapsed ? '' : 'md:gap-x-0'} md:grid-rows-[auto_minmax(0,1fr)_auto] ${desktopColumnClasses}`}
       >
-        <ChunkVisualizer
+        <KnowledgePanel
           articles={articles}
           selectedArticle={selectedArticle}
           viewMode={viewMode}
@@ -324,6 +325,7 @@ export default function Home({ articles }: HomeProps) {
           isKnowledgeCollapsed={isKnowledgeCollapsed}
         />
       </div>
+      <Footer />
     </div>
   )
 }

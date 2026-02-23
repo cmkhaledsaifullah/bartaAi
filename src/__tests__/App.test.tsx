@@ -1,6 +1,6 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
-import App from '../App'
+import App from '../views/App'
 
 afterEach(() => {
   cleanup()

@@ -47,12 +47,12 @@ describe('BartaAI E2E', () => {
     const chunksToggle = await driver.findElement(By.css('[data-testid="view-toggle-chunks"]'))
     await chunksToggle.click()
 
-    const chunkVisualizer = await driver.wait(
+    const knowledgePanelVisualizer = await driver.wait(
       until.elementLocated(By.css('[data-testid="chunk-visualizer"]')),
       DEFAULT_WAIT_MS,
     )
 
-    const keywordCount = await chunkVisualizer.getAttribute('data-keyword-count')
+    const keywordCount = await knowledgePanelVisualizer.getAttribute('data-keyword-count')
     expect(keywordCount).toBe('0')
   })
 
@@ -135,13 +135,13 @@ describe('BartaAI E2E', () => {
       await chunksToggle.click()
 
       // Verify chunk visualizer appears
-      const chunkVisualizer = await driver.wait(
+      const knowledgePanelVisualizer = await driver.wait(
         until.elementLocated(By.css('[data-testid="chunk-visualizer"]')),
         DEFAULT_WAIT_MS,
       )
       
       // Scroll to visualizer to ensure it's in view
-      await driver.executeScript('arguments[0].scrollIntoView({ behavior: "instant", block: "center" })', chunkVisualizer)
+      await driver.executeScript('arguments[0].scrollIntoView({ behavior: "instant", block: "center" })', knowledgePanelVisualizer)
 
       // Toggle back to text/articles view
       const textToggle = await driver.wait(

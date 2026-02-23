@@ -2,7 +2,7 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import { act } from 'react'
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import type { Mock } from 'vitest'
-import Home from '../Home'
+import Home from '../views/Home'
 import {
   buildContextText,
   buildGeminiPrompt,

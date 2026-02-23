@@ -56,7 +56,7 @@ export type ChunkCardsProps = {
   highlightKeywords?: string[]
 }
 
-export type ChunkVisualizerProps = {
+export type KnowledgePanelProps = {
   articles: Article[]
   selectedArticle: Article
   viewMode: ViewMode
