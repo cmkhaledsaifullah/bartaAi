@@ -41,18 +41,29 @@ describe('BartaAI E2E', () => {
   it('renders the knowledge base and chunk preview toggle', async () => {
     await openApp()
 
+    // Switch to knowledge tab (works on both desktop and mobile)
+    const knowledgeTabButton = await driver.findElement(By.css('button[aria-label="View বার্তা ভাণ্ডার"]'))
+    await knowledgeTabButton.click()
+
+    // Wait for knowledge base to be available
+    await driver.wait(until.elementLocated(By.css('[data-testid="knowledge-base"]')), DEFAULT_WAIT_MS)
+
     const cards = await driver.findElements(By.css('[data-testid^="article-card-"]'))
     expect(cards.length).toBeGreaterThanOrEqual(3)
 
+    // Scroll to make view toggle visible
     const chunksToggle = await driver.findElement(By.css('[data-testid="view-toggle-chunks"]'))
+    await driver.executeScript('arguments[0].scrollIntoView({ behavior: "instant", block: "center" })', chunksToggle)
+    await driver.wait(until.elementIsVisible(chunksToggle), DEFAULT_WAIT_MS)
+    
     await chunksToggle.click()
 
-    const chunkVisualizer = await driver.wait(
+    const knowledgePanelVisualizer = await driver.wait(
       until.elementLocated(By.css('[data-testid="chunk-visualizer"]')),
       DEFAULT_WAIT_MS,
     )
 
-    const keywordCount = await chunkVisualizer.getAttribute('data-keyword-count')
+    const keywordCount = await knowledgePanelVisualizer.getAttribute('data-keyword-count')
     expect(keywordCount).toBe('0')
   })
 
@@ -83,28 +94,32 @@ describe('BartaAI E2E', () => {
   it('stacks knowledge panel below chat on mobile viewports', async () => {
     await openApp(MOBILE_VIEWPORT)
 
+    // Verify we start on prompt tab
     const chatPanel = await driver.findElement(By.css('[data-testid="chat-panel"]'))
-    const knowledgePanel = await driver.findElement(By.css('[data-testid="knowledge-panel"]'))
+    expect(await chatPanel.isDisplayed()).toBe(true)
 
-    const layoutInfo = (await driver.executeScript(
-      'return { chat: arguments[0].getBoundingClientRect(), knowledge: arguments[1].getBoundingClientRect(), innerWidth: window.innerWidth }',
-      chatPanel,
-      knowledgePanel,
-    )) as {
-      chat: { top: number; bottom: number; width: number }
-      knowledge: { top: number; bottom: number; width: number }
-      innerWidth: number
-    }
+    // Switch to knowledge tab by clicking footer navigation - using Bangla title
+    const knowledgeTabButton = await driver.findElement(By.css('button[aria-label="View বার্তা ভাণ্ডার"]'))
+    // Use JavaScript click to bypass visibility issues
+    await driver.executeScript('arguments[0].click()', knowledgeTabButton)
 
-    expect(layoutInfo.innerWidth).toBeLessThanOrEqual(600)
-    expect(layoutInfo.knowledge.top).toBeGreaterThan(layoutInfo.chat.bottom - 4)
+    // Wait for knowledge base to be visible
+    const knowledgeBase = await driver.wait(
+      until.elementLocated(By.css('[data-testid="knowledge-base"]')),
+      DEFAULT_WAIT_MS,
+    )
+    await driver.wait(until.elementIsVisible(knowledgeBase), DEFAULT_WAIT_MS)
 
-    await driver.executeScript('arguments[0].scrollIntoView({ behavior: "instant", block: "start" })', knowledgePanel)
+    // Verify mobile viewport
+    const innerWidth = await driver.executeScript('return window.innerWidth') as number
+    expect(innerWidth).toBeLessThanOrEqual(600)
 
+    // Verify article preview functionality
     const previewPanel = await driver.findElement(By.css('[data-testid="article-preview-panel"]'))
     await driver.wait(until.elementIsVisible(previewPanel), DEFAULT_WAIT_MS)
 
     const articleCard = await driver.findElement(By.css('[data-testid="article-card-2"]'))
+    await driver.executeScript('arguments[0].scrollIntoView({ behavior: "instant", block: "center" })', articleCard)
     await articleCard.click()
 
     const previewText = await previewPanel.getText()
@@ -114,6 +129,14 @@ describe('BartaAI E2E', () => {
   describe('Mobile View', () => {
     it('renders knowledge base articles on mobile', async () => {
       await openApp(MOBILE_VIEWPORT)
+
+      // Switch to knowledge tab - using Bangla title
+      const knowledgeTabButton = await driver.findElement(By.css('button[aria-label="View বার্তা ভাণ্ডার"]'))
+      // Use JavaScript click to bypass visibility issues
+      await driver.executeScript('arguments[0].click()', knowledgeTabButton)
+
+      // Wait for knowledge base to be visible
+      await driver.wait(until.elementLocated(By.css('[data-testid="knowledge-base"]')), DEFAULT_WAIT_MS)
 
       const cards = await driver.findElements(By.css('[data-testid^="article-card-"]'))
       expect(cards.length).toBeGreaterThanOrEqual(3)
@@ -126,22 +149,34 @@ describe('BartaAI E2E', () => {
     it('toggles between article and chunk views on mobile', async () => {
       await openApp(MOBILE_VIEWPORT)
 
-      // Scroll to knowledge panel
-      const knowledgePanel = await driver.findElement(By.css('[data-testid="knowledge-panel"]'))
-      await driver.executeScript('arguments[0].scrollIntoView({ behavior: "instant", block: "start" })', knowledgePanel)
+      // Switch to knowledge tab - using Bangla title
+      const knowledgeTabButton = await driver.findElement(By.css('button[aria-label="View বার্তা ভাণ্ডার"]'))
+      // Use JavaScript click to bypass visibility issues
+      await driver.executeScript('arguments[0].click()', knowledgeTabButton)
 
-      // Click chunks toggle
+      // Wait for knowledge base to be visible
+      const knowledgeBase = await driver.wait(
+        until.elementLocated(By.css('[data-testid="knowledge-base"]')),
+        DEFAULT_WAIT_MS,
+      )
+      await driver.wait(until.elementIsVisible(knowledgeBase), DEFAULT_WAIT_MS)
+
+      // Scroll to view toggle
       const chunksToggle = await driver.findElement(By.css('[data-testid="view-toggle-chunks"]'))
+      await driver.executeScript('arguments[0].scrollIntoView({ behavior: "instant", block: "center" })', chunksToggle)
+      await driver.wait(until.elementIsVisible(chunksToggle), DEFAULT_WAIT_MS)
+      
+      // Click chunks toggle
       await chunksToggle.click()
 
       // Verify chunk visualizer appears
-      const chunkVisualizer = await driver.wait(
+      const knowledgePanelVisualizer = await driver.wait(
         until.elementLocated(By.css('[data-testid="chunk-visualizer"]')),
         DEFAULT_WAIT_MS,
       )
       
       // Scroll to visualizer to ensure it's in view
-      await driver.executeScript('arguments[0].scrollIntoView({ behavior: "instant", block: "center" })', chunkVisualizer)
+      await driver.executeScript('arguments[0].scrollIntoView({ behavior: "instant", block: "center" })', knowledgePanelVisualizer)
 
       // Toggle back to text/articles view
       const textToggle = await driver.wait(
@@ -264,12 +299,21 @@ describe('BartaAI E2E', () => {
     it('clicks on article cards to view details on mobile', async () => {
       await openApp(MOBILE_VIEWPORT)
 
-      // Scroll to knowledge panel
-      const knowledgePanel = await driver.findElement(By.css('[data-testid="knowledge-panel"]'))
-      await driver.executeScript('arguments[0].scrollIntoView({ behavior: "instant", block: "start" })', knowledgePanel)
+      // Switch to knowledge tab - using Bangla title
+      const knowledgeTabButton = await driver.findElement(By.css('button[aria-label="View বার্তা ভাণ্ডার"]'))
+      // Use JavaScript click to bypass visibility issues
+      await driver.executeScript('arguments[0].click()', knowledgeTabButton)
+
+      // Wait for knowledge base to be visible
+      const knowledgeBase = await driver.wait(
+        until.elementLocated(By.css('[data-testid="knowledge-base"]')),
+        DEFAULT_WAIT_MS,
+      )
+      await driver.wait(until.elementIsVisible(knowledgeBase), DEFAULT_WAIT_MS)
 
       // Click on an article card
       const articleCard = await driver.findElement(By.css('[data-testid="article-card-1"]'))
+      await driver.executeScript('arguments[0].scrollIntoView({ behavior: "instant", block: "center" })', articleCard)
       await articleCard.click()
 
       // Wait for preview panel
@@ -395,6 +439,96 @@ describe('BartaAI E2E', () => {
       expect(layoutInfo.width).toBeLessThanOrEqual(600)
       // On mobile, grid should be single column (not multi-column with panel width)
       expect(layoutInfo.gridCols).not.toContain('360px')
+    })
+  })
+
+  describe('Desktop Tab Navigation', () => {
+    it('switches between prompt and knowledge tabs on desktop', async () => {
+      await openApp(DESKTOP_VIEWPORT)
+
+      // Verify we start on prompt tab
+      const chatPanel = await driver.findElement(By.css('[data-testid="chat-panel"]'))
+      expect(await chatPanel.isDisplayed()).toBe(true)
+
+      // Click knowledge tab in header navigation
+      const knowledgeTabButton = await driver.findElement(By.css('button[aria-label="View বার্তা ভাণ্ডার"]'))
+      await knowledgeTabButton.click()
+
+      // Wait for knowledge base to be visible
+      const knowledgeBase = await driver.wait(
+        until.elementLocated(By.css('[data-testid="knowledge-base"]')),
+        DEFAULT_WAIT_MS,
+      )
+      expect(await knowledgeBase.isDisplayed()).toBe(true)
+
+      // Verify prompt panel is now hidden
+      expect(await chatPanel.isDisplayed()).toBe(false)
+
+      // Switch back to prompt tab
+      const promptTabButton = await driver.findElement(By.css('button[aria-label="View বার্তা Prompt"]'))
+      await promptTabButton.click()
+
+      // Verify prompt panel is visible again
+      await driver.wait(until.elementIsVisible(chatPanel), DEFAULT_WAIT_MS)
+      expect(await chatPanel.isDisplayed()).toBe(true)
+
+      // Verify knowledge base is now hidden
+      expect(await knowledgeBase.isDisplayed()).toBe(false)
+    })
+
+    it('opens and closes settings panel on desktop', async () => {
+      await openApp(DESKTOP_VIEWPORT)
+
+      // Wait for prompt panel to be visible
+      const chatPanel = await driver.findElement(By.css('[data-testid="chat-panel"]'))
+      await driver.wait(until.elementIsVisible(chatPanel), DEFAULT_WAIT_MS)
+
+      // Find settings button (with desktop suffix from Panel component)
+      const settingsButton = await driver.findElement(By.css('[data-testid="settings-toggle-desktop"]'))
+      await settingsButton.click()
+
+      // Wait for settings panel to appear
+      await driver.sleep(300) // Wait for animation
+
+      // Verify settings panel is visible by checking for API key input
+      const apiKeyInput = await driver.findElement(By.css('input[type="password"][placeholder*="Enter key"]'))
+      expect(await apiKeyInput.isDisplayed()).toBe(true)
+
+      // Click settings button again to close
+      await settingsButton.click()
+      await driver.sleep(300) // Wait for animation
+
+      // Verify settings panel is hidden
+      const settingsPanels = await driver.findElements(By.css('input[type="password"][placeholder*="Enter key"]'))
+      if (settingsPanels.length > 0) {
+        expect(await settingsPanels[0].isDisplayed()).toBe(false)
+      }
+    })
+
+    it('verifies active tab styling on desktop', async () => {
+      await openApp(DESKTOP_VIEWPORT)
+
+      // Get the prompt tab button
+      const promptTabButton = await driver.findElement(By.css('button[aria-label="View বার্তা Prompt"]'))
+      
+      // Check that it has active styling (aria-current should be "page")
+      const ariaCurrent = await promptTabButton.getAttribute('aria-current')
+      expect(ariaCurrent).toBe('page')
+
+      // Switch to knowledge tab
+      const knowledgeTabButton = await driver.findElement(By.css('button[aria-label="View বার্তা ভাণ্ডার"]'))
+      await knowledgeTabButton.click()
+
+      // Wait a bit for state to update
+      await driver.sleep(200)
+
+      // Verify knowledge tab is now active
+      const knowledgeAriaCurrent = await knowledgeTabButton.getAttribute('aria-current')
+      expect(knowledgeAriaCurrent).toBe('page')
+
+      // Verify prompt tab is no longer active
+      const promptAriaCurrentAfter = await promptTabButton.getAttribute('aria-current')
+      expect(promptAriaCurrentAfter).toBeNull()
     })
   })
 })

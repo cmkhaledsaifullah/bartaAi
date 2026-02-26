@@ -27,7 +27,7 @@
 
 1. Install dependencies: `npm install`
 2. Start the dev server: `npm run dev`
-3. Open the printed URL (default http://localhost:5173)
+3. Open the printed URL (default <http://localhost:5173>)
 
 ## Production Build & Hosting
 
@@ -43,38 +43,54 @@
 
 ## Project Structure
 
-```
+```plaintext
 src/
-├─ App.tsx               # Root wrapper + mock article seed + prop wiring
-├─ Home.tsx              # BanglaNews RAG explorer UI (chat, chunk visualizer, Gemini hook)
-├─ ChunkVisualizer.tsx   # Component for visualizing retrieved chunks
-├─ Prompt.tsx            # Prompt input component with suggestions
-├─ homeHelpers.ts        # Helper functions for RAG pipeline (keywords, context, Gemini API)
-├─ types.ts              # Shared type declarations (articles, chat, RAG pipeline)
-├─ App.css               # Supplemental utility classes (line clamp, animations)
-├─ index.css             # Tailwind entry point + global tokens
-└─ main.tsx              # React entry point
+├─ views/                    # UI Components
+│  ├─ App.tsx               # Root wrapper + mock article seed + prop wiring
+│  ├─ Home.tsx              # BanglaNews RAG explorer UI (chat, knowledge panel, Gemini hook)
+│  ├─ KnowledgeBase.tsx     # Component for visualizing retrieved chunks and articles
+│  ├─ Prompt.tsx            # Prompt input component with suggestions
+│  ├─ Header.tsx            # App header with sign-in button
+│  └─ Footer.tsx            # App footer
+├─ styles/                   # CSS Stylesheets
+│  ├─ index.css             # Tailwind entry point + global tokens
+│  ├─ App.css               # Supplemental utility classes (line clamp, animations)
+│  ├─ Home.css              # Home component specific styles
+│  └─ KnowledgePanel.css    # Knowledge panel specific styles
+├─ __tests__/                # Unit tests
+│  ├─ App.test.tsx
+│  ├─ Home.test.tsx
+│  ├─ KnowledgePanel.test.tsx
+│  └─ Prompt.test.tsx
+├─ e2e/                      # End-to-end tests
+│  └─ home.e2e.test.ts
+├─ test/                     # Test configuration
+│  └─ setup.ts              # Vitest global setup (mocks, test utils)
+├─ homeHelpers.ts            # Helper functions for RAG pipeline (keywords, context, Gemini API)
+├─ types.ts                  # Shared type declarations (articles, chat, RAG pipeline)
+└─ main.tsx                  # React entry point
 ```
 
-Adjust the structure as the app grows (e.g., add `features/`, `components/`, or `routes/`).
+The structure separates concerns: views for components, styles for CSS, test utilities separate from test files, keeping the codebase organized as it grows.
 
 ### Data & Type Flow
 
-- `App.tsx` now hosts the `MOCK_ARTICLES` array so you can swap in live data sources (REST, Firestore, etc.) without touching the presentation layer.
-- `Home.tsx` receives the articles via props and only contains UI logic/state, making it easy to reuse in other shells.
+- `views/App.tsx` now hosts the `MOCK_ARTICLES` array so you can swap in live data sources (REST, Firestore, etc.) without touching the presentation layer.
+- `views/Home.tsx` receives the articles via props and only contains UI logic/state, making it easy to reuse in other shells.
 - All domain models—articles, retrieved chunks, chat messages, Gemini responses, and prop types—live in `src/types.ts` for a single source of truth when expanding the RAG pipeline.
 
 ## BartaAI Overview
 
-- Three mock Bangla news articles simulate a knowledge base, with sidebar previews and chunk toggles.
+- Three mock Bangla news articles simulate a knowledge base, with Knowledge Panel previews and chunk toggles.
 - Chat panel shows user/bot turns plus retrieved chunks, and a live pipeline list tracks RAG steps.
 - Optional Gemini API key field triggers real responses via `gemini-2.5-flash-preview-09-2025`; without a key the UI falls back to scripted answers.
 - Example prompts (“মেট্রোরেল…”, “How is Bangladesh doing in Cricket?”) help demo the flow instantly.
 
 ## Styling Stack
 
-- Tailwind CSS 3 drives layout/typography via utility classes; `src/index.css` wires in `@tailwind` directives.
-- `src/App.css` only defines helper utilities (line clamp + motion presets) to keep Tailwind as the primary styling mechanism.
+- Tailwind CSS 3 drives layout/typography via utility classes; `src/styles/index.css` wires in `@tailwind` directives.
+- `src/styles/App.css` only defines helper utilities (line clamp + motion presets) to keep Tailwind as the primary styling mechanism.
+- Component-specific styles are organized in `src/styles/` (Home.css, KnowledgePanel.css) for better maintainability.
 - Lucide icons supply the visual language for sections (database, CPU, bot avatar, etc.).
 
 ## Testing & Linting
@@ -87,9 +103,11 @@ Adjust the structure as the app grows (e.g., add `features/`, `components/`, or 
 ## Continuous Integration & Deployment
 
 ### CI Pipeline (`.github/workflows/ci.yml`)
+
 Runs on every push and pull request to `main`. Provisions Chrome, installs dependencies, lints, executes the coverage suite, runs Stryker mutation testing, and exercises the Selenium WebDriver e2e flow. Coverage, mutation, and generated reports upload as artifacts for inspection.
 
 ### CD Pipeline (`.github/workflows/cd.yml`)
+
 Automatically deploys to GitHub Pages on every push to `main`. The workflow runs in three stages:
 
 1. **Test Stage**: Runs the complete test suite as integration tests
@@ -107,13 +125,16 @@ Automatically deploys to GitHub Pages on every push to `main`. The workflow runs
 This ensures only fully tested code reaches production.
 
 #### GitHub Pages Setup
+
 To enable deployment:
+
 1. Go to your repository Settings → Pages
 2. Under "Build and deployment", set Source to **GitHub Actions**
 3. Push to `main` branch to trigger the first deployment
 4. Your app will be available at `https://<username>.github.io/<repo-name>/`
 
 If deploying to a repository subdirectory (e.g., `https://<username>.github.io/bartaAi/`), update `vite.config.ts`:
+
 ```typescript
 export default defineConfig({
   base: '/bartaAi/', // Match your repository name

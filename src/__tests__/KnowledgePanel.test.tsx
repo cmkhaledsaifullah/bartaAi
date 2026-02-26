@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import ChunkVisualizer, { ChunkCards } from '../ChunkVisualizer'
+import KnowledgeBase, { ChunkCards } from '../views/KnowledgeBase'
 import type { Article, ViewMode } from '../types'
 
 const ARTICLES: Article[] = [
@@ -17,12 +17,12 @@ const ARTICLES: Article[] = [
     source: 'Economy Beat',
     date: '2023-11-07',
     title: 'Investment momentum',
-    content: 'দ্বিতীয় বাক্য পরিকল্পনা। তৃতীয় বাক্য তথ্য।',
+    content: 'দ্বিতীয় বাক্য পরিকল্পনা। তৃতীয় বাক্য তথ্য।',
     url: '#',
   },
 ]
 
-const renderSidebar = (overrides: Partial<{ viewMode: ViewMode; isCollapsed: boolean }> = {}) => {
+const renderPanel = (overrides: Partial<{ viewMode: ViewMode; isCollapsed: boolean }> = {}) => {
   const props = {
     articles: ARTICLES,
     selectedArticle: ARTICLES[0]!,
@@ -32,29 +32,30 @@ const renderSidebar = (overrides: Partial<{ viewMode: ViewMode; isCollapsed: boo
     onViewModeChange: vi.fn(),
     isCollapsed: false,
     onToggleCollapse: vi.fn(),
+    isPromptCollapsed: false,
     ...overrides,
   }
 
-  render(<ChunkVisualizer {...props} />)
+  render(<KnowledgeBase {...props} />)
   return props
 }
 
-describe('ChunkVisualizer sidebar', () => {
+describe('KnowledgeBase', () => {
   afterEach(() => {
     cleanup()
   })
 
   it('renders article list metadata and counts', () => {
-    renderSidebar()
+    renderPanel()
 
-    expect(screen.getByText('Knowledge Base')).toBeInTheDocument()
-    expect(screen.getByText('2 Articles')).toBeInTheDocument()
+    expect(screen.getAllByText('বার্তা ভাণ্ডার').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('2 Articles').length).toBeGreaterThan(0)
     expect(screen.getByTestId('article-card-1')).toHaveClass('bg-blue-50')
     expect(screen.getByTestId('article-card-2')).toHaveClass('bg-white')
   })
 
   it('invokes onSelectArticle when an article card is clicked', () => {
-    const props = renderSidebar()
+    const props = renderPanel()
 
     fireEvent.click(screen.getByTestId('article-card-2'))
 
@@ -62,35 +63,35 @@ describe('ChunkVisualizer sidebar', () => {
   })
 
   it('switches view modes via the toggle buttons', () => {
-    const props = renderSidebar()
+    const props = renderPanel()
 
     fireEvent.click(screen.getByTestId('view-toggle-chunks'))
     expect(props.onViewModeChange).toHaveBeenCalledWith('chunks')
   })
 
   it('renders chunk cards when the view mode is set to chunks', () => {
-    renderSidebar({ viewMode: 'chunks' })
+    renderPanel({ viewMode: 'chunks' })
 
     expect(screen.getByTestId('chunk-visualizer')).toBeInTheDocument()
     expect(screen.getAllByTestId('chunk-card').length).toBeGreaterThan(0)
   })
 
   it('renders collapsed mobile button when isCollapsed is true', () => {
-    const props = renderSidebar({ isCollapsed: true })
+    const props = renderPanel({ isCollapsed: true })
 
     const buttons = screen.getAllByRole('button', { expanded: false })
     const mobileButton = buttons.find((btn) => btn.classList.contains('md:hidden'))
     
     expect(mobileButton).toBeDefined()
     expect(mobileButton).toHaveClass('md:hidden')
-    expect(within(mobileButton!).getByText('Knowledge Base')).toBeInTheDocument()
+    expect(within(mobileButton!).getByText('বার্তা ভাণ্ডার')).toBeInTheDocument()
 
     fireEvent.click(mobileButton!)
     expect(props.onToggleCollapse).toHaveBeenCalled()
   })
 
   it('renders collapsed desktop button when isCollapsed is true', () => {
-    const props = renderSidebar({ isCollapsed: true })
+    const props = renderPanel({ isCollapsed: true })
 
     const desktopButtons = screen.getAllByRole('button', { expanded: false })
     const desktopButton = desktopButtons.find((btn) => btn.classList.contains('md:flex'))
@@ -111,7 +112,7 @@ describe('ChunkCards', () => {
   it('highlights any chunk that matches at least one trimmed keyword', () => {
     render(
       <ChunkCards
-        text="রেল সংবাদ অগ্রগতি চলছে। বিনিয়োগ পরিকল্পনা শক্তিশালী।"
+        text="রেল সংবাদ অগ্রগতি চলছে। বিনিয়োগ পরিকল্পনা শক্তিশালী।"
         highlightKeywords={['  রেল  ', 'অনুপস্থিত শব্দ']}
       />,
     )
@@ -123,7 +124,7 @@ describe('ChunkCards', () => {
   })
 
   it('renders chunk numbers, lengths, and keeps non-matching chunks neutral', () => {
-    render(<ChunkCards text="প্রথম বাক্য। দ্বিতীয় অংশ!" highlightKeywords={['দ্বিতীয়']} />)
+    render(<ChunkCards text="প্রথম বাক্য। দ্বিতীয় অংশ!" highlightKeywords={['দ্বিতীয়']} />)
 
     const cards = screen.getAllByTestId('chunk-card')
     const meta = within(cards[0]!).getByText(/Chunk/i)
@@ -134,7 +135,7 @@ describe('ChunkCards', () => {
   })
 
   it('renders neutral chunks when highlightKeywords prop is omitted', () => {
-    render(<ChunkCards text="প্রথম বাক্য? দ্বিতীয় বাক্য!" />)
+    render(<ChunkCards text="প্রথম বাক্য? দ্বিতীয় বাক্য!" />)
 
     expect(screen.getByTestId('chunk-visualizer')).toHaveAttribute('data-keyword-count', '0')
     screen.getAllByTestId('chunk-card').forEach((card) => {
@@ -175,7 +176,7 @@ describe('ChunkCards', () => {
   })
 
   it('ignores keywords that collapse to empty strings after trimming', () => {
-    render(<ChunkCards text="প্রথম বাক্য। দ্বিতীয় বাক্য?" highlightKeywords={['   ']} />)
+    render(<ChunkCards text="প্রথম বাক্য। দ্বিতীয় বাক্য?" highlightKeywords={['   ']} />)
 
     expect(screen.getByTestId('chunk-visualizer')).toHaveAttribute('data-keyword-count', '0')
     screen.getAllByTestId('chunk-card').forEach((card) => {

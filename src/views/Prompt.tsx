@@ -1,7 +1,9 @@
 import type { ChangeEvent, KeyboardEvent } from 'react'
 import { useEffect, useRef } from 'react'
 import { Bot, CheckCircle2, Cpu, Loader2, Search, Settings } from 'lucide-react'
-import type { PromptProps } from './types'
+import type { PromptProps } from '../types'
+import Panel from './Panel'
+import { promptConfig } from '../panelConfigs'
 
 export default function Prompt({
   chatHistory,
@@ -17,7 +19,10 @@ export default function Prompt({
   onSubmit,
   ragSteps,
   messagesEndRef,
-  isKnowledgeCollapsed,
+  isCollapsed,
+  onToggleCollapse,
+  isActiveTab = false,
+  isKnowledgeCollapsed = false,
 }: PromptProps) {
   const apiKeyFieldId = 'gemini-api-key'
   const settingsRef = useRef<HTMLDivElement>(null)
@@ -63,41 +68,42 @@ export default function Prompt({
 
   const isSubmitDisabled = isProcessing || !query.trim()
 
-  const desktopSpanClasses = isKnowledgeCollapsed ? 'md:col-start-2 md:col-end-3' : 'md:col-start-3 md:col-end-4'
+  // Mobile order only - desktop positioning handled by wrapper div in Home.tsx
+  // Apply grid column classes based on knowledge panel state
+  const desktopSpanClasses = isKnowledgeCollapsed
+    ? 'order-1 md:order-2 md:col-start-2 md:col-end-3'
+    : 'order-1 md:order-2 md:col-start-3 md:col-end-4'
+
+  const settingsButton = (
+    <button
+      type="button"
+      ref={settingsButtonRef}
+      onClick={(e) => {
+        e.stopPropagation()
+        onToggleSettings()
+      }}
+      data-testid="settings-toggle"
+      className={`p-2 rounded-full transition-colors ${
+        showSettings ? 'bg-slate-100 text-emerald-600' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+      }`}
+      aria-label="Toggle settings"
+    >
+      <Settings size={20} />
+    </button>
+  )
 
   return (
-    <div
-      className={`order-1 md:order-2 ${desktopSpanClasses} md:row-span-3 md:h-full md:max-h-full bg-white/90 border border-slate-200 rounded-2xl shadow-xl flex flex-col relative overflow-hidden`}
-      data-testid="chat-panel"
-      data-knowledge-collapsed={isKnowledgeCollapsed ? 'true' : 'false'}
-      role="region"
+    <div className={isActiveTab ? '' : 'hidden'}>
+      <Panel
+        config={promptConfig}
+        isCollapsed={isCollapsed}
+      onToggleCollapse={onToggleCollapse}
+      desktopSpanClasses={desktopSpanClasses}
+      collapsedSpanClasses=""
+      additionalHeaderActions={settingsButton}
+      containerClassName="bg-white/90 border border-slate-200 rounded-2xl shadow-xl"
+      dataAttributes={{ 'knowledge-collapsed': isKnowledgeCollapsed }}
     >
-      <header className="bg-white border-b border-slate-200 px-4 sm:px-6 py-4 flex flex-row items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10">
-            <img src="/logo.svg" alt="BartaAI Logo" className="w-full h-full object-contain" />
-          </div>
-          <div>
-            <h1 className="font-bold text-slate-800 text-lg">
-              <span className="text-emerald-600 font-light">বার্তাAI</span>
-            </h1>
-            <p className="text-[10px] text-slate-400 font-medium tracking-wide">খবর থেকে উত্তর</p>
-          </div>
-        </div>
-        <button
-          type="button"
-          ref={settingsButtonRef}
-          onClick={onToggleSettings}
-          data-testid="settings-toggle"
-          className={`p-2 rounded-full transition-colors ${
-            showSettings ? 'bg-slate-100 text-emerald-600' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
-          }`}
-          aria-label="Toggle settings"
-        >
-          <Settings size={20} />
-        </button>
-      </header>
-
       {showSettings && (
         <div
           ref={settingsRef}
@@ -263,9 +269,9 @@ export default function Prompt({
             >
               Example {index + 1}: {question}
             </button>
-          ))}
-        </div>
+          ))}        </div>
       </div>
+    </Panel>
     </div>
   )
 }

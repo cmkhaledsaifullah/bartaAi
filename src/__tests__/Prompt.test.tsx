@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import type { ComponentProps, MutableRefObject } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import Prompt from '../Prompt'
+import Prompt from '../views/Prompt'
 import type { ChatMessage, RagStep } from '../types'
 
 const PLACEHOLDER = 'Ask about the news (e.g., মেট্রোরেল বা ক্রিকেট সম্পর্কে কিছু বলুন)...'
@@ -54,7 +54,11 @@ const renderPrompt = (overrides: Partial<ComponentProps<typeof Prompt>> = {}) =>
     onQueryChange: vi.fn(),
     onSubmit: vi.fn(),
     ragSteps: [],
-    messagesEndRef: createMessagesEndRef(),    isKnowledgeCollapsed: false,    ...overrides,
+    messagesEndRef: createMessagesEndRef(),
+    isCollapsed: false,
+    onToggleCollapse: vi.fn(),
+    isKnowledgeCollapsed: false,
+    ...overrides,
   }
 
   render(<Prompt {...props} />)
@@ -111,7 +115,7 @@ describe('Prompt', () => {
   it('toggles the settings panel and updates the API key input', () => {
     const props = renderPrompt()
 
-    fireEvent.click(screen.getByTestId('settings-toggle'))
+    fireEvent.click(screen.getByTestId('settings-toggle-desktop'))
     expect(props.onToggleSettings).toHaveBeenCalledTimes(1)
 
     const apiProps = renderPrompt({ showSettings: true })
@@ -165,7 +169,7 @@ describe('Prompt', () => {
   it('does not close settings panel when clicking the settings button', () => {
     const props = renderPrompt({ showSettings: true })
 
-    const settingsButton = screen.getByTestId('settings-toggle')
+    const settingsButton = screen.getByTestId('settings-toggle-desktop')
     fireEvent.mouseDown(settingsButton)
     
     expect(props.onToggleSettings).not.toHaveBeenCalled()

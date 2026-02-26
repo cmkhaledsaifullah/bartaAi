@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import './App.css'
-import ChunkVisualizer from './ChunkVisualizer'
+import '../styles/App.css'
+import '../styles/Home.css'
+import KnowledgeBase from './KnowledgeBase'
 import Prompt from './Prompt'
 import {
   buildContextText,
@@ -11,7 +12,7 @@ import {
   extractSearchKeywords,
   resetRagStepsState,
   splitArticleIntoSentences,
-} from './homeHelpers'
+} from '../homeHelpers'
 import type {
   Article,
   ViewMode,
@@ -21,7 +22,9 @@ import type {
   RagStatus,
   GeminiResponse,
   HomeProps,
-} from './types'
+} from '../types'
+import Footer from './Footer'
+import Header from './Header'
 
 export default function Home({ articles }: HomeProps) {
   useEffect(() => {
@@ -49,22 +52,9 @@ export default function Home({ articles }: HomeProps) {
   ])
   const [isProcessing, setIsProcessing] = useState(false)
   const [ragSteps, setRagSteps] = useState<RagStep[]>([])
+  const [activeTab, setActiveTab] = useState<string>('prompt')
   const [isKnowledgeCollapsed, setIsKnowledgeCollapsed] = useState(false)
-  const [panelWidth, setPanelWidth] = useState(360)
-  const [isResizing, setIsResizing] = useState(false)
-  const [isDesktop, setIsDesktop] = useState(false)
-  const [resizeStartX, setResizeStartX] = useState(0)
-  const [resizeStartWidth, setResizeStartWidth] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
-
-  useEffect(() => {
-    const checkDesktop = () => {
-      setIsDesktop(window.innerWidth >= 768)
-    }
-    checkDesktop()
-    window.addEventListener('resize', checkDesktop)
-    return () => window.removeEventListener('resize', checkDesktop)
-  }, [])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -215,98 +205,12 @@ export default function Home({ articles }: HomeProps) {
     'How is Bangladesh doing in Cricket?',
   ]
 
-  const desktopColumnClasses = isKnowledgeCollapsed
-    ? 'md:grid-cols-[48px_minmax(0,1fr)] lg:grid-cols-[56px_minmax(0,1fr)] xl:grid-cols-[64px_minmax(0,1fr)]'
-    : ''
-
-  const gridStyle = isDesktop && !isKnowledgeCollapsed
-    ? { gridTemplateColumns: `${panelWidth}px 16px minmax(0, 1fr)` }
-    : {}
-
-  const toggleKnowledgePanel = () => {
-    setIsKnowledgeCollapsed((prev) => !prev)
-  }
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    setIsResizing(true)
-    setResizeStartX(e.clientX)
-    setResizeStartWidth(panelWidth)
-  }
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isResizing) return
-      const delta = e.clientX - resizeStartX
-      const newWidth = resizeStartWidth + delta
-      if (newWidth >= 280 && newWidth <= 600) {
-        setPanelWidth(newWidth)
-      }
-    }
-
-    const handleMouseUp = () => {
-      setIsResizing(false)
-    }
-
-    if (isResizing) {
-      document.addEventListener('mousemove', handleMouseMove)
-      document.addEventListener('mouseup', handleMouseUp)
-      document.body.style.cursor = 'col-resize'
-      document.body.style.userSelect = 'none'
-    } else {
-      document.body.style.cursor = ''
-      document.body.style.userSelect = ''
-    }
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove)
-      document.removeEventListener('mouseup', handleMouseUp)
-      document.body.style.cursor = ''
-      document.body.style.userSelect = ''
-    }
-  }, [isResizing, resizeStartX, resizeStartWidth])
-
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
-      <style data-testid="global-style-block">
-        {`
-          .font-bangla { font-family: 'Noto Sans Bengali', sans-serif; }
-          ::-webkit-scrollbar { width: 8px; height: 8px; }
-          ::-webkit-scrollbar-track { background: #f1f1f1; }
-          ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-          ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        `}
-      </style>
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
+      <Header activeTab={activeTab} onTabChange={setActiveTab} />
 
-      <div
-        className={`mx-auto max-w-7xl px-4 py-4 sm:px-6 md:px-8 lg:px-12 min-h-screen md:min-h-[100dvh] md:h-[100dvh] grid gap-4 md:gap-y-6 ${isKnowledgeCollapsed ? '' : 'md:gap-x-0'} md:grid-rows-[auto_minmax(0,1fr)_auto] ${desktopColumnClasses}`}
-        style={gridStyle}
-      >
-        <ChunkVisualizer
-          articles={articles}
-          selectedArticle={selectedArticle}
-          viewMode={viewMode}
-          highlightKeywords={[]}
-          onSelectArticle={setSelectedArticle}
-          onViewModeChange={setViewMode}
-          isCollapsed={isKnowledgeCollapsed}
-          onToggleCollapse={toggleKnowledgePanel}
-        />
-
-        {!isKnowledgeCollapsed && (
-          <div
-            className="hidden md:flex md:row-span-3 md:row-start-1 md:col-start-2 w-full cursor-col-resize hover:bg-slate-500/25 active:bg-slate-600/35 transition-colors items-center justify-center"
-            onMouseDown={handleMouseDown}
-            role="separator"
-            aria-label="Resize panels"
-          >
-            <div className="flex flex-row gap-[3px] px-2 py-3 rounded">
-              <div className="w-[2px] h-6 bg-slate-400 rounded-full" />
-              <div className="w-[2px] h-6 bg-slate-400 rounded-full" />
-              <div className="w-[2px] h-6 bg-slate-400 rounded-full" />
-            </div>
-          </div>
-        )}
-
+      <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 md:px-8 lg:px-12 pb-24 md:pb-4 flex-1">
+        {/* Both panels handle their own visibility based on activeTab */}
         <Prompt
           chatHistory={chatHistory}
           showSettings={showSettings}
@@ -321,9 +225,26 @@ export default function Home({ articles }: HomeProps) {
           onSubmit={handleSearch}
           ragSteps={ragSteps}
           messagesEndRef={messagesEndRef}
+          isCollapsed={false}
+          onToggleCollapse={() => {}}
+          isActiveTab={activeTab === 'prompt'}
           isKnowledgeCollapsed={isKnowledgeCollapsed}
         />
+
+        <KnowledgeBase
+          articles={articles}
+          selectedArticle={selectedArticle}
+          viewMode={viewMode}
+          highlightKeywords={[]}
+          onSelectArticle={setSelectedArticle}
+          onViewModeChange={setViewMode}
+          isCollapsed={isKnowledgeCollapsed}
+          onToggleCollapse={() => setIsKnowledgeCollapsed((prev) => !prev)}
+          isActiveTab={activeTab === 'knowledge'}
+        />
       </div>
+
+      <Footer activeTab={activeTab} onTabChange={setActiveTab} />
     </div>
   )
 }
