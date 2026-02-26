@@ -41,21 +41,30 @@ export default function Panel({
 }: PanelProps) {
   const Icon = config.icon
 
+  // Helper to safely get data-testid from props
+  const getDataTestId = (element: ReactNode): string | undefined => {
+    if (isValidElement(element)) {
+      const props = element.props as Record<string, unknown>
+      return typeof props['data-testid'] === 'string' ? props['data-testid'] : undefined
+    }
+    return undefined
+  }
+
   // Clone additionalHeaderActions to add unique test IDs for mobile and desktop
   const mobileHeaderActions = additionalHeaderActions && isValidElement(additionalHeaderActions)
-    ? cloneElement(additionalHeaderActions as ReactElement, {
-        'data-testid': (additionalHeaderActions.props as any)['data-testid'] 
-          ? `${(additionalHeaderActions.props as any)['data-testid']}-mobile`
+    ? cloneElement(additionalHeaderActions as ReactElement<Record<string, unknown>>, {
+        'data-testid': getDataTestId(additionalHeaderActions) 
+          ? `${getDataTestId(additionalHeaderActions)}-mobile`
           : undefined,
-      } as any)
+      } as Record<string, unknown>)
     : additionalHeaderActions
 
   const desktopHeaderActions = additionalHeaderActions && isValidElement(additionalHeaderActions)
-    ? cloneElement(additionalHeaderActions as ReactElement, {
-        'data-testid': (additionalHeaderActions.props as any)['data-testid'] 
-          ? `${(additionalHeaderActions.props as any)['data-testid']}-desktop`
+    ? cloneElement(additionalHeaderActions as ReactElement<Record<string, unknown>>, {
+        'data-testid': getDataTestId(additionalHeaderActions)
+          ? `${getDataTestId(additionalHeaderActions)}-desktop`
           : undefined,
-      } as any)
+      } as Record<string, unknown>)
     : additionalHeaderActions
 
   if (isCollapsed) {
