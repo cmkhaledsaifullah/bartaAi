@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import '../styles/App.css'
 import '../styles/Home.css'
-import KnowledgePanel from './KnowledgePanel'
+import KnowledgeBase from './KnowledgeBase'
 import Prompt from './Prompt'
 import {
   buildContextText,
@@ -52,37 +52,12 @@ export default function Home({ articles }: HomeProps) {
   ])
   const [isProcessing, setIsProcessing] = useState(false)
   const [ragSteps, setRagSteps] = useState<RagStep[]>([])
-  const [isKnowledgeCollapsed, setIsKnowledgeCollapsed] = useState(false)
-  const [panelWidth, setPanelWidth] = useState(360)
-  const [isResizing, setIsResizing] = useState(false)
-  const [isDesktop, setIsDesktop] = useState(false)
-  const [resizeStartX, setResizeStartX] = useState(0)
-  const [resizeStartWidth, setResizeStartWidth] = useState(0)
+  const [activeTab, setActiveTab] = useState<string>('prompt')
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
-  const gridRef = useRef<HTMLDivElement | null>(null)
-
-  useEffect(() => {
-    const checkDesktop = () => {
-      setIsDesktop(window.innerWidth >= 768)
-    }
-    checkDesktop()
-    window.addEventListener('resize', checkDesktop)
-    return () => window.removeEventListener('resize', checkDesktop)
-  }, [])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [chatHistory, isProcessing, ragSteps])
-
-  useEffect(() => {
-    if (gridRef.current) {
-      if (isDesktop && !isKnowledgeCollapsed) {
-        gridRef.current.style.setProperty('--panel-width', `${panelWidth}px`)
-      } else {
-        gridRef.current.style.removeProperty('--panel-width')
-      }
-    }
-  }, [panelWidth, isDesktop, isKnowledgeCollapsed])
 
   const addRagStep = (text: string, status: RagStatus) => {
     setRagSteps((prev) => [...prev, { text, status, id: `step-${Date.now()}-${Math.random()}` }])
@@ -229,85 +204,12 @@ export default function Home({ articles }: HomeProps) {
     'How is Bangladesh doing in Cricket?',
   ]
 
-  const desktopColumnClasses = isKnowledgeCollapsed
-    ? 'md:grid-cols-[48px_minmax(0,1fr)] lg:grid-cols-[56px_minmax(0,1fr)] xl:grid-cols-[64px_minmax(0,1fr)]'
-    : ''
-
-  const toggleKnowledgePanel = () => {
-    setIsKnowledgeCollapsed((prev) => !prev)
-  }
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    setIsResizing(true)
-    setResizeStartX(e.clientX)
-    setResizeStartWidth(panelWidth)
-  }
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isResizing) return
-      const delta = e.clientX - resizeStartX
-      const newWidth = resizeStartWidth + delta
-      if (newWidth >= 280 && newWidth <= 600) {
-        setPanelWidth(newWidth)
-      }
-    }
-
-    const handleMouseUp = () => {
-      setIsResizing(false)
-    }
-
-    if (isResizing) {
-      document.addEventListener('mousemove', handleMouseMove)
-      document.addEventListener('mouseup', handleMouseUp)
-      document.body.style.cursor = 'col-resize'
-      document.body.style.userSelect = 'none'
-    } else {
-      document.body.style.cursor = ''
-      document.body.style.userSelect = ''
-    }
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove)
-      document.removeEventListener('mouseup', handleMouseUp)
-      document.body.style.cursor = ''
-      document.body.style.userSelect = ''
-    }
-  }, [isResizing, resizeStartX, resizeStartWidth])
-
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
-      <Header />
-      <div
-        ref={gridRef}
-        className={`home-grid mx-auto max-w-7xl px-4 py-4 sm:px-6 md:px-8 lg:px-12 min-h-screen md:min-h-[100dvh] md:h-[100dvh] grid gap-4 md:gap-y-6 ${isKnowledgeCollapsed ? '' : 'md:gap-x-0'} md:grid-rows-[auto_minmax(0,1fr)_auto] ${desktopColumnClasses}`}
-      >
-        <KnowledgePanel
-          articles={articles}
-          selectedArticle={selectedArticle}
-          viewMode={viewMode}
-          highlightKeywords={[]}
-          onSelectArticle={setSelectedArticle}
-          onViewModeChange={setViewMode}
-          isCollapsed={isKnowledgeCollapsed}
-          onToggleCollapse={toggleKnowledgePanel}
-        />
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
+      <Header activeTab={activeTab} onTabChange={setActiveTab} />
 
-        {!isKnowledgeCollapsed && (
-          <div
-            className="hidden md:flex md:row-span-3 md:row-start-1 md:col-start-2 w-full cursor-col-resize hover:bg-slate-500/25 active:bg-slate-600/35 transition-colors items-center justify-center"
-            onMouseDown={handleMouseDown}
-            role="separator"
-            aria-label="Resize panels"
-          >
-            <div className="flex flex-row gap-[3px] px-2 py-3 rounded">
-              <div className="w-[2px] h-6 bg-slate-400 rounded-full" />
-              <div className="w-[2px] h-6 bg-slate-400 rounded-full" />
-              <div className="w-[2px] h-6 bg-slate-400 rounded-full" />
-            </div>
-          </div>
-        )}
-
+      <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 md:px-8 lg:px-12 pb-24 md:pb-4 flex-1">
+        {/* Both panels handle their own visibility based on activeTab */}
         <Prompt
           chatHistory={chatHistory}
           showSettings={showSettings}
@@ -322,10 +224,25 @@ export default function Home({ articles }: HomeProps) {
           onSubmit={handleSearch}
           ragSteps={ragSteps}
           messagesEndRef={messagesEndRef}
-          isKnowledgeCollapsed={isKnowledgeCollapsed}
+          isCollapsed={false}
+          onToggleCollapse={() => {}}
+          isActiveTab={activeTab === 'prompt'}
+        />
+
+        <KnowledgeBase
+          articles={articles}
+          selectedArticle={selectedArticle}
+          viewMode={viewMode}
+          highlightKeywords={[]}
+          onSelectArticle={setSelectedArticle}
+          onViewModeChange={setViewMode}
+          isCollapsed={false}
+          onToggleCollapse={() => {}}
+          isActiveTab={activeTab === 'knowledge'}
         />
       </div>
-      <Footer />
+
+      <Footer activeTab={activeTab} onTabChange={setActiveTab} />
     </div>
   )
 }

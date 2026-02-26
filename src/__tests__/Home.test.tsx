@@ -964,8 +964,8 @@ describe('Home', () => {
   it('toggles knowledge panel collapsed state', () => {
     renderHome()
     
-    const knowledgePanel = screen.getByTestId('knowledge-panel')
-    expect(knowledgePanel).toBeInTheDocument()
+    const knowledgeBase = screen.getByTestId('knowledge-base')
+    expect(knowledgeBase).toBeInTheDocument()
     
     const toggleButtons = screen.getAllByRole('button')
     const collapseButton = toggleButtons.find(btn => 

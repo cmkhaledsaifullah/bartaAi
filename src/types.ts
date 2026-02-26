@@ -56,7 +56,7 @@ export type ChunkCardsProps = {
   highlightKeywords?: string[]
 }
 
-export type KnowledgePanelProps = {
+export type KnowledgeBaseProps = {
   articles: Article[]
   selectedArticle: Article
   viewMode: ViewMode
@@ -65,6 +65,7 @@ export type KnowledgePanelProps = {
   onViewModeChange: (mode: ViewMode) => void
   isCollapsed: boolean
   onToggleCollapse: () => void
+  isActiveTab?: boolean
 }
 
 export type PromptProps = {
@@ -81,7 +82,9 @@ export type PromptProps = {
   onSubmit: () => void
   ragSteps: RagStep[]
   messagesEndRef: MutableRefObject<HTMLDivElement | null>
-  isKnowledgeCollapsed: boolean
+  isCollapsed: boolean
+  onToggleCollapse: () => void
+  isActiveTab?: boolean
 }
 
 export type HomeProps = {

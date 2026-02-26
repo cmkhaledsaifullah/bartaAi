@@ -1,6 +1,12 @@
 import { useState } from 'react'
+import PanelNavigation from '../components/PanelNavigation'
 
-export default function Header() {
+interface HeaderProps {
+  activeTab?: string
+  onTabChange?: (tab: string) => void
+}
+
+export default function Header({ activeTab, onTabChange }: HeaderProps) {
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(false)
 
   const handleSignIn = () => {
@@ -10,17 +16,22 @@ export default function Header() {
 
   return (
     <>
-      <header className="bg-white border-b border-slate-200 px-4 sm:px-6 py-4 flex flex-row items-center justify-between">
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+      <header className="bg-white border-b border-slate-200 px-4 sm:px-6 py-4 flex flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <div className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0">
             <img src="/logo.svg" alt="BartaAI Logo" className="w-full h-full object-contain" />
           </div>
           <h1 className="font-bold text-slate-800 text-xl sm:text-2xl flex-shrink-0">
             <span className="text-emerald-600 font-light">বার্তাAI</span>
           </h1>
-          <span className="text-slate-300 hidden sm:inline">—</span>
-          <p className="text-xs sm:text-sm text-slate-400 font-medium tracking-wide hidden sm:block truncate">খবর থেকে উত্তর</p>
         </div>
+
+        {/* Desktop Panel Buttons - Centered */}
+        {activeTab && onTabChange && (
+          <div className="hidden md:flex items-center gap-4 absolute left-1/2 transform -translate-x-1/2">
+            <PanelNavigation activeTab={activeTab} onTabChange={onTabChange} variant="desktop" />
+          </div>
+        )}
 
         {/* Desktop SignIn Button */}
         <button

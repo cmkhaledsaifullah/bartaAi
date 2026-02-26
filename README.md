@@ -48,7 +48,7 @@ src/
 ├─ views/                    # UI Components
 │  ├─ App.tsx               # Root wrapper + mock article seed + prop wiring
 │  ├─ Home.tsx              # BanglaNews RAG explorer UI (chat, knowledge panel, Gemini hook)
-│  ├─ KnowledgePanel.tsx    # Component for visualizing retrieved chunks and articles
+│  ├─ KnowledgeBase.tsx     # Component for visualizing retrieved chunks and articles
 │  ├─ Prompt.tsx            # Prompt input component with suggestions
 │  ├─ Header.tsx            # App header with sign-in button
 │  └─ Footer.tsx            # App footer

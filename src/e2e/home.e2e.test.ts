@@ -84,12 +84,12 @@ describe('BartaAI E2E', () => {
     await openApp(MOBILE_VIEWPORT)
 
     const chatPanel = await driver.findElement(By.css('[data-testid="chat-panel"]'))
-    const knowledgePanel = await driver.findElement(By.css('[data-testid="knowledge-panel"]'))
+    const knowledgeBase = await driver.findElement(By.css('[data-testid="knowledge-base"]'))
 
     const layoutInfo = (await driver.executeScript(
       'return { chat: arguments[0].getBoundingClientRect(), knowledge: arguments[1].getBoundingClientRect(), innerWidth: window.innerWidth }',
       chatPanel,
-      knowledgePanel,
+      knowledgeBase,
     )) as {
       chat: { top: number; bottom: number; width: number }
       knowledge: { top: number; bottom: number; width: number }
@@ -99,7 +99,7 @@ describe('BartaAI E2E', () => {
     expect(layoutInfo.innerWidth).toBeLessThanOrEqual(600)
     expect(layoutInfo.knowledge.top).toBeGreaterThan(layoutInfo.chat.bottom - 4)
 
-    await driver.executeScript('arguments[0].scrollIntoView({ behavior: "instant", block: "start" })', knowledgePanel)
+    await driver.executeScript('arguments[0].scrollIntoView({ behavior: "instant", block: "start" })', knowledgeBase)
 
     const previewPanel = await driver.findElement(By.css('[data-testid="article-preview-panel"]'))
     await driver.wait(until.elementIsVisible(previewPanel), DEFAULT_WAIT_MS)
@@ -126,9 +126,9 @@ describe('BartaAI E2E', () => {
     it('toggles between article and chunk views on mobile', async () => {
       await openApp(MOBILE_VIEWPORT)
 
-      // Scroll to knowledge panel
-      const knowledgePanel = await driver.findElement(By.css('[data-testid="knowledge-panel"]'))
-      await driver.executeScript('arguments[0].scrollIntoView({ behavior: "instant", block: "start" })', knowledgePanel)
+      // Scroll to knowledge base
+      const knowledgeBase = await driver.findElement(By.css('[data-testid="knowledge-base"]'))
+      await driver.executeScript('arguments[0].scrollIntoView({ behavior: "instant", block: "start" })', knowledgeBase)
 
       // Click chunks toggle
       const chunksToggle = await driver.findElement(By.css('[data-testid="view-toggle-chunks"]'))
@@ -264,9 +264,9 @@ describe('BartaAI E2E', () => {
     it('clicks on article cards to view details on mobile', async () => {
       await openApp(MOBILE_VIEWPORT)
 
-      // Scroll to knowledge panel
-      const knowledgePanel = await driver.findElement(By.css('[data-testid="knowledge-panel"]'))
-      await driver.executeScript('arguments[0].scrollIntoView({ behavior: "instant", block: "start" })', knowledgePanel)
+      // Scroll to knowledge base
+      const knowledgeBase = await driver.findElement(By.css('[data-testid="knowledge-base"]'))
+      await driver.executeScript('arguments[0].scrollIntoView({ behavior: "instant", block: "start" })', knowledgeBase)
 
       // Click on an article card
       const articleCard = await driver.findElement(By.css('[data-testid="article-card-1"]'))

@@ -1,9 +1,20 @@
-import { ChevronDown, Database, Split } from 'lucide-react'
+import { Database, Split } from 'lucide-react'
 import { splitArticleIntoSentences } from '../homeHelpers'
-import type { ChunkCardsProps, KnowledgePanelProps } from '../types'
-import '../styles/KnowledgePanel.css'
+import type { ChunkCardsProps, KnowledgeBaseProps } from '../types'
+import Panel, { type PanelConfig } from './Panel'
 
-export default function KnowledgePanel({
+export const knowledgeBaseConfig: PanelConfig = {
+  icon: Database,
+  title: 'বার্তা ভাণ্ডার',
+  bgColorClass: 'bg-orange-50',
+  borderColorClass: 'border-orange-100',
+  iconColorClass: 'text-orange-500',
+  textColorClass: 'text-orange-800',
+  testId: 'knowledge-base',
+  ariaLabel: 'Knowledge base',
+}
+
+export default function KnowledgeBase({
   articles,
   selectedArticle,
   viewMode,
@@ -12,66 +23,27 @@ export default function KnowledgePanel({
   onViewModeChange,
   isCollapsed,
   onToggleCollapse,
-}: KnowledgePanelProps) {
-  if (isCollapsed) {
-    return (
-      <div
-        className="order-2 md:order-1 flex flex-col gap-3 md:gap-0 md:row-span-3 md:h-full md:justify-start md:items-start md:pb-4 md:col-start-1 md:col-end-2 mb-4 md:mb-0"
-        data-testid="knowledge-panel"
-        role="complementary"
-      >
-        <button
-          type="button"
-          onClick={onToggleCollapse}
-          className="md:hidden w-full rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 shadow-sm flex items-center justify-between"
-          aria-expanded="false"
-        >
-          <div className="flex items-center gap-2 text-orange-800">
-            <Database size={18} className="text-orange-500" />
-            <h2 className="font-semibold text-sm uppercase tracking-wide">বার্তা ভাণ্ডার</h2>
-          </div>
-          <ChevronDown size={18} className="text-emerald-600" />
-        </button>
+  isActiveTab = false,
+}: KnowledgeBaseProps) {
+  const headerBadge = (
+    <div className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full font-medium">
+      {articles.length} Articles
+    </div>
+  )
 
-        <button
-          type="button"
-          onClick={onToggleCollapse}
-          className="hidden md:flex flex-col items-center justify-center rounded-2xl border border-orange-200 bg-orange-50 shadow-sm hover:border-emerald-300 hover:bg-white transition-colors px-3 py-4 w-full vertical-text"
-          aria-expanded="false"
-        >
-          <span className="flex items-center gap-2 text-orange-800">
-            <Database size={18} className="text-orange-500 rotate-90" />
-            <span className="font-semibold text-sm uppercase tracking-wide">বার্তা ভাণ্ডার</span>
-          </span>
-        </button>
-      </div>
-    )
-  }
+  // Mobile order only - desktop positioning handled by wrapper div in Home.tsx
+  const desktopSpanClasses = 'order-2 md:order-1'
 
   return (
-    <div
-      className="order-2 md:order-1 bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col overflow-hidden md:row-span-3 md:h-full md:col-start-1 md:col-end-2"
-      data-testid="knowledge-panel"
-      role="complementary"
-    >
-      <button
-        type="button"
-        onClick={onToggleCollapse}
-        className="w-full text-left p-4 border-b border-orange-100 bg-orange-50 flex justify-between items-center cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
-        aria-label="Collapse knowledge panel"
-        aria-expanded="true"
+    <div className={isActiveTab ? '' : 'hidden'}>
+      <Panel
+        config={knowledgeBaseConfig}
+        isCollapsed={isCollapsed}
+        onToggleCollapse={onToggleCollapse}
+        desktopSpanClasses={desktopSpanClasses}
+        collapsedSpanClasses=""
+        headerBadge={headerBadge}
       >
-        <div className="flex items-center gap-2 text-orange-800">
-          <Database size={18} className="text-orange-500" />
-          <h2 className="font-semibold text-sm uppercase tracking-wide">বার্তা ভাণ্ডার</h2>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full font-medium">
-            {articles.length} Articles
-          </div>
-        </div>
-      </button>
-
       <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3 sm:space-y-4">
         {articles.map((article) => {
           const isSelected = selectedArticle.id === article.id
@@ -139,6 +111,7 @@ export default function KnowledgePanel({
           </div>
         </div>
       </div>
+    </Panel>
     </div>
   )
 }
