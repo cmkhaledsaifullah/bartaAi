@@ -1796,6 +1796,21 @@ describe('Home', () => {
     expect(remainingLinks.length).toBe(0)
   })
 
+  it('removes Bengali font link on component unmount', () => {
+    const { unmount } = renderHome()
+
+    // Font link should be added
+    const linksBeforeUnmount = document.querySelectorAll('link[href*="Noto+Sans+Bengali"]')
+    expect(linksBeforeUnmount.length).toBeGreaterThan(0)
+
+    // Unmount and verify cleanup function was called
+    unmount()
+
+    // Font link should be removed by cleanup function
+    const linksAfterUnmount = document.querySelectorAll('link[href*="Noto+Sans+Bengali"]')
+    expect(linksAfterUnmount).toHaveLength(0)
+  })
+
   it('verifies scroll behavior triggers on chat history changes', async () => {
     renderHome()
     const mockScrollIntoView = vi.fn()
@@ -1818,6 +1833,17 @@ describe('Home', () => {
     // Component should render without errors
     // If ragSteps was ["Stryker was here"], TypeScript would catch type error in runtime
     expect(screen.getByTestId('chat-panel')).toBeInTheDocument()
+  })
+
+  it('calls empty onToggleCollapse function on Prompt panel when desktop collapse button is clicked', () => {
+    renderHome()
+    
+    // Find the Prompt panel collapse button (desktop header button with aria-label from config)
+    const chatPanel = screen.getByTestId('chat-panel')
+    const collapseButton = within(chatPanel).getByRole('button', { name: 'Prompt panel' })
+    
+    // Click should not throw even though the function is empty
+    expect(() => fireEvent.click(collapseButton)).not.toThrow()
   })
 
   // Kill isDesktop initial state and desktop detection mutants

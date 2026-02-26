@@ -15,7 +15,7 @@ export default mergeConfig(baseConfig, {
       reporter: ['text', 'json-summary', 'html'],
       reportsDirectory: './coverage',
       include: ['src/**/*.{ts,tsx}'],
-      exclude: ['src/main.tsx', 'src/e2e/**'],
+      exclude: ['src/main.tsx', 'src/e2e/**', 'src/**/*.test.{ts,tsx}', 'src/__tests__/**', 'src/test/**'],
       thresholds: {
         statements: 95,
         branches: 95,
