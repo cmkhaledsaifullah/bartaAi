@@ -1,6 +1,12 @@
 /** @type {import('@stryker-mutator/api/core').PartialStrykerOptions} */
 export default {
-  mutate: ['src/Home.tsx', 'src/Prompt.tsx'],
+  mutate: [
+    'src/**/*.{ts,tsx}',
+    '!src/**/*.test.{ts,tsx}',
+    '!src/**/__tests__/**',
+    '!src/main.tsx',
+    '!src/test/**',
+  ],
   testRunner: 'vitest',
   reporters: ['html', 'clear-text', 'progress'],
   coverageAnalysis: 'perTest',

@@ -348,4 +348,271 @@ describe('Panel', () => {
       expect(mobileHeader).toBeInTheDocument()
     })
   })
+
+  describe('mutant killing tests', () => {
+    it('verifies collapsed button className includes textColor and gap', () => {
+      const onToggleCollapse = vi.fn()
+      const { container } = render(
+        <Panel
+          config={mockConfig}
+          isCollapsed={true}
+          onToggleCollapse={onToggleCollapse}
+          desktopSpanClasses="col-span-1"
+        >
+          <div>Content</div>
+        </Panel>
+      )
+
+      // Find the span with the icon and text
+      const spans = container.querySelectorAll('span')
+      const iconSpan = Array.from(spans).find(span => span.textContent?.includes('Test Panel'))
+      expect(iconSpan?.className).toContain('flex')
+      expect(iconSpan?.className).toContain('items-center')
+      expect(iconSpan?.className).toContain('gap-2')
+      expect(iconSpan?.className).toContain('text-emerald-800')
+    })
+
+    it('verifies aria-label uses OR operator not AND operator', () => {
+      const onToggleCollapse = vi.fn()
+      const configWithoutAriaLabel = { ...mockConfig, ariaLabel: undefined }
+      render(
+        <Panel
+          config={configWithoutAriaLabel}
+          isCollapsed={true}
+          onToggleCollapse={onToggleCollapse}
+          desktopSpanClasses="col-span-1"
+        >
+          <div>Content</div>
+        </Panel>
+      )
+
+      // Should use fallback when ariaLabel is undefined (OR logic)
+      const buttons = screen.getAllByRole('button', { name: 'Expand Test Panel' })
+      expect(buttons.length).toBeGreaterThan(0)
+    })
+
+    it('verifies aria-label template literal is not empty', () => {
+      const onToggleCollapse = vi.fn()
+      const configWithoutAriaLabel = { ...mockConfig, ariaLabel: undefined }
+      render(
+        <Panel
+          config={configWithoutAriaLabel}
+          isCollapsed={true}
+          onToggleCollapse={onToggleCollapse}
+          desktopSpanClasses="col-span-1"
+        >
+          <div>Content</div>
+        </Panel>
+      )
+
+      // Aria label should not be empty string
+      const buttons = screen.getAllByRole('button')
+      const ariaLabels = buttons.map(b => b.getAttribute('aria-label'))
+      expect(ariaLabels.some(label => label && label !== '')).toBe(true)
+    })
+
+    it('verifies containerClassName has default value not empty', () => {
+      const onToggleCollapse = vi.fn()
+      render(
+        <Panel
+          config={mockConfig}
+          isCollapsed={false}
+          onToggleCollapse={onToggleCollapse}
+          desktopSpanClasses="col-span-2"
+        >
+          <div>Content</div>
+        </Panel>
+      )
+
+      const panel = screen.getByTestId('test-panel')
+      // Should have default border and background classes
+      expect(panel.className).toContain('border')
+      expect(panel.className).toContain('rounded')
+    })
+
+    it('verifies conditional expressions for aria-label use correct booleans', () => {
+      const onToggleCollapse = vi.fn()
+      
+      // With ariaLabel provided
+      const { unmount } = render(
+        <Panel
+          config={mockConfig}
+          isCollapsed={true}
+          onToggleCollapse={onToggleCollapse}
+          desktopSpanClasses="col-span-1"
+        >
+          <div>Content</div>
+        </Panel>
+      )
+      
+      expect(screen.getAllByRole('button', { name: 'Test Panel Area' }).length).toBeGreaterThan(0)
+      
+      unmount()
+      
+      // Without ariaLabel
+      const configWithoutAriaLabel = { ...mockConfig, ariaLabel: undefined }
+      render(
+        <Panel
+          config={configWithoutAriaLabel}
+          isCollapsed={true}
+          onToggleCollapse={onToggleCollapse}
+          desktopSpanClasses="col-span-1"
+        >
+          <div>Content</div>
+        </Panel>
+      )
+      
+      expect(screen.getAllByRole('button', { name: 'Expand Test Panel' }).length).toBeGreaterThan(0)
+    })
+
+    it('verifies collapsed button inner div has non-empty className with textColorClass', () => {
+      const onToggleCollapse = vi.fn()
+      const { container } = render(
+        <Panel
+          config={mockConfig}
+          isCollapsed={true}
+          onToggleCollapse={onToggleCollapse}
+          desktopSpanClasses="col-span-1"
+        >
+          <div>Content</div>
+        </Panel>
+      )
+
+      // Mobile button inner div
+      const mobileButton = container.querySelector('.md\\:hidden.w-full')
+      const mobileInnerDiv = mobileButton?.querySelector('.flex.items-center.gap-2')
+      expect(mobileInnerDiv).toBeInTheDocument()
+      expect(mobileInnerDiv?.className).toContain('text-emerald-800')
+    })
+
+    it('verifies collapsed icon has non-empty className with rotation', () => {
+      const onToggleCollapse = vi.fn()
+      const { container } = render(
+        <Panel
+          config={mockConfig}
+          isCollapsed={true}
+          onToggleCollapse={onToggleCollapse}
+          desktopSpanClasses="col-span-1"
+        >
+          <div>Content</div>
+        </Panel>
+      )
+
+      // Desktop button icon should have rotate-90 class
+      const desktopButton = container.querySelector('.hidden.md\\:flex.flex-col')
+      const icon = desktopButton?.querySelector('svg.rotate-90')
+      expect(icon).toBeInTheDocument()
+      // SVGs use class attribute, not className property
+      const iconClassAttr = icon?.getAttribute('class')
+      expect(iconClassAttr).toContain('text-emerald-600')
+      expect(iconClassAttr).toContain('rotate-90')
+    })
+
+    it('verifies expanded mobile header has non-empty className', () => {
+      const onToggleCollapse = vi.fn()
+      const { container } = render(
+        <Panel
+          config={mockConfig}
+          isCollapsed={false}
+          onToggleCollapse={onToggleCollapse}
+          desktopSpanClasses="col-span-2"
+        >
+          <div>Content</div>
+        </Panel>
+      )
+
+      const mobileHeader = container.querySelector('.md\\:hidden.w-full.p-4.border-b')
+      expect(mobileHeader).toBeInTheDocument()
+      expect(mobileHeader?.className).toContain('bg-emerald-50')
+      expect(mobileHeader?.className).toContain('border-emerald-200')
+      expect(mobileHeader?.className).toContain('flex')
+      expect(mobileHeader?.className).toContain('justify-between')
+    })
+
+    it('verifies expanded desktop header has non-empty className', () => {
+      const onToggleCollapse = vi.fn()
+      const { container } = render(
+        <Panel
+          config={mockConfig}
+          isCollapsed={false}
+          onToggleCollapse={onToggleCollapse}
+          desktopSpanClasses="col-span-2"
+        >
+          <div>Content</div>
+        </Panel>
+      )
+
+      const desktopHeader = container.querySelector('.hidden.md\\:flex.w-full.text-left.p-4.border-b')
+      expect(desktopHeader).toBeInTheDocument()
+      expect(desktopHeader?.className).toContain('bg-emerald-50')
+      expect(desktopHeader?.className).toContain('border-emerald-200')
+      expect(desktopHeader?.className).toContain('justify-between')
+    })
+
+    it('verifies expanded desktop button has non-empty className with textColorClass', () => {
+      const onToggleCollapse = vi.fn()
+      render(
+        <Panel
+          config={mockConfig}
+          isCollapsed={false}
+          onToggleCollapse={onToggleCollapse}
+          desktopSpanClasses="col-span-2"
+        >
+          <div>Content</div>
+        </Panel>
+      )
+
+      const collapseButton = screen.getByRole('button', { name: 'Test Panel Area' })
+      expect(collapseButton.className).toContain('flex')
+      expect(collapseButton.className).toContain('items-center')
+      expect(collapseButton.className).toContain('gap-2')
+      expect(collapseButton.className).toContain('text-emerald-800')
+      expect(collapseButton.className).toContain('cursor-pointer')
+    })
+
+    it('verifies aria-label template literal includes title text', () => {
+      const onToggleCollapse = vi.fn()
+      const configWithoutAriaLabel = { ...mockConfig, ariaLabel: undefined }
+      
+      // Collapsed state
+      const { unmount } = render(
+        <Panel
+          config={configWithoutAriaLabel}
+          isCollapsed={true}
+          onToggleCollapse={onToggleCollapse}
+          desktopSpanClasses="col-span-1"
+        >
+          <div>Content</div>
+        </Panel>
+      )
+
+      const buttons = screen.getAllByRole('button')
+      buttons.forEach(button => {
+        const ariaLabel = button.getAttribute('aria-label')
+        expect(ariaLabel).toBeTruthy()
+        expect(ariaLabel).toContain('Test Panel')
+        expect(ariaLabel).not.toBe('')
+      })
+
+      unmount()
+
+      // Expanded state
+      render(
+        <Panel
+          config={configWithoutAriaLabel}
+          isCollapsed={false}
+          onToggleCollapse={onToggleCollapse}
+          desktopSpanClasses="col-span-2"
+        >
+          <div>Content</div>
+        </Panel>
+      )
+
+      const collapseButton = screen.getByRole('button', { name: /Test Panel/i })
+      const ariaLabel = collapseButton.getAttribute('aria-label')
+      expect(ariaLabel).toContain('Collapse')
+      expect(ariaLabel).toContain('Test Panel')
+      expect(ariaLabel).not.toBe('')
+    })
+  })
 })

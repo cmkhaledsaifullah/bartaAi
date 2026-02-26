@@ -139,4 +139,35 @@ describe('Header', () => {
     const overlay = container.querySelector('.bg-black.bg-opacity-50')
     expect(overlay).toBeInTheDocument()
   })
+
+  it('does not render panel navigation when only activeTab is provided', () => {
+    const { container } = render(<Header activeTab="prompt" />)
+    
+    // Panel navigation container should not exist
+    const navContainer = container.querySelector('.hidden.md\\:flex')
+    expect(navContainer).toBeNull()
+  })
+
+  it('does not render panel navigation when only onTabChange is provided', () => {
+    const { container } = render(<Header onTabChange={vi.fn()} />)
+    
+    // Panel navigation container should not exist
+    const navContainer = container.querySelector('.hidden.md\\:flex')
+    expect(navContainer).toBeNull()
+  })
+
+  it('verifies both activeTab and onTabChange are required for navigation', () => {
+    const onTabChange = vi.fn()
+    
+    // Without both props
+    const { container: container1 } = render(<Header />)
+    expect(container1.querySelector('[data-testid="panel-nav-desktop"]')).toBeNull()
+    
+    cleanup()
+    
+    // With both props
+    render(<Header activeTab="prompt" onTabChange={onTabChange} />)
+    const navigation = screen.queryByRole('navigation')
+    expect(navigation).toBeInTheDocument()
+  })
 })

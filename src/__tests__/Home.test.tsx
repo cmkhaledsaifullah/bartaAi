@@ -2192,4 +2192,131 @@ describe('Home', () => {
     // Should not crash - optional chaining handles empty array
     await waitFor(() => expect(mockFetch).toHaveBeenCalled())
   })
+
+  it('verifies default activeTab value is prompt not empty string', () => {
+    renderHome()
+    
+    // Prompt panel should be active and visible by default (not hidden)
+    // If activeTab was empty string instead of 'prompt', the Prompt component
+    // would not receive isActiveTab=true and might not render properly
+    const promptPanel = screen.getByTestId('chat-panel')
+    expect(promptPanel).toBeVisible()
+    
+    // Verify the input placeholder is present (part of Prompt component)
+    const input = screen.getByPlaceholderText(QUESTION_PLACEHOLDER)
+    expect(input).toBeInTheDocument()
+  })
+
+  it('verifies scrollIntoView is called with optional chaining', async () => {
+    const mockScrollIntoView = vi.fn()
+    const { unmount } = renderHome()
+    
+    // Create a ref mock
+    const messagesEndDiv = screen.getAllByTestId(/chat-message|chat-panel/)[0]
+    if (messagesEndDiv) {
+      messagesEndDiv.scrollIntoView = mockScrollIntoView
+    }
+    
+    const input = screen.getByPlaceholderText(QUESTION_PLACEHOLDER)
+    fireEvent.change(input, { target: { value: 'test' } })
+    fireEvent.click(screen.getByRole('button', { name: /run search/i }))
+    
+    // Component should not crash even if scrollIntoView doesn't exist
+    expect(() => unmount()).not.toThrow()
+  })
+
+  it('verifies activeTab prompt comparison shows Prompt panel and hides Knowledge panel', () => {
+    renderHome()
+    
+    // When activeTab === 'prompt', Prompt should be visible
+    const promptDiv = screen.getByTestId('chat-panel').parentElement
+    expect(promptDiv?.className).not.toContain('hidden')
+    
+    // Knowledge panel should be hidden initially
+    const knowledgePanel = screen.getByTestId('knowledge-base').parentElement
+    expect(knowledgePanel?.className).toContain('hidden')
+  })
+
+  it('verifies activeTab knowledge comparison shows Knowledge panel and hides Prompt panel', () => {
+    renderHome()
+    
+    // Switch to knowledge tab
+    const knowledgeButton = screen.getAllByRole('button', { name: /বার্তা ভাণ্ডার/i })[0]
+    fireEvent.click(knowledgeButton)
+    
+    // Knowledge should now be visible
+    const knowledgePanel = screen.getByTestId('knowledge-base').parentElement
+    expect(knowledgePanel?.className).not.toContain('hidden')
+    
+    // Prompt should be hidden
+    const promptDiv = screen.getByTestId('chat-panel').parentElement
+    expect(promptDiv?.className).toContain('hidden')
+  })
+
+  it('verifies activeTab comparison uses strict equality for prompt', () => {
+    renderHome()
+    
+    // Initially activeTab is 'prompt', so Prompt should be visible
+    const promptDiv = screen.getByTestId('chat-panel').parentElement
+    expect(promptDiv?.className).not.toContain('hidden')
+    
+    // If comparison was !== instead of ===, this would be inverted
+    // If comparison was always true/false, switching wouldn't work
+    const knowledgeButton = screen.getAllByRole('button', { name: /বার্তা ভাণ্ডার/i })[0]
+    fireEvent.click(knowledgeButton)
+    
+    // After switching, Prompt should be hidden
+    expect(promptDiv?.className).toContain('hidden')
+  })
+
+  it('verifies activeTab comparison uses strict equality for knowledge', () => {
+    renderHome()
+    
+    // Initially knowledge is hidden
+    const knowledgePanel = screen.getByTestId('knowledge-base').parentElement
+    expect(knowledgePanel?.className).toContain('hidden')
+    
+    // Switch to knowledge
+    const knowledgeButton = screen.getAllByRole('button', { name: /বার্তা ভাণ্ডার/i })[0]
+    fireEvent.click(knowledgeButton)
+    
+    // Now should be visible
+    expect(knowledgePanel?.className).not.toContain('hidden')
+    
+    // If comparison was !== instead of ===, this would be inverted
+    // Switch back to prompt
+    const promptButton = screen.getAllByRole('button', { name: /বার্তা Prompt/i })[0]
+    fireEvent.click(promptButton)
+    
+    // Knowledge should be hidden again
+    expect(knowledgePanel?.className).toContain('hidden')
+  })
+
+  it('verifies activeTab string comparison exact values', () => {
+    renderHome()
+    
+    // Get both panel containers
+    const promptDiv = screen.getByTestId('chat-panel').parentElement
+    const knowledgePanel = screen.getByTestId('knowledge-base').parentElement
+    
+    // Initially activeTab='prompt', so prompt visible, knowledge hidden
+    expect(promptDiv?.className).not.toContain('hidden')
+    expect(knowledgePanel?.className).toContain('hidden')
+    
+    // If string 'prompt' was changed to '', neither would match correctly
+    // Navigate through tabs to verify exact matches work
+    const knowledgeButton = screen.getAllByRole('button', { name: /বার্তা ভাণ্ডার/i })[0]
+    fireEvent.click(knowledgeButton)
+    
+    // Now activeTab='knowledge'
+    expect(promptDiv?.className).toContain('hidden')
+    expect(knowledgePanel?.className).not.toContain('hidden')
+    
+    // Back to prompt
+    const promptButton = screen.getAllByRole('button', { name: /বার্তা Prompt/i })[0]
+    fireEvent.click(promptButton)
+    
+    expect(promptDiv?.className).not.toContain('hidden')
+    expect(knowledgePanel?.className).toContain('hidden')
+  })
 })

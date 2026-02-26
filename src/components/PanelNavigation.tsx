@@ -14,7 +14,7 @@ export default function PanelNavigation({ activeTab, onTabChange, variant }: Pan
   const isDesktop = variant === 'desktop'
 
   return (
-    <>
+    <nav role="navigation" data-variant={variant}>
       {panelRegistry.map((panel) => {
         const isActive = activeTab === panel.id
         const Icon = panel.icon
@@ -37,6 +37,6 @@ export default function PanelNavigation({ activeTab, onTabChange, variant }: Pan
           </button>
         )
       })}
-    </>
+    </nav>
   )
 }
