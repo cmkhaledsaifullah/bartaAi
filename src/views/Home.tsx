@@ -53,6 +53,7 @@ export default function Home({ articles }: HomeProps) {
   const [isProcessing, setIsProcessing] = useState(false)
   const [ragSteps, setRagSteps] = useState<RagStep[]>([])
   const [activeTab, setActiveTab] = useState<string>('prompt')
+  const [isKnowledgeCollapsed, setIsKnowledgeCollapsed] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -227,6 +228,7 @@ export default function Home({ articles }: HomeProps) {
           isCollapsed={false}
           onToggleCollapse={() => {}}
           isActiveTab={activeTab === 'prompt'}
+          isKnowledgeCollapsed={isKnowledgeCollapsed}
         />
 
         <KnowledgeBase
@@ -236,8 +238,8 @@ export default function Home({ articles }: HomeProps) {
           highlightKeywords={[]}
           onSelectArticle={setSelectedArticle}
           onViewModeChange={setViewMode}
-          isCollapsed={false}
-          onToggleCollapse={() => {}}
+          isCollapsed={isKnowledgeCollapsed}
+          onToggleCollapse={() => setIsKnowledgeCollapsed((prev) => !prev)}
           isActiveTab={activeTab === 'knowledge'}
         />
       </div>

@@ -48,8 +48,8 @@ describe('KnowledgeBase', () => {
   it('renders article list metadata and counts', () => {
     renderPanel()
 
-    expect(screen.getByText('Knowledge Base')).toBeInTheDocument()
-    expect(screen.getByText('2 Articles')).toBeInTheDocument()
+    expect(screen.getAllByText('বার্তা ভাণ্ডার').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('2 Articles').length).toBeGreaterThan(0)
     expect(screen.getByTestId('article-card-1')).toHaveClass('bg-blue-50')
     expect(screen.getByTestId('article-card-2')).toHaveClass('bg-white')
   })
@@ -84,7 +84,7 @@ describe('KnowledgeBase', () => {
     
     expect(mobileButton).toBeDefined()
     expect(mobileButton).toHaveClass('md:hidden')
-    expect(within(mobileButton!).getByText('Knowledge Base')).toBeInTheDocument()
+    expect(within(mobileButton!).getByText('বার্তা ভাণ্ডার')).toBeInTheDocument()
 
     fireEvent.click(mobileButton!)
     expect(props.onToggleCollapse).toHaveBeenCalled()

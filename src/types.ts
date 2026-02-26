@@ -85,6 +85,7 @@ export type PromptProps = {
   isCollapsed: boolean
   onToggleCollapse: () => void
   isActiveTab?: boolean
+  isKnowledgeCollapsed?: boolean
 }
 
 export type HomeProps = {

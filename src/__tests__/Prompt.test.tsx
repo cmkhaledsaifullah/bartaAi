@@ -111,7 +111,7 @@ describe('Prompt', () => {
   it('toggles the settings panel and updates the API key input', () => {
     const props = renderPrompt()
 
-    fireEvent.click(screen.getByTestId('settings-toggle'))
+    fireEvent.click(screen.getByTestId('settings-toggle-desktop'))
     expect(props.onToggleSettings).toHaveBeenCalledTimes(1)
 
     const apiProps = renderPrompt({ showSettings: true })
@@ -165,7 +165,7 @@ describe('Prompt', () => {
   it('does not close settings panel when clicking the settings button', () => {
     const props = renderPrompt({ showSettings: true })
 
-    const settingsButton = screen.getByTestId('settings-toggle')
+    const settingsButton = screen.getByTestId('settings-toggle-desktop')
     fireEvent.mouseDown(settingsButton)
     
     expect(props.onToggleSettings).not.toHaveBeenCalled()

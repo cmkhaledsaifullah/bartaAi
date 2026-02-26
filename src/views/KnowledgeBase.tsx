@@ -1,18 +1,8 @@
-import { Database, Split } from 'lucide-react'
+import { Split } from 'lucide-react'
 import { splitArticleIntoSentences } from '../homeHelpers'
 import type { ChunkCardsProps, KnowledgeBaseProps } from '../types'
-import Panel, { type PanelConfig } from './Panel'
-
-export const knowledgeBaseConfig: PanelConfig = {
-  icon: Database,
-  title: 'বার্তা ভাণ্ডার',
-  bgColorClass: 'bg-orange-50',
-  borderColorClass: 'border-orange-100',
-  iconColorClass: 'text-orange-500',
-  textColorClass: 'text-orange-800',
-  testId: 'knowledge-base',
-  ariaLabel: 'Knowledge base',
-}
+import Panel from './Panel'
+import { knowledgeBaseConfig } from '../panelConfigs'
 
 export default function KnowledgeBase({
   articles,

@@ -1,5 +1,4 @@
-import { promptConfig } from './views/Prompt'
-import { knowledgeBaseConfig } from './views/KnowledgeBase'
+import { promptConfig, knowledgeBaseConfig } from './panelConfigs'
 import type { PanelConfig } from './views/Panel'
 
 export type PanelConfigWithId = PanelConfig & {
