@@ -54,7 +54,11 @@ const renderPrompt = (overrides: Partial<ComponentProps<typeof Prompt>> = {}) =>
     onQueryChange: vi.fn(),
     onSubmit: vi.fn(),
     ragSteps: [],
-    messagesEndRef: createMessagesEndRef(),    isKnowledgeCollapsed: false,    ...overrides,
+    messagesEndRef: createMessagesEndRef(),
+    isCollapsed: false,
+    onToggleCollapse: vi.fn(),
+    isKnowledgeCollapsed: false,
+    ...overrides,
   }
 
   render(<Prompt {...props} />)

@@ -43,21 +43,19 @@ export default function Panel({
 
   // Clone additionalHeaderActions to add unique test IDs for mobile and desktop
   const mobileHeaderActions = additionalHeaderActions && isValidElement(additionalHeaderActions)
-    ? cloneElement(additionalHeaderActions, {
-        // @ts-expect-error - dynamically adding data-testid
-        'data-testid': additionalHeaderActions.props['data-testid'] 
-          ? `${additionalHeaderActions.props['data-testid']}-mobile`
+    ? cloneElement(additionalHeaderActions as ReactElement, {
+        'data-testid': (additionalHeaderActions.props as any)['data-testid'] 
+          ? `${(additionalHeaderActions.props as any)['data-testid']}-mobile`
           : undefined,
-      } as ReactElement)
+      } as any)
     : additionalHeaderActions
 
   const desktopHeaderActions = additionalHeaderActions && isValidElement(additionalHeaderActions)
-    ? cloneElement(additionalHeaderActions, {
-        // @ts-expect-error - dynamically adding data-testid
-        'data-testid': additionalHeaderActions.props['data-testid'] 
-          ? `${additionalHeaderActions.props['data-testid']}-desktop`
+    ? cloneElement(additionalHeaderActions as ReactElement, {
+        'data-testid': (additionalHeaderActions.props as any)['data-testid'] 
+          ? `${(additionalHeaderActions.props as any)['data-testid']}-desktop`
           : undefined,
-      } as ReactElement)
+      } as any)
     : additionalHeaderActions
 
   if (isCollapsed) {
