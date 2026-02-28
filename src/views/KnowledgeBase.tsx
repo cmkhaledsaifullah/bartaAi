@@ -1,8 +1,8 @@
 import { Split } from 'lucide-react'
-import { splitArticleIntoSentences } from '../homeHelpers'
+import { splitArticleIntoSentences } from '../utils/homeHelpers'
 import type { ChunkCardsProps, KnowledgeBaseProps } from '../types'
-import Panel from './Panel'
-import { knowledgeBaseConfig } from '../panelConfigs'
+import Panel from '../components/Panel'
+import { knowledgeBaseConfig } from '../config/panelConfigs'
 
 export default function KnowledgeBase({
   articles,
@@ -13,7 +13,6 @@ export default function KnowledgeBase({
   onViewModeChange,
   isCollapsed,
   onToggleCollapse,
-  isActiveTab = false,
 }: KnowledgeBaseProps) {
   const headerBadge = (
     <div className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full font-medium">
@@ -21,19 +20,13 @@ export default function KnowledgeBase({
     </div>
   )
 
-  // Mobile order only - desktop positioning handled by wrapper div in Home.tsx
-  const desktopSpanClasses = 'order-2 md:order-1'
-
   return (
-    <div className={isActiveTab ? '' : 'hidden'}>
-      <Panel
-        config={knowledgeBaseConfig}
-        isCollapsed={isCollapsed}
-        onToggleCollapse={onToggleCollapse}
-        desktopSpanClasses={desktopSpanClasses}
-        collapsedSpanClasses=""
-        headerBadge={headerBadge}
-      >
+    <Panel
+      config={knowledgeBaseConfig}
+      isCollapsed={isCollapsed}
+      onToggleCollapse={onToggleCollapse}
+      headerBadge={headerBadge}
+    >
       <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3 sm:space-y-4">
         {articles.map((article) => {
           const isSelected = selectedArticle.id === article.id
@@ -102,7 +95,6 @@ export default function KnowledgeBase({
         </div>
       </div>
     </Panel>
-    </div>
   )
 }
 

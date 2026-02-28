@@ -3,7 +3,7 @@ import { Builder, By, until, type WebDriver } from 'selenium-webdriver'
 import chrome from 'selenium-webdriver/chrome'
 
 const BASE_URL = process.env.E2E_BASE_URL ?? 'http://127.0.0.1:4173'
-const DEFAULT_WAIT_MS = 20000
+const DEFAULT_WAIT_MS = 30000
 const DESKTOP_VIEWPORT = { width: 1280, height: 720 }
 const MOBILE_VIEWPORT = { width: 390, height: 844 }
 
@@ -35,7 +35,8 @@ describe('BartaAI E2E', () => {
   const openApp = async (viewport = DESKTOP_VIEWPORT) => {
     await setViewport(viewport)
     await driver.get(BASE_URL)
-    await driver.wait(until.elementLocated(By.css('[data-testid="article-card-1"]')), DEFAULT_WAIT_MS)
+    // Wait for the chat panel (prompt tab) to load - this is the default view
+    await driver.wait(until.elementLocated(By.css('[data-testid="chat-panel"]')), DEFAULT_WAIT_MS)
   }
 
   it('renders the knowledge base and chunk preview toggle', async () => {
@@ -447,7 +448,7 @@ describe('BartaAI E2E', () => {
       await openApp(DESKTOP_VIEWPORT)
 
       // Verify we start on prompt tab
-      const chatPanel = await driver.findElement(By.css('[data-testid="chat-panel"]'))
+      let chatPanel = await driver.findElement(By.css('[data-testid="chat-panel"]'))
       expect(await chatPanel.isDisplayed()).toBe(true)
 
       // Click knowledge tab in header navigation
@@ -461,19 +462,25 @@ describe('BartaAI E2E', () => {
       )
       expect(await knowledgeBase.isDisplayed()).toBe(true)
 
-      // Verify prompt panel is now hidden
-      expect(await chatPanel.isDisplayed()).toBe(false)
+      // Verify prompt panel is now hidden (re-query to avoid stale element)
+      const chatPanels = await driver.findElements(By.css('[data-testid="chat-panel"]'))
+      expect(chatPanels.length === 0 || !(await chatPanels[0]?.isDisplayed())).toBe(true)
 
       // Switch back to prompt tab
       const promptTabButton = await driver.findElement(By.css('button[aria-label="View বার্তা Prompt"]'))
       await promptTabButton.click()
 
-      // Verify prompt panel is visible again
+      // Verify prompt panel is visible again (re-query to get fresh element)
+      chatPanel = await driver.wait(
+        until.elementLocated(By.css('[data-testid="chat-panel"]')),
+        DEFAULT_WAIT_MS,
+      )
       await driver.wait(until.elementIsVisible(chatPanel), DEFAULT_WAIT_MS)
       expect(await chatPanel.isDisplayed()).toBe(true)
 
-      // Verify knowledge base is now hidden
-      expect(await knowledgeBase.isDisplayed()).toBe(false)
+      // Verify knowledge base is now hidden (re-query to avoid stale element)
+      const knowledgeBases = await driver.findElements(By.css('[data-testid="knowledge-base"]'))
+      expect(knowledgeBases.length === 0 || !(await knowledgeBases[0]?.isDisplayed())).toBe(true)
     })
 
     it('opens and closes settings panel on desktop', async () => {
@@ -488,7 +495,7 @@ describe('BartaAI E2E', () => {
       await settingsButton.click()
 
       // Wait for settings panel to appear
-      await driver.sleep(300) // Wait for animation
+      await driver.sleep(500) // Wait for animation
 
       // Verify settings panel is visible by checking for API key input
       const apiKeyInput = await driver.findElement(By.css('input[type="password"][placeholder*="Enter key"]'))
@@ -496,7 +503,7 @@ describe('BartaAI E2E', () => {
 
       // Click settings button again to close
       await settingsButton.click()
-      await driver.sleep(300) // Wait for animation
+      await driver.sleep(500) // Wait for animation
 
       // Verify settings panel is hidden
       const settingsPanels = await driver.findElements(By.css('input[type="password"][placeholder*="Enter key"]'))

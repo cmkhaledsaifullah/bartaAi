@@ -2,7 +2,7 @@ import type { ReactElement, ReactNode } from 'react'
 import { cloneElement, isValidElement } from 'react'
 import { ChevronDown } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import '../styles/KnowledgePanel.css'
+import '../styles/App.css'
 
 export type PanelConfig = {
   icon: LucideIcon
@@ -19,8 +19,6 @@ export type PanelProps = {
   config: PanelConfig
   isCollapsed: boolean
   onToggleCollapse: () => void
-  desktopSpanClasses: string
-  collapsedSpanClasses?: string // Optional for backward compatibility
   additionalHeaderActions?: ReactNode
   headerBadge?: ReactNode
   children: ReactNode
@@ -32,7 +30,6 @@ export default function Panel({
   config,
   isCollapsed,
   onToggleCollapse,
-  desktopSpanClasses,
   additionalHeaderActions,
   headerBadge,
   children,
@@ -74,7 +71,7 @@ export default function Panel({
         <button
           type="button"
           onClick={onToggleCollapse}
-          className={`md:hidden w-full rounded-2xl border ${config.borderColorClass} ${config.bgColorClass} px-4 py-3 shadow-sm flex items-center justify-between ${desktopSpanClasses}`}
+          className="md:hidden w-full rounded-2xl border ${config.borderColorClass} ${config.bgColorClass} px-4 py-3 shadow-sm flex items-center justify-between"
           aria-expanded="false"
           aria-label={config.ariaLabel || `Expand ${config.title}`}
           data-testid={config.testId}
@@ -105,7 +102,7 @@ export default function Panel({
 
   return (
     <div
-      className={`${desktopSpanClasses} md:h-full md:max-h-full ${containerClassName} flex flex-col relative overflow-hidden`}
+      className={`md:h-full md:max-h-full ${containerClassName} flex flex-col relative overflow-hidden`}
       data-testid={config.testId}
       role="complementary"
       {...Object.entries(dataAttributes).reduce((acc, [key, value]) => {

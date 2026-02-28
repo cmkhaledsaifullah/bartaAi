@@ -1,5 +1,5 @@
 import type { Dispatch, SetStateAction } from 'react'
-import type { RagStep, RetrievedChunk } from './types'
+import type { RagStep, RetrievedChunk } from '../types'
 
 const BENGALI_FONT_URL =
   'https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap'

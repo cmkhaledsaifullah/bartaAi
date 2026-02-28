@@ -1,5 +1,5 @@
 import { Database, MessageSquare } from 'lucide-react'
-import type { PanelConfig } from './views/Panel'
+import type { PanelConfig } from '../components/Panel'
 
 export const knowledgeBaseConfig: PanelConfig = {
   icon: Database,

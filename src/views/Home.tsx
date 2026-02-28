@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import '../styles/App.css'
-import '../styles/Home.css'
 import KnowledgeBase from './KnowledgeBase'
 import Prompt from './Prompt'
 import {
@@ -12,7 +11,17 @@ import {
   extractSearchKeywords,
   resetRagStepsState,
   splitArticleIntoSentences,
-} from '../homeHelpers'
+} from '../utils/homeHelpers'
+import { generateMockResponse } from '../utils/mockResponses'
+import {
+  INITIAL_CHAT_MESSAGE,
+  RAG_STEP_DELAY,
+  MOCK_RESPONSE_DELAY,
+  MAX_RETRIEVED_CHUNKS,
+  NO_CONTEXT_MESSAGE,
+  PROMPT_PLACEHOLDER,
+  EXAMPLE_QUESTIONS,
+} from '../config/constants'
 import type {
   Article,
   ViewMode,
@@ -41,15 +50,7 @@ export default function Home({ articles }: HomeProps) {
   const [apiKey, setApiKey] = useState('')
   const [showSettings, setShowSettings] = useState(false)
   const [query, setQuery] = useState('')
-  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([
-    {
-      id: 'initial-msg',
-      role: 'system',
-      content:
-        'স্বাগতম! আমি আপনার বার্তাAI—বাংলাদেশের সর্বশেষ খবরের ভিত্তিতে আপনার প্রশ্নের উত্তর দিতে প্রস্তুত।',
-      type: 'text',
-    },
-  ])
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([INITIAL_CHAT_MESSAGE])
   const [isProcessing, setIsProcessing] = useState(false)
   const [ragSteps, setRagSteps] = useState<RagStep[]>([])
   const [activeTab, setActiveTab] = useState<string>('prompt')
@@ -83,10 +84,10 @@ export default function Home({ articles }: HomeProps) {
     resetRagStepsState(setRagSteps)
 
     addRagStep('Generating query embeddings...', 'processing')
-    await new Promise((resolve) => setTimeout(resolve, 800))
+    await new Promise((resolve) => setTimeout(resolve, RAG_STEP_DELAY))
 
     addRagStep('Searching vector database (ChromaDB simulated)...', 'processing')
-    await new Promise((resolve) => setTimeout(resolve, 800))
+    await new Promise((resolve) => setTimeout(resolve, RAG_STEP_DELAY))
 
     const searchKeywords = extractSearchKeywords(query)
 
@@ -116,7 +117,7 @@ export default function Home({ articles }: HomeProps) {
     })
 
     retrievedChunks.sort((a, b) => b.score - a.score)
-    const topChunks = retrievedChunks.slice(0, 3)
+    const topChunks = retrievedChunks.slice(0, MAX_RETRIEVED_CHUNKS)
 
     if (topChunks.length > 0) {
       addRagStep(`Found ${topChunks.length} relevant context chunks`, 'success')
@@ -145,29 +146,10 @@ export default function Home({ articles }: HomeProps) {
         }
 
         answer =
-          data.candidates?.[0]?.content?.parts?.[0]?.text ??
-          'দুঃখিত, আমার জানা তথ্যের (Context) মধ্যে এই বিষয়ে কোনো খবর নেই।'
+          data.candidates?.[0]?.content?.parts?.[0]?.text ?? NO_CONTEXT_MESSAGE
       } else {
-        await new Promise((resolve) => setTimeout(resolve, 1500))
-
-        if (topChunks.length > 0) {
-          const topSource = topChunks[0].sourceId
-
-          if (topSource === 1) {
-            answer =
-              'উত্তরা থেকে মতিঝিল পর্যন্ত পুরো রুটে মেট্রোরেল চলাচল শুরু হয়েছে। প্রধানমন্ত্রী শেখ হাসিনা আগারগাঁও স্টেশনে এটি উদ্বোধন করেন। যাত্রীরা সকাল ৭:৩০ থেকে ১১:৩০ পর্যন্ত চলাচল করতে পারবেন।'
-          } else if (topSource === 2) {
-            answer =
-              'আজ বাংলাদেশ নেদারল্যান্ডসের বিপক্ষে খেলবে। সেমিফাইনালে যেতে হলে বাংলাদেশকে জিততেই হবে। তাসকিন আহমেদ ইনজুরি থেকে ফিরছেন।'
-          } else if (topSource === 3) {
-            answer =
-              'গত ২৪ ঘণ্টায় ১,২০০ জন ডেঙ্গু রোগী হাসপাতালে ভর্তি হয়েছেন। যদিও ভর্তির হার কিছুটা কমেছে, কিন্তু মৃত্যুর সংখ্যা এখনো চিন্তার বিষয়।'
-          } else {
-            answer = 'সংগৃহীত তথ্যের ভিত্তিতে দেখা যাচ্ছে যে বিষয়টি খবরে উল্লেখ করা হয়েছে।'
-          }
-        } else {
-          answer = 'দুঃখিত, আমার জানা তথ্যের (Context) মধ্যে এই বিষয়ে কোনো খবর নেই।'
-        }
+        await new Promise((resolve) => setTimeout(resolve, MOCK_RESPONSE_DELAY))
+        answer = generateMockResponse(topChunks)
       }
 
       setChatHistory((prev) => [
@@ -198,50 +180,46 @@ export default function Home({ articles }: HomeProps) {
     }
   }
 
-  const promptPlaceholder = 'Ask about the news (e.g., মেট্রোরেল বা ক্রিকেট সম্পর্কে কিছু বলুন)...'
-
-  const exampleQuestions = [
-    'মেট্রোরেল নিয়ে আপডেট কি?',
-    'How is Bangladesh doing in Cricket?',
-  ]
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
       <Header activeTab={activeTab} onTabChange={setActiveTab} />
 
       <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 md:px-8 lg:px-12 pb-24 md:pb-4 flex-1">
-        {/* Both panels handle their own visibility based on activeTab */}
-        <Prompt
-          chatHistory={chatHistory}
-          showSettings={showSettings}
-          onToggleSettings={() => setShowSettings((prev) => !prev)}
-          apiKey={apiKey}
-          onApiKeyChange={setApiKey}
-          query={query}
-          isProcessing={isProcessing}
-          placeholder={promptPlaceholder}
-          exampleQuestions={exampleQuestions}
-          onQueryChange={setQuery}
-          onSubmit={handleSearch}
-          ragSteps={ragSteps}
-          messagesEndRef={messagesEndRef}
-          isCollapsed={false}
-          onToggleCollapse={() => {}}
-          isActiveTab={activeTab === 'prompt'}
-          isKnowledgeCollapsed={isKnowledgeCollapsed}
-        />
+        {/* Tab visibility controlled here for consistent mobile and desktop experience */}
+        {activeTab === 'prompt' && (
+          <Prompt
+            chatHistory={chatHistory}
+            showSettings={showSettings}
+            onToggleSettings={() => setShowSettings((prev) => !prev)}
+            apiKey={apiKey}
+            onApiKeyChange={setApiKey}
+            query={query}
+            isProcessing={isProcessing}
+            placeholder={PROMPT_PLACEHOLDER}
+            exampleQuestions={EXAMPLE_QUESTIONS}
+            onQueryChange={setQuery}
+            onSubmit={handleSearch}
+            ragSteps={ragSteps}
+            messagesEndRef={messagesEndRef}
+            isCollapsed={false}
+            onToggleCollapse={() => {}}
+            isKnowledgeCollapsed={isKnowledgeCollapsed}
+          />
+        )}
 
-        <KnowledgeBase
-          articles={articles}
-          selectedArticle={selectedArticle}
-          viewMode={viewMode}
-          highlightKeywords={[]}
-          onSelectArticle={setSelectedArticle}
-          onViewModeChange={setViewMode}
-          isCollapsed={isKnowledgeCollapsed}
-          onToggleCollapse={() => setIsKnowledgeCollapsed((prev) => !prev)}
-          isActiveTab={activeTab === 'knowledge'}
-        />
+        {activeTab === 'knowledge' && (
+          <KnowledgeBase
+            articles={articles}
+            selectedArticle={selectedArticle}
+            viewMode={viewMode}
+            highlightKeywords={[]}
+            onSelectArticle={setSelectedArticle}
+            onViewModeChange={setViewMode}
+            isCollapsed={isKnowledgeCollapsed}
+            onToggleCollapse={() => setIsKnowledgeCollapsed((prev) => !prev)}
+          />
+        )}
       </div>
 
       <Footer activeTab={activeTab} onTabChange={setActiveTab} />
