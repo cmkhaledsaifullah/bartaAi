@@ -22,7 +22,7 @@ const ARTICLES: Article[] = [
   },
 ]
 
-const renderPanel = (overrides: Partial<{ viewMode: ViewMode; isCollapsed: boolean; isActiveTab: boolean }> = {}) => {
+const renderPanel = (overrides: Partial<{ viewMode: ViewMode; isCollapsed: boolean }> = {}) => {
   const props = {
     articles: ARTICLES,
     selectedArticle: ARTICLES[0]!,
@@ -32,7 +32,6 @@ const renderPanel = (overrides: Partial<{ viewMode: ViewMode; isCollapsed: boole
     onViewModeChange: vi.fn(),
     isCollapsed: false,
     onToggleCollapse: vi.fn(),
-    isActiveTab: true,
     ...overrides,
   }
 
@@ -103,8 +102,8 @@ describe('KnowledgeBase', () => {
     expect(props.onToggleCollapse).toHaveBeenCalled()
   })
 
-  it('is visible when isActiveTab is true', () => {
-    const { container } = render(
+  it('renders knowledge base panel', () => {
+    render(
       <KnowledgeBase
         articles={ARTICLES}
         selectedArticle={ARTICLES[0]!}
@@ -113,30 +112,10 @@ describe('KnowledgeBase', () => {
         onViewModeChange={vi.fn()}
         isCollapsed={false}
         onToggleCollapse={vi.fn()}
-        isActiveTab={true}
       />
     )
 
-    const wrapper = container.querySelector('div')
-    expect(wrapper).not.toHaveClass('hidden')
-  })
-
-  it('is hidden when isActiveTab is false', () => {
-    const { container } = render(
-      <KnowledgeBase
-        articles={ARTICLES}
-        selectedArticle={ARTICLES[0]!}
-        viewMode="text"
-        onSelectArticle={vi.fn()}
-        onViewModeChange={vi.fn()}
-        isCollapsed={false}
-        onToggleCollapse={vi.fn()}
-        isActiveTab={false}
-      />
-    )
-
-    const wrapper = container.querySelector('div')
-    expect(wrapper).toHaveClass('hidden')
+    expect(screen.getByTestId('knowledge-base')).toBeInTheDocument()
   })
 })
 

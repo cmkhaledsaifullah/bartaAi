@@ -1,8 +1,8 @@
 import { cleanup, render, screen, fireEvent } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { MessageSquare } from 'lucide-react'
-import Panel from '../views/Panel'
-import type { PanelConfig } from '../views/Panel'
+import Panel from '../components/Panel'
+import type { PanelConfig } from '../components/Panel'
 
 afterEach(() => {
   cleanup()
@@ -28,7 +28,6 @@ describe('Panel', () => {
           config={mockConfig}
           isCollapsed={true}
           onToggleCollapse={onToggleCollapse}
-          desktopSpanClasses="col-span-1"
         >
           <div>Content</div>
         </Panel>
@@ -47,7 +46,6 @@ describe('Panel', () => {
           config={mockConfig}
           isCollapsed={true}
           onToggleCollapse={onToggleCollapse}
-          desktopSpanClasses="col-span-1"
         >
           <div>Content</div>
         </Panel>
@@ -64,7 +62,6 @@ describe('Panel', () => {
           config={mockConfig}
           isCollapsed={true}
           onToggleCollapse={onToggleCollapse}
-          desktopSpanClasses="col-span-1"
         >
           <div>Content</div>
         </Panel>
@@ -83,7 +80,6 @@ describe('Panel', () => {
           config={configWithoutAriaLabel}
           isCollapsed={true}
           onToggleCollapse={onToggleCollapse}
-          desktopSpanClasses="col-span-1"
         >
           <div>Content</div>
         </Panel>
@@ -99,7 +95,6 @@ describe('Panel', () => {
           config={mockConfig}
           isCollapsed={true}
           onToggleCollapse={onToggleCollapse}
-          desktopSpanClasses="col-span-1"
         >
           <div data-testid="panel-content">Content</div>
         </Panel>
@@ -117,7 +112,6 @@ describe('Panel', () => {
           config={mockConfig}
           isCollapsed={false}
           onToggleCollapse={onToggleCollapse}
-          desktopSpanClasses="col-span-2"
         >
           <div data-testid="panel-content">Panel Content</div>
         </Panel>
@@ -135,7 +129,6 @@ describe('Panel', () => {
           config={mockConfig}
           isCollapsed={false}
           onToggleCollapse={onToggleCollapse}
-          desktopSpanClasses="col-span-2"
         >
           <div>Content</div>
         </Panel>
@@ -154,7 +147,6 @@ describe('Panel', () => {
           config={mockConfig}
           isCollapsed={false}
           onToggleCollapse={onToggleCollapse}
-          desktopSpanClasses="col-span-2"
         >
           <div>Content</div>
         </Panel>
@@ -171,7 +163,6 @@ describe('Panel', () => {
           config={mockConfig}
           isCollapsed={false}
           onToggleCollapse={onToggleCollapse}
-          desktopSpanClasses="col-span-2"
         >
           <div>Content</div>
         </Panel>
@@ -189,7 +180,6 @@ describe('Panel', () => {
           config={mockConfig}
           isCollapsed={false}
           onToggleCollapse={onToggleCollapse}
-          desktopSpanClasses="col-span-2"
           additionalHeaderActions={
             <button data-testid="custom-action">Action</button>
           }
@@ -209,7 +199,6 @@ describe('Panel', () => {
           config={mockConfig}
           isCollapsed={false}
           onToggleCollapse={onToggleCollapse}
-          desktopSpanClasses="col-span-2"
           headerBadge={<span data-testid="badge">New</span>}
         >
           <div>Content</div>
@@ -226,7 +215,6 @@ describe('Panel', () => {
           config={mockConfig}
           isCollapsed={false}
           onToggleCollapse={onToggleCollapse}
-          desktopSpanClasses="col-span-2"
           containerClassName="custom-container-class"
         >
           <div>Content</div>
@@ -244,7 +232,6 @@ describe('Panel', () => {
           config={mockConfig}
           isCollapsed={false}
           onToggleCollapse={onToggleCollapse}
-          desktopSpanClasses="col-span-2"
           dataAttributes={{
             'custom-attr': 'value',
             'another-attr': true,
@@ -269,7 +256,6 @@ describe('Panel', () => {
           config={configWithoutAriaLabel}
           isCollapsed={false}
           onToggleCollapse={onToggleCollapse}
-          desktopSpanClasses="col-span-2"
         >
           <div>Content</div>
         </Panel>
@@ -285,7 +271,6 @@ describe('Panel', () => {
           config={mockConfig}
           isCollapsed={false}
           onToggleCollapse={onToggleCollapse}
-          desktopSpanClasses="col-span-2"
           additionalHeaderActions="Text Action"
         >
           <div>Content</div>
@@ -302,7 +287,6 @@ describe('Panel', () => {
           config={mockConfig}
           isCollapsed={false}
           onToggleCollapse={onToggleCollapse}
-          desktopSpanClasses="col-span-2"
           additionalHeaderActions={<button>No TestId</button>}
         >
           <div>Content</div>
@@ -314,14 +298,15 @@ describe('Panel', () => {
   })
 
   describe('styling and classes', () => {
-    it('applies desktop span classes correctly', () => {
+    it.skip('applies desktop span classes correctly', () => {
+      // This test is skipped because Panel no longer applies grid classes
+      // The Panel component is now used within flex containers
       const onToggleCollapse = vi.fn()
       render(
         <Panel
           config={mockConfig}
           isCollapsed={false}
           onToggleCollapse={onToggleCollapse}
-          desktopSpanClasses="col-span-3 md:col-start-1"
         >
           <div>Content</div>
         </Panel>
@@ -338,7 +323,6 @@ describe('Panel', () => {
           config={mockConfig}
           isCollapsed={false}
           onToggleCollapse={onToggleCollapse}
-          desktopSpanClasses="col-span-2"
         >
           <div>Content</div>
         </Panel>
@@ -357,7 +341,6 @@ describe('Panel', () => {
           config={mockConfig}
           isCollapsed={true}
           onToggleCollapse={onToggleCollapse}
-          desktopSpanClasses="col-span-1"
         >
           <div>Content</div>
         </Panel>
@@ -380,7 +363,6 @@ describe('Panel', () => {
           config={configWithoutAriaLabel}
           isCollapsed={true}
           onToggleCollapse={onToggleCollapse}
-          desktopSpanClasses="col-span-1"
         >
           <div>Content</div>
         </Panel>
@@ -399,7 +381,6 @@ describe('Panel', () => {
           config={configWithoutAriaLabel}
           isCollapsed={true}
           onToggleCollapse={onToggleCollapse}
-          desktopSpanClasses="col-span-1"
         >
           <div>Content</div>
         </Panel>
@@ -418,7 +399,6 @@ describe('Panel', () => {
           config={mockConfig}
           isCollapsed={false}
           onToggleCollapse={onToggleCollapse}
-          desktopSpanClasses="col-span-2"
         >
           <div>Content</div>
         </Panel>
@@ -439,7 +419,6 @@ describe('Panel', () => {
           config={mockConfig}
           isCollapsed={true}
           onToggleCollapse={onToggleCollapse}
-          desktopSpanClasses="col-span-1"
         >
           <div>Content</div>
         </Panel>
@@ -456,7 +435,6 @@ describe('Panel', () => {
           config={configWithoutAriaLabel}
           isCollapsed={true}
           onToggleCollapse={onToggleCollapse}
-          desktopSpanClasses="col-span-1"
         >
           <div>Content</div>
         </Panel>
@@ -472,7 +450,6 @@ describe('Panel', () => {
           config={mockConfig}
           isCollapsed={true}
           onToggleCollapse={onToggleCollapse}
-          desktopSpanClasses="col-span-1"
         >
           <div>Content</div>
         </Panel>
@@ -492,7 +469,6 @@ describe('Panel', () => {
           config={mockConfig}
           isCollapsed={true}
           onToggleCollapse={onToggleCollapse}
-          desktopSpanClasses="col-span-1"
         >
           <div>Content</div>
         </Panel>
@@ -515,7 +491,6 @@ describe('Panel', () => {
           config={mockConfig}
           isCollapsed={false}
           onToggleCollapse={onToggleCollapse}
-          desktopSpanClasses="col-span-2"
         >
           <div>Content</div>
         </Panel>
@@ -536,7 +511,6 @@ describe('Panel', () => {
           config={mockConfig}
           isCollapsed={false}
           onToggleCollapse={onToggleCollapse}
-          desktopSpanClasses="col-span-2"
         >
           <div>Content</div>
         </Panel>
@@ -556,7 +530,6 @@ describe('Panel', () => {
           config={mockConfig}
           isCollapsed={false}
           onToggleCollapse={onToggleCollapse}
-          desktopSpanClasses="col-span-2"
         >
           <div>Content</div>
         </Panel>
@@ -580,7 +553,6 @@ describe('Panel', () => {
           config={configWithoutAriaLabel}
           isCollapsed={true}
           onToggleCollapse={onToggleCollapse}
-          desktopSpanClasses="col-span-1"
         >
           <div>Content</div>
         </Panel>
@@ -602,7 +574,6 @@ describe('Panel', () => {
           config={configWithoutAriaLabel}
           isCollapsed={false}
           onToggleCollapse={onToggleCollapse}
-          desktopSpanClasses="col-span-2"
         >
           <div>Content</div>
         </Panel>

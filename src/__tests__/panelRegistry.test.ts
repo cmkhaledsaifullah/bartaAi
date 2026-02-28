@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { panelRegistry, getPanelById } from '../panelRegistry'
+import { panelRegistry, getPanelById } from '../config/panelRegistry'
 
 describe('panelRegistry', () => {
   it('contains the expected panels', () => {

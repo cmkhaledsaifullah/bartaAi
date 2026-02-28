@@ -65,7 +65,6 @@ export type KnowledgeBaseProps = {
   onViewModeChange: (mode: ViewMode) => void
   isCollapsed: boolean
   onToggleCollapse: () => void
-  isActiveTab?: boolean
 }
 
 export type PromptProps = {
@@ -84,7 +83,6 @@ export type PromptProps = {
   messagesEndRef: MutableRefObject<HTMLDivElement | null>
   isCollapsed: boolean
   onToggleCollapse: () => void
-  isActiveTab?: boolean
   isKnowledgeCollapsed?: boolean
 }
 

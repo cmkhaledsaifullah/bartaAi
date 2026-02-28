@@ -1,4 +1,4 @@
-import { panelRegistry } from '../panelRegistry'
+import { panelRegistry } from '../config/panelRegistry'
 
 interface PanelNavigationProps {
   activeTab: string
@@ -11,10 +11,8 @@ interface PanelNavigationProps {
  * Used in both desktop header and mobile bottom tab bar.
  */
 export default function PanelNavigation({ activeTab, onTabChange, variant }: PanelNavigationProps) {
-  const isDesktop = variant === 'desktop'
-
   return (
-    <nav role="navigation" data-variant={variant}>
+    <nav role="navigation" data-variant={variant} className="flex items-center gap-2">
       {panelRegistry.map((panel) => {
         const isActive = activeTab === panel.id
         const Icon = panel.icon
@@ -24,7 +22,9 @@ export default function PanelNavigation({ activeTab, onTabChange, variant }: Pan
             key={panel.id}
             type="button"
             onClick={() => onTabChange(panel.id)}
-            className={`flex flex-col items-center justify-center gap-1 px-${isDesktop ? '4' : '6'} py-2 rounded-lg transition-colors ${
+            className={`flex flex-col items-center justify-center gap-1 ${
+              variant === 'desktop' ? 'px-4' : 'px-6'
+            } py-2 rounded-lg transition-colors ${
               isActive
                 ? `${panel.bgColorClass} ${panel.textColorClass}`
                 : 'text-slate-600 hover:bg-slate-50'

@@ -2,6 +2,7 @@
   color-scheme: light;
 }
 
+/* Utility Classes */
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -9,6 +10,15 @@
   overflow: hidden;
 }
 
+.vertical-text {
+  writing-mode: vertical-lr;
+}
+
+.font-bangla {
+  font-family: 'Noto Sans Bengali', sans-serif;
+}
+
+/* Animation Classes */
 .animate-in {
   animation-duration: 0.4s;
   animation-fill-mode: both;
@@ -55,4 +65,23 @@
     transform: translateX(0);
     opacity: 1;
   }
+}
+
+/* Custom Scrollbar Styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }

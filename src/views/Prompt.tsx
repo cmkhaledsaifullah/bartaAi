@@ -2,8 +2,8 @@ import type { ChangeEvent, KeyboardEvent } from 'react'
 import { useEffect, useRef } from 'react'
 import { Bot, CheckCircle2, Cpu, Loader2, Search, Settings } from 'lucide-react'
 import type { PromptProps } from '../types'
-import Panel from './Panel'
-import { promptConfig } from '../panelConfigs'
+import Panel from '../components/Panel'
+import { promptConfig } from '../config/panelConfigs'
 
 export default function Prompt({
   chatHistory,
@@ -21,7 +21,6 @@ export default function Prompt({
   messagesEndRef,
   isCollapsed,
   onToggleCollapse,
-  isActiveTab = false,
   isKnowledgeCollapsed = false,
 }: PromptProps) {
   const apiKeyFieldId = 'gemini-api-key'
@@ -68,12 +67,6 @@ export default function Prompt({
 
   const isSubmitDisabled = isProcessing || !query.trim()
 
-  // Mobile order only - desktop positioning handled by wrapper div in Home.tsx
-  // Apply grid column classes based on knowledge panel state
-  const desktopSpanClasses = isKnowledgeCollapsed
-    ? 'order-1 md:order-2 md:col-start-2 md:col-end-3'
-    : 'order-1 md:order-2 md:col-start-3 md:col-end-4'
-
   const settingsButton = (
     <button
       type="button"
@@ -93,13 +86,10 @@ export default function Prompt({
   )
 
   return (
-    <div className={isActiveTab ? '' : 'hidden'}>
-      <Panel
-        config={promptConfig}
-        isCollapsed={isCollapsed}
+    <Panel
+      config={promptConfig}
+      isCollapsed={isCollapsed}
       onToggleCollapse={onToggleCollapse}
-      desktopSpanClasses={desktopSpanClasses}
-      collapsedSpanClasses=""
       additionalHeaderActions={settingsButton}
       containerClassName="bg-white/90 border border-slate-200 rounded-2xl shadow-xl"
       dataAttributes={{ 'knowledge-collapsed': isKnowledgeCollapsed }}
@@ -272,6 +262,5 @@ export default function Prompt({
           ))}        </div>
       </div>
     </Panel>
-    </div>
   )
 }

@@ -132,19 +132,17 @@ describe('Prompt', () => {
     expect(within(ragPanel).getByTestId('rag-icon-success')).toBeInTheDocument()
   })
 
-  it('applies correct desktop column classes when knowledge panel is collapsed', () => {
+  it('applies correct data attribute when knowledge panel is collapsed', () => {
     renderPrompt({ isKnowledgeCollapsed: true })
     
     const chatPanel = screen.getByTestId('chat-panel')
-    expect(chatPanel).toHaveClass('md:col-start-2', 'md:col-end-3')
     expect(chatPanel).toHaveAttribute('data-knowledge-collapsed', 'true')
   })
 
-  it('applies correct desktop column classes when knowledge panel is expanded', () => {
+  it('applies correct data attribute when knowledge panel is expanded', () => {
     renderPrompt({ isKnowledgeCollapsed: false })
     
     const chatPanel = screen.getByTestId('chat-panel')
-    expect(chatPanel).toHaveClass('md:col-start-3', 'md:col-end-4')
     expect(chatPanel).toHaveAttribute('data-knowledge-collapsed', 'false')
   })
 
