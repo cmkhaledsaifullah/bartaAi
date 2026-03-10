@@ -298,24 +298,6 @@ describe('Panel', () => {
   })
 
   describe('styling and classes', () => {
-    it.skip('applies desktop span classes correctly', () => {
-      // This test is skipped because Panel no longer applies grid classes
-      // The Panel component is now used within flex containers
-      const onToggleCollapse = vi.fn()
-      render(
-        <Panel
-          config={mockConfig}
-          isCollapsed={false}
-          onToggleCollapse={onToggleCollapse}
-        >
-          <div>Content</div>
-        </Panel>
-      )
-
-      const panel = screen.getByTestId('test-panel')
-      expect(panel).toHaveClass('col-span-3', 'md:col-start-1')
-    })
-
     it('applies config color classes correctly', () => {
       const onToggleCollapse = vi.fn()
       const { container } = render(

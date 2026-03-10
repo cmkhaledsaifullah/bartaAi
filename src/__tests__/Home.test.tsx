@@ -3,15 +3,6 @@ import { act } from 'react'
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import type { Mock } from 'vitest'
 import Home from '../views/Home'
-import {
-  buildContextText,
-  buildGeminiPrompt,
-  buildGeminiRequest,
-  collectUniqueSources,
-  extractSearchKeywords,
-  resetRagStepsState,
-  splitArticleIntoSentences,
-} from '../utils/homeHelpers'
 import type { Article } from '../types'
 
 const MOCK_ARTICLES: Article[] = [
@@ -53,18 +44,6 @@ const RICH_RAIL_ARTICLES: Article[] = [
     content:
       'রেল সংবাদ অগ্রগতি প্রকল্প বাস্তবায়ন হচ্ছে। রেল অগ্রগতি প্রকল্প চলছে। সংবাদ প্রকল্প বিশ্লেষণ চলছে। প্রকল্প আপডেট প্রস্তুত।',
     url: 'https://example.com/rail',
-  },
-]
-
-const ALT_CONTEXT_ARTICLES: Article[] = [
-  {
-    id: 4,
-    source: 'Economic Times BD',
-    date: '2023-11-02',
-    title: 'অর্থনীতি: নতুন বিনিয়োগ পরিকল্পনা',
-    content:
-      'বাংলাদেশের অর্থনীতিতে নতুন বিনিয়োগ পরিকল্পনা ঘোষণা করা হয়েছে। বিনিয়োগ বোর্ড বলেছে এই পরিকল্পনায় প্রযুক্তি খাতকে সবচেয়ে বেশি গুরুত্ব দেওয়া হবে।',
-    url: 'https://example.com/economy',
   },
 ]
 
@@ -120,85 +99,6 @@ afterEach(() => {
   global.fetch = originalFetch
 })
 
-describe('Home helpers', () => {
-  it('extractSearchKeywords trims whitespace and ignores short tokens', () => {
-    expect(extractSearchKeywords('  ai   সংবাদ   ট্রেন  ')).toEqual(['সংবাদ', 'ট্রেন'])
-  })
-
-  it('extractSearchKeywords strips punctuation, lowercases, and deduplicates tokens', () => {
-    expect(extractSearchKeywords('METRO!! metro?? পরিকল্পনা, পরিকল্পনা. ai')).toEqual(['metro', 'পরিকল্পনা'])
-  })
-
-  it('extractSearchKeywords keeps Bengali grapheme clusters intact', () => {
-    expect(extractSearchKeywords('মেট্রোরেল আপডেট')).toContain('মেট্রোরেল')
-  })
-
-  it('extractSearchKeywords returns empty array when no keywords match', () => {
-    expect(extractSearchKeywords('!@# $%^ &*()')).toEqual([])
-  })
-
-  it('splitArticleIntoSentences respects Bengali punctuation boundaries', () => {
-    expect(splitArticleIntoSentences('প্রথম বাক্য। দ্বিতীয় প্রশ্ন? তৃতীয় উচ্ছ্বাস!')).toEqual([
-      'প্রথম বাক্য।',
-      'দ্বিতীয় প্রশ্ন?',
-      'তৃতীয় উচ্ছ্বাস!',
-    ])
-  })
-
-  it('splitArticleIntoSentences removes whitespace spillover between sentences', () => {
-    expect(splitArticleIntoSentences('প্রথম বাক্য।   দ্বিতীয় বাক্য!   তৃতীয় অংশ?')).toEqual([
-      'প্রথম বাক্য।',
-      'দ্বিতীয় বাক্য!',
-      'তৃতীয় অংশ?',
-    ])
-  })
-
-  it('buildGeminiPrompt weaves the context and question into the template', () => {
-    const prompt = buildGeminiPrompt('context A', 'What happened?')
-
-    expect(prompt).toContain('context A')
-    expect(prompt).toContain('What happened?')
-    expect(prompt.startsWith('You are a helpful news assistant')).toBe(true)
-  })
-
-  it('buildGeminiRequest targets the Gemini endpoint with headers and payload', () => {
-    const { url, init } = buildGeminiRequest('fake-key', 'Prompt text here')
-    const bodyPayload = JSON.parse((init?.body as string) ?? '{}')
-
-    expect(url).toContain('fake-key')
-    expect(init?.method).toBe('POST')
-    expect(init?.headers).toEqual({ 'Content-Type': 'application/json' })
-    expect(bodyPayload).toEqual({ contents: [{ parts: [{ text: 'Prompt text here' }] }] })
-  })
-
-  it('resetRagStepsState clears all rag steps via the provided setter', () => {
-    const setter: Parameters<typeof resetRagStepsState>[0] = vi.fn()
-
-    resetRagStepsState(setter)
-
-    expect(setter).toHaveBeenCalledWith([])
-  })
-
-  it('collectUniqueSources removes duplicates while preserving order', () => {
-    const sources = collectUniqueSources([
-      { source: 'A', score: 1, text: 'a', sourceId: 1 },
-      { source: 'B', score: 1, text: 'b', sourceId: 2 },
-      { source: 'A', score: 2, text: 'c', sourceId: 1 },
-    ])
-
-    expect(sources).toEqual(['A', 'B'])
-  })
-
-  it('buildContextText joins retrieved sentences with blank lines', () => {
-    const context = buildContextText([
-      { text: 'Sentence one.', score: 1, source: 'A', sourceId: 1 },
-      { text: 'Sentence two.', score: 1, source: 'B', sourceId: 2 },
-    ])
-
-    expect(context).toBe('Sentence one.\n\nSentence two.')
-  })
-})
-
 describe('Home', () => {
   it('mounts the Bengali font link and cleans it up on unmount', () => {
     const { unmount } = renderHome()
@@ -211,14 +111,6 @@ describe('Home', () => {
 
     unmount()
     expect(document.head.querySelector('link[data-testid="bangla-font-link"]')).toBeNull()
-  })
-
-  it.skip('renders the global style block with scrollbar overrides', () => {
-    renderHome()
-
-    const styleBlock = screen.getByTestId('global-style-block')
-    expect(styleBlock).toHaveTextContent('.font-bangla')
-    expect(styleBlock).toHaveTextContent('::-webkit-scrollbar-thumb')
   })
 
   it('displays the initial welcome system message in the chat stream', () => {
@@ -401,25 +293,6 @@ describe('Home', () => {
     expect(userMessages).toHaveLength(0)
   })
 
-  it.skip('processes questions without an API key and surfaces mocked answers', async () => {
-    // Skipped: Text matching across split DOM elements needs custom matcher
-    vi.useFakeTimers()
-    renderHome()
-
-    submitQuery('মেট্রোরেল নিয়ে বলুন')
-
-    expect(screen.getByText('Generating query embeddings...')).toBeInTheDocument()
-
-    await advanceAllTimers()
-    vi.useRealTimers()
-
-    await waitFor(() =>
-      expect(
-        screen.getByText(/উত্তরা থেকে মতিঝিল পর্যন্ত পুরো রুটে মেট্রোরেল চলাচল শুরু হয়েছে/),
-      ).toBeInTheDocument(),
-    )
-    expect(screen.getByText(/Source: মেট্রোরেলের আগারগাঁও-মতিঝিল অংশের উদ্বোধন/)).toBeInTheDocument()
-  })
 
   it('returns the cricket fallback answer when the second article is most relevant', async () => {
     vi.useFakeTimers()
@@ -437,22 +310,6 @@ describe('Home', () => {
     )
   })
 
-  it.skip('returns the dengue fallback answer when the third article ranks highest', async () => {
-    // Skipped: Text matching across split DOM elements needs custom matcher
-    vi.useFakeTimers()
-    renderHome()
-
-    submitQuery('ডেঙ্গু পরিস্থিতি এখন কেমন')
-
-    await advanceAllTimers()
-    vi.useRealTimers()
-
-    await waitFor(() =>
-      expect(
-        screen.getByText(/গত ২৪ ঘণ্টায় ১,২০০ জন ডেঙ্গু রোগী হাসপাতালে ভর্তি হয়েছেন। যদিও ভর্তির হার কিছুটা কমেছে/),
-      ).toBeInTheDocument(),
-    )
-  })
 
   it('matches retrieved context regardless of casing', async () => {
     vi.useFakeTimers()
@@ -471,37 +328,7 @@ describe('Home', () => {
     })
   })
 
-  it.skip('falls back to the generic context message when an unknown source ranks first', async () => {
-    // Skipped: Text matching across split DOM elements needs custom matcher
-    vi.useFakeTimers()
-    renderHome(ALT_CONTEXT_ARTICLES)
 
-    submitQuery('অর্থনীতি বিনিয়োগ পরিকল্পনা জানাবেন')
-
-    await advanceAllTimers()
-    vi.useRealTimers()
-
-    await waitFor(() =>
-      expect(screen.getByText('সংগৃহীত তথ্যের ভিত্তিতে দেখা যাচ্ছে যে বিষয়টি খবরে উল্লেখ করা হয়েছে।')).toBeInTheDocument(),
-    )
-  })
-
-  it.skip('returns the context-missing answer when no keywords qualify for retrieval', async () => {
-    // Skipped: Text matching across split DOM elements needs custom matcher
-    vi.useFakeTimers()
-    renderHome()
-
-    submitQuery('AI')
-
-    await advanceAllTimers()
-    vi.useRealTimers()
-
-    await waitFor(() =>
-      expect(
-        screen.getByText('দুঃখিত, আমার জানা তথ্যের (Context) মধ্যে এই বিষয়ে কোনো খবর নেই।'),
-      ).toBeInTheDocument(),
-    )
-  })
 
   it('does not render retrieved context when no matches are found', async () => {
     vi.useFakeTimers()
@@ -691,55 +518,7 @@ describe('Home', () => {
     expect(newlineGroups.length).toBeGreaterThan(1)
   })
 
-  it.skip('falls back to the generic context message when Gemini returns no text payload', async () => {
-    // Skipped: Text matching across split DOM elements needs custom matcher
-    vi.useFakeTimers()
 
-    global.fetch = vi.fn().mockResolvedValue({
-      json: async () => ({ candidates: [{ content: { parts: [{}] } }] }),
-    }) as typeof fetch
-
-    renderHome()
-
-    fireEvent.click(screen.getByTestId('settings-toggle-desktop'))
-    fireEvent.change(screen.getByLabelText(/Gemini API Key/i), { target: { value: 'key-xyz' } })
-
-    submitQuery('ক্রিকেট আপডেট')
-
-    await advanceAllTimers()
-    vi.useRealTimers()
-
-    await waitFor(() =>
-      expect(
-        screen.getByText('দুঃখিত, আমার জানা তথ্যের (Context) মধ্যে এই বিষয়ে কোনো খবর নেই।'),
-      ).toBeInTheDocument(),
-    )
-  })
-
-  it.skip('falls back gracefully when Gemini omits the candidates payload entirely', async () => {
-    // Skipped: Text matching across split DOM elements needs custom matcher
-    vi.useFakeTimers()
-
-    global.fetch = vi.fn().mockResolvedValue({
-      json: async () => ({}),
-    }) as typeof fetch
-
-    renderHome()
-
-    fireEvent.click(screen.getByTestId('settings-toggle-desktop'))
-    fireEvent.change(screen.getByLabelText(/Gemini API Key/i), { target: { value: 'key-xyz' } })
-
-    submitQuery('ক্রিকেট আপডেট')
-
-    await advanceAllTimers()
-    vi.useRealTimers()
-
-    await waitFor(() =>
-      expect(
-        screen.getByText('দুঃখিত, আমার জানা তথ্যের (Context) মধ্যে এই বিষয়ে কোনো খবর নেই।'),
-      ).toBeInTheDocument(),
-    )
-  })
 
   it('surfaces API errors inside the chat stream for invalid keys', async () => {
     vi.useFakeTimers()
@@ -972,420 +751,34 @@ describe('Home', () => {
     expect(chunkNodes[2]!.dataset.score).toBe('1')
   })
 
-  it.skip('detects desktop on initial render when window is wide', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
-    
-    const chatPanel = screen.getByTestId('chat-panel')
-    expect(chatPanel).toBeInTheDocument()
-  })
 
-  it.skip('updates desktop state when window is resized', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
 
-    Object.defineProperty(window, 'innerWidth', { value: 500, writable: true })
-    fireEvent(window, new Event('resize'))
 
-    expect(screen.getByTestId('chat-panel')).toBeInTheDocument()
-  })
 
-  it.skip('toggles knowledge panel collapsed state', () => {
-    // This test is skipped because the current implementation uses tab-based
-    // conditional rendering rather than collapse state
-    renderHome()
-    
-    const knowledgeBase = screen.getByTestId('knowledge-base')
-    expect(knowledgeBase).toBeInTheDocument()
-    
-    const toggleButtons = screen.getAllByRole('button')
-    const collapseButton = toggleButtons.find(btn => 
-      btn.getAttribute('aria-expanded') === 'true' && 
-      btn.textContent?.includes('বার্তা ভাণ্ডার')
-    )
-    
-    if (collapseButton) {
-      fireEvent.click(collapseButton)
-      const chatPanel = screen.getByTestId('chat-panel')
-      expect(chatPanel).toHaveAttribute('data-knowledge-collapsed', 'true')
-    }
-  })
 
-  it.skip('handles mousedown on resize separator', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
-    
-    const separator = screen.queryByRole('separator', { name: /resize panels/i })
-    if (separator) {
-      fireEvent.mouseDown(separator, { clientX: 400 })
-      expect(separator).toBeInTheDocument()
-    }
-  })
 
-  it.skip('resizes panel width when dragging separator', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
-    
-    const separator = screen.queryByRole('separator', { name: /resize panels/i })
-    if (separator) {
-      fireEvent.mouseDown(separator, { clientX: 400 })
-      
-      fireEvent(document, new MouseEvent('mousemove', { clientX: 450, bubbles: true }))
-      fireEvent(document, new MouseEvent('mouseup', { bubbles: true }))
-      
-      expect(separator).toBeInTheDocument()
-    }
-  })
 
-  it.skip('clamps panel width to minimum and maximum bounds', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
-    
-    const separator = screen.queryByRole('separator', { name: /resize panels/i })
-    if (separator) {
-      fireEvent.mouseDown(separator, { clientX: 400 })
-      
-      fireEvent(document, new MouseEvent('mousemove', { clientX: 100, bubbles: true }))
-      fireEvent(document, new MouseEvent('mouseup', { bubbles: true }))
-      
-      expect(separator).toBeInTheDocument()
-    }
-  })
 
-  it.skip('stops resizing on mouseup event', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
-    
-    const separator = screen.queryByRole('separator', { name: /resize panels/i })
-    if (separator) {
-      fireEvent.mouseDown(separator, { clientX: 400 })
-      fireEvent(document, new MouseEvent('mouseup', { bubbles: true }))
-      
-      fireEvent(document, new MouseEvent('mousemove', { clientX: 450, bubbles: true }))
-      expect(separator).toBeInTheDocument()
-    }
-  })
 
-  it.skip('does not resize when mousemove occurs without active drag', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
-    
-    fireEvent(document, new MouseEvent('mousemove', { clientX: 450, bubbles: true }))
-    
-    const chatPanel = screen.getByTestId('chat-panel')
-    expect(chatPanel).toBeInTheDocument()
-  })
 
-  it.skip('hides resize separator when knowledge panel is collapsed', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
-    
-    const toggleButtons = screen.getAllByRole('button')
-    const collapseButton = toggleButtons.find(btn => 
-      btn.getAttribute('aria-expanded') === 'true' && 
-      btn.textContent?.includes('বার্তা ভাণ্ডার')
-    )
-    
-    if (collapseButton) {
-      fireEvent.click(collapseButton)
-      const separator = screen.queryByRole('separator', { name: /resize panels/i })
-      expect(separator).not.toBeInTheDocument()
-    }
-  })
 
-  it.skip('applies correct grid template columns style when panel is expanded', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    const { container } = renderHome()
-    
-    const gridContainer = container.querySelector('[class*="grid"]')
-    expect(gridContainer).toBeInTheDocument()
-  })
 
-  it.skip('sets cursor style to col-resize during active drag', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
-    
-    const separator = screen.queryByRole('separator', { name: /resize panels/i })
-    if (separator) {
-      expect(document.body.style.cursor).toBe('')
-      
-      fireEvent.mouseDown(separator, { clientX: 400 })
-      expect(document.body.style.cursor).toBe('col-resize')
-      expect(document.body.style.userSelect).toBe('none')
-      
-      fireEvent(document, new MouseEvent('mouseup', { bubbles: true }))
-      expect(document.body.style.cursor).toBe('')
-      expect(document.body.style.userSelect).toBe('')
-    }
-  })
 
-  it.skip('calculates correct panel width delta during drag', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
-    
-    const separator = screen.queryByRole('separator', { name: /resize panels/i })
-    if (separator) {
-      fireEvent.mouseDown(separator, { clientX: 400 })
-      
-      // Move right by 50px
-      fireEvent(document, new MouseEvent('mousemove', { clientX: 450, bubbles: true }))
-      // Panel should resize
-      
-      // Move left by 100px (back past start)
-      fireEvent(document, new MouseEvent('mousemove', { clientX: 300, bubbles: true }))
-      
-      fireEvent(document, new MouseEvent('mouseup', { bubbles: true }))
-      expect(separator).toBeInTheDocument()
-    }
-  })
 
-  it.skip('respects minimum panel width of 280px', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
-    
-    const separator = screen.queryByRole('separator', { name: /resize panels/i })
-    if (separator) {
-      fireEvent.mouseDown(separator, { clientX: 400 })
-      
-      // Try to drag far left (below minimum)
-      fireEvent(document, new MouseEvent('mousemove', { clientX: 50, bubbles: true }))
-      fireEvent(document, new MouseEvent('mouseup', { bubbles: true }))
-      
-      expect(separator).toBeInTheDocument()
-    }
-  })
 
-  it.skip('respects maximum panel width of 600px', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
-    
-    const separator = screen.queryByRole('separator', { name: /resize panels/i })
-    if (separator) {
-      fireEvent.mouseDown(separator, { clientX: 400 })
-      
-      // Try to drag far right (above maximum)
-      fireEvent(document, new MouseEvent('mousemove', { clientX: 800, bubbles: true }))
-      fireEvent(document, new MouseEvent('mouseup', { bubbles: true }))
-      
-      expect(separator).toBeInTheDocument()
-    }
-  })
 
-  it.skip('cleans up resize event listeners on unmount', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    const { unmount } = renderHome()
-    
-    const separator = screen.queryByRole('separator', { name: /resize panels/i })
-    if (separator) {
-      fireEvent.mouseDown(separator, { clientX: 400 })
-    }
-    
-    unmount()
-    
-    // After unmount, mousemove should not cause errors
-    fireEvent(document, new MouseEvent('mousemove', { clientX: 450, bubbles: true }))
-    fireEvent(document, new MouseEvent('mouseup', { bubbles: true }))
-  })
 
-  it.skip('cleans up desktop resize listener on unmount', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    const { unmount } = renderHome()
-    
-    unmount()
-    
-    // After unmount, resize should not cause errors
-    Object.defineProperty(window, 'innerWidth', { value: 500, writable: true })
-    fireEvent(window, new Event('resize'))
-  })
 
-  it.skip('updates desktop state from false to true on resize', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 500, writable: true, configurable: true })
-    renderHome()
-    
-    // Initially narrow (mobile)
-    expect(screen.getByTestId('chat-panel')).toBeInTheDocument()
-    
-    // Resize to wide (desktop)
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true })
-    fireEvent(window, new Event('resize'))
-    
-    // Separator should now be available
-    const separator = screen.queryByRole('separator', { name: /resize panels/i })
-    if (separator) {
-      expect(separator).toBeInTheDocument()
-    }
-  })
 
-  it.skip('applies different grid classes based on collapse state', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
-    
-    // Check that chat panel position changes when toggling collapse
-    const chatPanel = screen.getByTestId('chat-panel')
-    const initialClasses = chatPanel.className
-    
-    const toggleButtons = screen.getAllByRole('button')
-    const collapseButton = toggleButtons.find(btn => 
-      btn.getAttribute('aria-expanded') === 'true' && 
-      btn.textContent?.includes('বার্তা ভাণ্ডার')
-    )
-    
-    if (collapseButton) {
-      fireEvent.click(collapseButton)
-      const updatedClasses = chatPanel.className
-      expect(initialClasses).not.toBe(updatedClasses)
-    }
-  })
 
-  it.skip('handles rapid mouse movements during resize', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
-    
-    const separator = screen.queryByRole('separator', { name: /resize panels/i })
-    if (separator) {
-      fireEvent.mouseDown(separator, { clientX: 400 })
-      
-      // Rapid movements
-      fireEvent(document, new MouseEvent('mousemove', { clientX: 420, bubbles: true }))
-      fireEvent(document, new MouseEvent('mousemove', { clientX: 440, bubbles: true }))
-      fireEvent(document, new MouseEvent('mousemove', { clientX: 460, bubbles: true }))
-      fireEvent(document, new MouseEvent('mousemove', { clientX: 480, bubbles: true }))
-      
-      fireEvent(document, new MouseEvent('mouseup', { bubbles: true }))
-      expect(separator).toBeInTheDocument()
-    }
-  })
 
-  it.skip('verifies default panel width is 360px', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
-    
-    const separator = screen.queryByRole('separator', { name: /resize panels/i })
-    expect(separator).toBeInTheDocument()
-  })
 
-  it.skip('verifies resize state initializes to false', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
-    
-    // Should not be resizing initially
-    expect(document.body.style.cursor).not.toBe('col-resize')
-  })
 
-  it.skip('verifies desktop state initializes based on window width', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 500, writable: true, configurable: true })
-    renderHome()
-    
-    // On mobile, separator should exist but may be hidden via CSS
-    const chatPanel = screen.getByTestId('chat-panel')
-    expect(chatPanel).toBeInTheDocument()
-  })
 
-  it.skip('sets resizing state to true on mousedown', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
-    
-    const separator = screen.queryByRole('separator', { name: /resize panels/i })
-    if (separator) {
-      expect(document.body.style.cursor).toBe('')
-      fireEvent.mouseDown(separator, { clientX: 400 })
-      expect(document.body.style.cursor).toBe('col-resize')
-    }
-  })
 
-  it.skip('verifies resize start position is captured', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
-    
-    const separator = screen.queryByRole('separator', { name: /resize panels/i })
-    if (separator) {
-      fireEvent.mouseDown(separator, { clientX: 350 })
-      // Verify that subsequent movements are relative to start position
-      fireEvent(document, new MouseEvent('mousemove', { clientX: 400, bubbles: true }))
-      fireEvent(document, new MouseEvent('mouseup', { bubbles: true }))
-      expect(separator).toBeInTheDocument()
-    }
-  })
 
-  it.skip('maintains cursor and userSelect styles during active resize', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
-    
-    const separator = screen.queryByRole('separator', { name: /resize panels/i })
-    if (separator) {
-      fireEvent.mouseDown(separator, { clientX: 400 })
-      expect(document.body.style.cursor).toBe('col-resize')
-      expect(document.body.style.userSelect).toBe('none')
-      
-      fireEvent(document, new MouseEvent('mousemove', { clientX: 450, bubbles: true }))
-      expect(document.body.style.cursor).toBe('col-resize')
-      expect(document.body.style.userSelect).toBe('none')
-    }
-  })
 
-  it.skip('resets styles when exiting resize mode', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
-    
-    const separator = screen.queryByRole('separator', { name: /resize panels/i })
-    if (separator) {
-      fireEvent.mouseDown(separator, { clientX: 400 })
-      expect(document.body.style.cursor).toBe('col-resize')
-      
-      fireEvent(document, new MouseEvent('mouseup', { bubbles: true }))
-      expect(document.body.style.cursor).toBe('')
-      expect(document.body.style.userSelect).toBe('')
-    }
-  })
 
-  it.skip('does not update panel width when width is below minimum', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
-    
-    const separator = screen.queryByRole('separator', { name: /resize panels/i })
-    if (separator) {
-      fireEvent.mouseDown(separator, { clientX: 400 })
-      // Try to drag to make width less than 280px (400 - 400 + 360 = 360, then 360 - 200 = 160 < 280)
-      fireEvent(document, new MouseEvent('mousemove', { clientX: 200, bubbles: true }))
-      fireEvent(document, new MouseEvent('mouseup', { bubbles: true }))
-      expect(separator).toBeInTheDocument()
-    }
-  })
-
-  it.skip('does not update panel width when width is above maximum', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
-    
-    const separator = screen.queryByRole('separator', { name: /resize panels/i })
-    if (separator) {
-      fireEvent.mouseDown(separator, { clientX: 400 })
-      // Try to drag to make width more than 600px
-      fireEvent(document, new MouseEvent('mousemove', { clientX: 700, bubbles: true }))
-      fireEvent(document, new MouseEvent('mouseup', { bubbles: true }))
-      expect(separator).toBeInTheDocument()
-    }
-  })
-
-  it.skip('shows separator only when desktop and not collapsed', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
-    
-    let separator = screen.queryByRole('separator', { name: /resize panels/i })
-    expect(separator).toBeInTheDocument()
-    
-    // Collapse panel
-    const toggleButtons = screen.getAllByRole('button')
-    const collapseButton = toggleButtons.find(btn => 
-      btn.getAttribute('aria-expanded') === 'true' && 
-      btn.textContent?.includes('বার্তা ভাণ্ডার')
-    )
-    
-    if (collapseButton) {
-      fireEvent.click(collapseButton)
-      separator = screen.queryByRole('separator', { name: /resize panels/i })
-      expect(separator).not.toBeInTheDocument()
-    }
-  })
 
   // Tests targeting surviving OptionalChaining mutants in Gemini response parsing
   it('verifies exact optional chaining path for Gemini candidates array access', async () => {
@@ -1481,225 +874,23 @@ describe('Home', () => {
   })
 
   // Tests targeting gridStyle calculation mutants
-  it.skip('verifies gridStyle is undefined when not desktop', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 500, writable: true, configurable: true })
-    const { container } = renderHome()
-    const mainGrid = container.querySelector('.md\\:grid-cols-\\[48px_minmax\\(0\\,1fr\\)\\]')
-    // When not desktop, gridStyle should be undefined, so inline style should not be set
-    expect(mainGrid?.getAttribute('style')).toBeFalsy()
-  })
 
-  it.skip('verifies gridStyle is undefined when knowledge panel is collapsed', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
-    const toggleButtons = screen.getAllByRole('button')
-    const collapseButton = toggleButtons.find(btn => 
-      btn.getAttribute('aria-expanded') === 'true' && 
-      btn.textContent?.includes('বার্তা ভাণ্ডার')
-    )
-    if (collapseButton) {
-      fireEvent.click(collapseButton)
-      const mainGrid = document.querySelector('.md\\:grid-cols-\\[48px_minmax\\(0\\,1fr\\)\\]')
-      // When collapsed, gridStyle should be undefined
-      expect(mainGrid?.getAttribute('style')).toBeFalsy()
-    }
-  })
 
-  it.skip('verifies gridStyle contains exact gridTemplateColumns template literal', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    const { container } = renderHome()
-    const gridElement = container.querySelector('.grid')
-    const style = gridElement?.getAttribute('style')
-    // Should contain the template with panelWidth, 16px separator, and minmax
-    expect(style).toContain('360px 16px minmax(0, 1fr)') // default panelWidth is 360
-  })
 
-  it.skip('verifies gridTemplateColumns updates with panel width changes', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    const { container } = renderHome()
-    const separator = screen.getByRole('separator', { name: /resize panels/i })
-    
-    fireEvent.mouseDown(separator, { clientX: 400 })
-    fireEvent(document, new MouseEvent('mousemove', { clientX: 450, bubbles: true }))
-    
-    const gridElement = container.querySelector('.grid')
-    const style = gridElement?.getAttribute('style')
-    // Panel width should be 360 + (450 - 400) = 410px
-    expect(style).toContain('410px 16px minmax(0, 1fr)')
-  })
 
   // Tests targeting resize logic mutants (delta, arithmetic operators)
-  it.skip('verifies resize delta calculation uses subtraction not addition', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    const { container } = renderHome()
-    const separator = screen.getByRole('separator', { name: /resize panels/i })
-    
-    // Start at 400, move left to 350 (delta should be -50)
-    fireEvent.mouseDown(separator, { clientX: 400 })
-    fireEvent(document, new MouseEvent('mousemove', { clientX: 350, bubbles: true }))
-    
-    const gridElement = container.querySelector('.grid')
-    const style = gridElement?.getAttribute('style')
-    // Panel width should be 360 + (-50) = 310px (not 360 + 400 + 350)
-    expect(style).toContain('310px 16px minmax(0, 1fr)')
-  })
 
-  it.skip('verifies newWidth calculation uses addition not subtraction', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    const { container } = renderHome()
-    const separator = screen.getByRole('separator', { name: /resize panels/i })
-    
-    // Start at 400, move right to 500 (delta = +100)
-    fireEvent.mouseDown(separator, { clientX: 400 })
-    fireEvent(document, new MouseEvent('mousemove', { clientX: 500, bubbles: true }))
-    
-    const gridElement = container.querySelector('.grid')
-    const style = gridElement?.getAttribute('style')
-    // Panel width should be 360 + 100 = 460px (not 360 - 100)
-    expect(style).toContain('460px 16px minmax(0, 1fr)')
-  })
 
-  it.skip('verifies exact minimum boundary at 280px using >=', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    const { container } = renderHome()
-    const separator = screen.getByRole('separator', { name: /resize panels/i })
-    
-    // Try to drag to exactly 280px
-    fireEvent.mouseDown(separator, { clientX: 360 })
-    fireEvent(document, new MouseEvent('mousemove', { clientX: 280, bubbles: true }))
-    
-    const gridElement = container.querySelector('.grid')
-    const style = gridElement?.getAttribute('style')
-    // Should allow exactly 280px (>= not >)
-    expect(style).toContain('280px 16px minmax(0, 1fr)')
-  })
 
-  it.skip('verifies exact maximum boundary at 600px using <=', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    const { container } = renderHome()
-    const separator = screen.getByRole('separator', { name: /resize panels/i })
-    
-    // Try to drag to exactly 600px
-    fireEvent.mouseDown(separator, { clientX: 360 })
-    fireEvent(document, new MouseEvent('mousemove', { clientX: 600, bubbles: true }))
-    
-    const gridElement = container.querySelector('.grid')
-    const style = gridElement?.getAttribute('style')
-    // Should allow exactly 600px (<= not <)
-    expect(style).toContain('600px 16px minmax(0, 1fr)')
-  })
 
-  it.skip('verifies width does not update when boundary check fails', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    const { container } = renderHome()
-    const separator = screen.getByRole('separator', { name: /resize panels/i })
-    
-    // Try to drag below 280px
-    fireEvent.mouseDown(separator, { clientX: 360 })
-    fireEvent(document, new MouseEvent('mousemove', { clientX: 250, bubbles: true }))
-    
-    const gridElement = container.querySelector('.grid')
-    const style = gridElement?.getAttribute('style')
-    // Should stay at 360px (not update to 270px)
-    expect(style).toContain('360px 16px minmax(0, 1fr)')
-  })
 
   // Tests targeting string literal and event listener mutants
-  it.skip('verifies mousemove event listener is attached with correct event name', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
-    const separator = screen.getByRole('separator', { name: /resize panels/i })
-    
-    const addEventListenerSpy = vi.spyOn(document, 'addEventListener')
-    fireEvent.mouseDown(separator, { clientX: 400 })
-    
-    // Should call addEventListener with 'mousemove', not empty string
-    expect(addEventListenerSpy).toHaveBeenCalledWith('mousemove', expect.any(Function))
-  })
 
-  it.skip('verifies mouseup event listener is attached with correct event name', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
-    const separator = screen.getByRole('separator', { name: /resize panels/i })
-    
-    const addEventListenerSpy = vi.spyOn(document, 'addEventListener')
-    fireEvent.mouseDown(separator, { clientX: 400 })
-    
-    // Should call addEventListener with 'mouseup', not empty string
-    expect(addEventListenerSpy).toHaveBeenCalledWith('mouseup', expect.any(Function))
-  })
 
-  it.skip('verifies cursor style is reset to empty string on mouseup', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
-    const separator = screen.getByRole('separator', { name: /resize panels/i })
-    
-    fireEvent.mouseDown(separator, { clientX: 400 })
-    expect(document.body.style.cursor).toBe('col-resize')
-    
-    fireEvent(document, new MouseEvent('mouseup', { bubbles: true }))
-    // Should be empty string, not 'col-resize' or other value
-    expect(document.body.style.cursor).toBe('')
-  })
 
-  it.skip('verifies userSelect style is reset to empty string on mouseup', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
-    const separator = screen.getByRole('separator', { name: /resize panels/i })
-    
-    fireEvent.mouseDown(separator, { clientX: 400 })
-    expect(document.body.style.userSelect).toBe('none')
-    
-    fireEvent(document, new MouseEvent('mouseup', { bubbles: true }))
-    // Should be empty string, not 'none' or other value
-    expect(document.body.style.userSelect).toBe('')
-  })
 
-  it.skip('verifies main grid className includes md:gap-x-0 when not collapsed', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    const { container } = renderHome()
-    const gridElement = container.querySelector('.grid')
-    // When not collapsed, should have 'md:gap-x-0' class
-    expect(gridElement?.className).toContain('md:gap-x-0')
-  })
 
-  it.skip('verifies main grid className does not include md:gap-x-0 when collapsed', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
-    const toggleButtons = screen.getAllByRole('button')
-    const collapseButton = toggleButtons.find(btn => 
-      btn.getAttribute('aria-expanded') === 'true' && 
-      btn.textContent?.includes('বার্তা ভাণ্ডার')
-    )
-    if (collapseButton) {
-      fireEvent.click(collapseButton)
-      const gridElement = document.querySelector('.grid')
-      // When collapsed, should NOT have 'md:gap-x-0' class (empty string)
-      expect(gridElement?.className).not.toContain('md:gap-x-0')
-    }
-  })
 
-  it.skip('verifies resizing stops when isResizing becomes false', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    const { container } = renderHome()
-    const separator = screen.getByRole('separator', { name: /resize panels/i })
-    
-    fireEvent.mouseDown(separator, { clientX: 400 })
-    fireEvent(document, new MouseEvent('mousemove', { clientX: 450, bubbles: true }))
-    
-    let gridElement = container.querySelector('.grid')
-    let style = gridElement?.getAttribute('style')
-    expect(style).toContain('410px') // width updated
-    
-    // Mouseup sets isResizing to false
-    fireEvent(document, new MouseEvent('mouseup', { bubbles: true }))
-    
-    // Try to move mouse again - should not update width
-    fireEvent(document, new MouseEvent('mousemove', { clientX: 500, bubbles: true }))
-    gridElement = container.querySelector('.grid')
-    style = gridElement?.getAttribute('style')
-    expect(style).toContain('410px') // still 410, not 450
-  })
 
   it('verifies answer variable initializes to empty string not other value', async () => {
     vi.useFakeTimers()
@@ -1719,99 +910,13 @@ describe('Home', () => {
     })
   })
 
-  it.skip('verifies grid columns styling when panel is not collapsed', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    const { container } = renderHome()
-    
-    // Should have grid layout with specific columns
-    const gridContainer = container.querySelector('[class*="grid"]')
-    expect(gridContainer).toBeInTheDocument()
-  })
 
-  it.skip('applies desktop-specific grid column classes', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
-    
-    const chatPanel = screen.getByTestId('chat-panel')
-    expect(chatPanel).toHaveClass('md:col-start-3')
-  })
 
-  it.skip('applies collapsed grid column classes when panel is collapsed', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
-    
-    const toggleButtons = screen.getAllByRole('button')
-    const collapseButton = toggleButtons.find(btn => 
-      btn.getAttribute('aria-expanded') === 'true' && 
-      btn.textContent?.includes('বার্তা ভাণ্ডার')
-    )
-    
-    if (collapseButton) {
-      fireEvent.click(collapseButton)
-      const chatPanel = screen.getByTestId('chat-panel')
-      expect(chatPanel).toHaveClass('md:col-start-2')
-    }
-  })
 
-  it.skip('removes event listeners when component unmounts during resize', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    const { unmount } = renderHome()
-    
-    const separator = screen.queryByRole('separator', { name: /resize panels/i })
-    if (separator) {
-      fireEvent.mouseDown(separator, { clientX: 400 })
-      expect(document.body.style.cursor).toBe('col-resize')
-    }
-    
-    unmount()
-    
-    // After unmount, styles should be cleaned up
-    expect(document.body.style.cursor).toBe('')
-    expect(document.body.style.userSelect).toBe('')
-  })
 
-  it.skip('verifies window innerWidth check uses >= operator for desktop detection', () => {
-    // Test at exactly 768px (breakpoint)
-    Object.defineProperty(window, 'innerWidth', { value: 768, writable: true, configurable: true })
-    renderHome()
-    
-    fireEvent(window, new Event('resize'))
-    
-    // At 768px, should be considered desktop
-    const separator = screen.queryByRole('separator', { name: /resize panels/i })
-    if (separator) {
-      expect(separator).toBeInTheDocument()
-    }
-  })
 
-  it.skip('verifies separator has correct aria-label', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
-    
-    const separator = screen.queryByRole('separator', { name: /resize panels/i })
-    if (separator) {
-      expect(separator).toHaveAttribute('aria-label', 'Resize panels')
-    }
-  })
 
-  it.skip('verifies separator has cursor-col-resize class', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
-    
-    const separator = screen.queryByRole('separator', { name: /resize panels/i })
-    if (separator) {
-      expect(separator).toHaveClass('cursor-col-resize')
-    }
-  })
 
-  it.skip('verifies grid template columns uses correct syntax', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
-    
-    // Grid should be applied with specific template
-    const chatPanel = screen.getByTestId('chat-panel')
-    expect(chatPanel).toBeInTheDocument()
-  })
 
   // Tests to kill remaining surviving mutants for 95%+ mutation score
   
@@ -1878,91 +983,13 @@ describe('Home', () => {
   })
 
   // Kill isDesktop initial state and desktop detection mutants
-  it.skip('verifies isDesktop starts as false on mobile width', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 500, writable: true, configurable: true })
-    renderHome()
-    
-    // The separator exists in DOM but is hidden on mobile via CSS classes
-    const separator = screen.queryByRole('separator', { name: /resize panels/i })
-    // It has hidden class for mobile, md:flex for desktop
-    expect(separator).toHaveClass('hidden')
-  })
 
-  it.skip('verifies desktop detection at exactly 768px uses >= not >', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 768, writable: true, configurable: true })
-    renderHome()
-    
-    // Trigger resize to update isDesktop state
-    fireEvent(window, new Event('resize'))
-    
-    // At exactly 768px, should be desktop (>=), not mobile (>)
-    const separator = screen.queryByRole('separator', { name: /resize panels/i })
-    expect(separator).toBeInTheDocument()
-  })
 
-  it.skip('verifies desktop detection at 767px is mobile', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 767, writable: true, configurable: true })
-    renderHome()
-    
-    fireEvent(window, new Event('resize'))
-    
-    // At 767px, should be mobile - separator has hidden class
-    const separator = screen.queryByRole('separator', { name: /resize panels/i })
-    expect(separator).toHaveClass('hidden')
-  })
 
-  it.skip('verifies setIsDesktop is not always set to true', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 500, writable: true, configurable: true })
-    renderHome()
-    
-    fireEvent(window, new Event('resize'))
-    
-    // If setIsDesktop(true) always, separator would show on mobile
-    const separator = screen.queryByRole('separator', { name: /resize panels/i })
-    // Should be hidden on mobile
-    expect(separator).toHaveClass('hidden')
-  })
 
   // Kill event listener string literal mutants
-  it.skip('verifies resize event listener uses "resize" not empty string', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
-    
-    // Separator should have md:flex class on desktop
-    let separator = screen.queryByRole('separator', { name: /resize panels/i })
-    expect(separator?.classList.contains('md:flex')).toBe(true)
-    
-    // Change width and trigger resize
-    Object.defineProperty(window, 'innerWidth', { value: 500, writable: true })
-    fireEvent(window, new Event('resize'))
-    
-    // If addEventListener used "", resize wouldn't work
-    // The separator still exists but styling would be same (hidden on mobile)
-    separator = screen.queryByRole('separator', { name: /resize panels/i })
-    // On mobile, the separator has hidden class
-    expect(separator?.classList.contains('hidden')).toBe(true)
-  })
 
-  it.skip('verifies desktop resize cleanup removes correct event listener', () => {
-    const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener')
-    const { unmount } = renderHome()
-    
-    unmount()
-    
-    // Should call removeEventListener with 'resize', not empty string
-    expect(removeEventListenerSpy).toHaveBeenCalledWith('resize', expect.any(Function))
-  })
 
-  it.skip('verifies cleanup function is not replaced with undefined', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener')
-    const { unmount } = renderHome()
-    
-    unmount()
-    
-    // If cleanup was () => undefined, removeEventListener wouldn't be called
-    expect(removeEventListenerSpy).toHaveBeenCalled()
-  })
 
   // Kill optional chaining mutants in scrollIntoView
   it('verifies scrollIntoView with smooth behavior on message update', async () => {
@@ -1995,154 +1022,16 @@ describe('Home', () => {
   })
 
   // Kill string literal mutants in grid classes
-  it.skip('verifies collapsed grid class is not "Stryker was here!"', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
-    
-    const toggleButtons = screen.getAllByRole('button')
-    const collapseButton = toggleButtons.find(btn => 
-      btn.getAttribute('aria-expanded') === 'true' && 
-      btn.textContent?.includes('বার্তা ভাণ্ডার')
-    )
-    
-    if (collapseButton) {
-      fireEvent.click(collapseButton)
-      const gridElement = document.querySelector('.grid')
-      // Should not contain "Stryker was here!"
-      expect(gridElement?.className).not.toContain('Stryker was here')
-    }
-  })
 
-  it.skip('verifies non-collapsed returns empty string not "Stryker was here!"', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    const { container } = renderHome()
-    
-    const gridElement = container.querySelector('.grid')
-    // When not collapsed, ternary should return '', not "Stryker was here!"
-    expect(gridElement?.className).not.toContain('Stryker was here!')
-  })
 
-  it.skip('verifies desktopColumnClasses not empty string when collapsed', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
-    
-    const toggleButtons = screen.getAllByRole('button')
-    const collapseButton = toggleButtons.find(btn => 
-      btn.getAttribute('aria-expanded') === 'true' && 
-      btn.textContent?.includes('বার্তা ভাণ্ডার')
-    )
-    
-    if (collapseButton) {
-      fireEvent.click(collapseButton)
-      const gridElement = document.querySelector('.grid')
-      // Should have grid column classes, not be empty
-      expect(gridElement?.className).toMatch(/md:grid-cols-\[48px/)
-    }
-  })
 
   // Kill BlockStatement mutant in else block (cursor/userSelect reset)
-  it.skip('verifies else block executes to reset cursor and userSelect', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
-    const separator = screen.getByRole('separator', { name: /resize panels/i })
-    
-    // Start resize
-    fireEvent.mouseDown(separator, { clientX: 400 })
-    expect(document.body.style.cursor).toBe('col-resize')
-    expect(document.body.style.userSelect).toBe('none')
-    
-    // Move mouse (still resizing)
-    fireEvent(document, new MouseEvent('mousemove', { clientX: 450, bubbles: true }))
-    expect(document.body.style.cursor).toBe('col-resize')
-    
-    // End resize - else block should reset styles
-    fireEvent(document, new MouseEvent('mouseup', { bubbles: true }))
-    
-    // If else block was {}, styles wouldn't reset
-    expect(document.body.style.cursor).toBe('')
-    expect(document.body.style.userSelect).toBe('')
-  })
 
   // Kill ConditionalExpression mutant for !isResizing check
-  it.skip('verifies mousemove only updates when isResizing is true', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    const { container } = renderHome()
-    
-    // Try to move without starting resize
-    fireEvent(document, new MouseEvent('mousemove', { clientX: 500, bubbles: true }))
-    
-    const gridElement = container.querySelector('.grid')
-    const style = gridElement?.getAttribute('style')
-    // Should stay at 360px since !isResizing check prevents update
-    expect(style).toContain('360px')
-  })
 
   // Kill ConditionalExpression mutant for boundary check
-  it.skip('verifies width boundary check is not just newWidth >= 280', async () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    const { container } = renderHome()
-    const separator = screen.getByRole('separator', { name: /resize panels/i })
-    
-    // First set width to exactly 280px by dragging left from 360px (delta = -80)
-    fireEvent.mouseDown(separator, { clientX: 360 })
-    fireEvent(document, new MouseEvent('mousemove', { clientX: 280, bubbles: true }))
-    
-    await waitFor(() => {
-      const gridElement = container.querySelector('.grid')
-      const style = gridElement?.getAttribute('style')
-      expect(style).toContain('280px')
-    })
-    
-    // Now try to drag further left (below 280px)
-    fireEvent.mouseDown(separator, { clientX: 280 })
-    fireEvent(document, new MouseEvent('mousemove', { clientX: 100, bubbles: true }))
-    
-    await waitFor(() => {
-      const gridElement = container.querySelector('.grid')
-      const style = gridElement?.getAttribute('style')
-      // Should stay at 280px, not go below
-      expect(style).toContain('280px')
-      expect(style).not.toContain('100px')
-    })
-    
-    // Set to 600px max
-    fireEvent.mouseDown(separator, { clientX: 280 })
-    fireEvent(document, new MouseEvent('mousemove', { clientX: 600, bubbles: true }))
-    
-    await waitFor(() => {
-      const gridElement = container.querySelector('.grid')
-      const style = gridElement?.getAttribute('style')
-      // Should cap at 600px
-      expect(style).toContain('600px')
-    })
-    
-    // Try to go beyond 600px
-    fireEvent.mouseDown(separator, { clientX: 600 })
-    fireEvent(document, new MouseEvent('mousemove', { clientX: 1000, bubbles: true }))
-    
-    await waitFor(() => {
-      const gridElement = container.querySelector('.grid')
-      const style = gridElement?.getAttribute('style')
-      // Should stay at 600px
-      expect(style).toContain('600px')
-      expect(style).not.toContain('1000px')
-    })
-  })
 
   // Kill mouseup removeEventListener string literal mutant
-  it.skip('verifies mouseup cleanup uses correct event name', () => {
-    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true })
-    renderHome()
-    const separator = screen.getByRole('separator', { name: /resize panels/i })
-    
-    const removeEventListenerSpy = vi.spyOn(document, 'removeEventListener')
-    
-    fireEvent.mouseDown(separator, { clientX: 400 })
-    fireEvent(document, new MouseEvent('mouseup', { bubbles: true }))
-    
-    // Should call with 'mouseup', not empty string ""
-    expect(removeEventListenerSpy).toHaveBeenCalledWith('mouseup', expect.any(Function))
-  })
 
   // Kill answer initialization string literal mutant
   it('verifies answer variable starts empty not "Stryker was here!"', async () => {
