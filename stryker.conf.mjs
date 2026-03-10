@@ -6,6 +6,7 @@ export default {
     '!src/**/__tests__/**',
     '!src/main.tsx',
     '!src/test/**',
+    '!src/e2e/**',
   ],
   testRunner: 'vitest',
   reporters: ['html', 'clear-text', 'progress'],
