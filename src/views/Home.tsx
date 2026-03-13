@@ -54,7 +54,6 @@ export default function Home({ articles }: HomeProps) {
   const [isProcessing, setIsProcessing] = useState(false)
   const [ragSteps, setRagSteps] = useState<RagStep[]>([])
   const [activeTab, setActiveTab] = useState<string>('prompt')
-  const [isKnowledgeCollapsed, setIsKnowledgeCollapsed] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -202,9 +201,6 @@ export default function Home({ articles }: HomeProps) {
             onSubmit={handleSearch}
             ragSteps={ragSteps}
             messagesEndRef={messagesEndRef}
-            isCollapsed={false}
-            onToggleCollapse={() => {}}
-            isKnowledgeCollapsed={isKnowledgeCollapsed}
           />
         )}
 
@@ -216,8 +212,6 @@ export default function Home({ articles }: HomeProps) {
             highlightKeywords={[]}
             onSelectArticle={setSelectedArticle}
             onViewModeChange={setViewMode}
-            isCollapsed={isKnowledgeCollapsed}
-            onToggleCollapse={() => setIsKnowledgeCollapsed((prev) => !prev)}
           />
         )}
       </div>

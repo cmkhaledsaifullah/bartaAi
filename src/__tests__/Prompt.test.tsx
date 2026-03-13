@@ -55,9 +55,6 @@ const renderPrompt = (overrides: Partial<ComponentProps<typeof Prompt>> = {}) =>
     onSubmit: vi.fn(),
     ragSteps: [],
     messagesEndRef: createMessagesEndRef(),
-    isCollapsed: false,
-    onToggleCollapse: vi.fn(),
-    isKnowledgeCollapsed: false,
     ...overrides,
   }
 
@@ -130,20 +127,6 @@ describe('Prompt', () => {
     const ragPanel = screen.getByTestId('rag-steps-panel')
     expect(within(ragPanel).getAllByTestId('rag-step')).toHaveLength(2)
     expect(within(ragPanel).getByTestId('rag-icon-success')).toBeInTheDocument()
-  })
-
-  it('applies correct data attribute when knowledge panel is collapsed', () => {
-    renderPrompt({ isKnowledgeCollapsed: true })
-    
-    const chatPanel = screen.getByTestId('chat-panel')
-    expect(chatPanel).toHaveAttribute('data-knowledge-collapsed', 'true')
-  })
-
-  it('applies correct data attribute when knowledge panel is expanded', () => {
-    renderPrompt({ isKnowledgeCollapsed: false })
-    
-    const chatPanel = screen.getByTestId('chat-panel')
-    expect(chatPanel).toHaveAttribute('data-knowledge-collapsed', 'false')
   })
 
   it('closes settings panel when clicking outside', () => {

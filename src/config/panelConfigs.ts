@@ -9,7 +9,6 @@ export const knowledgeBaseConfig: PanelConfig = {
   iconColorClass: 'text-orange-500',
   textColorClass: 'text-orange-800',
   testId: 'knowledge-base',
-  ariaLabel: 'Knowledge base',
 }
 
 export const promptConfig: PanelConfig = {
@@ -20,5 +19,4 @@ export const promptConfig: PanelConfig = {
   iconColorClass: 'text-sky-500',
   textColorClass: 'text-sky-800',
   testId: 'chat-panel',
-  ariaLabel: 'Prompt panel',
 }

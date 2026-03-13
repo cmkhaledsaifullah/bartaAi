@@ -971,17 +971,6 @@ describe('Home', () => {
     expect(screen.getByTestId('chat-panel')).toBeInTheDocument()
   })
 
-  it('calls empty onToggleCollapse function on Prompt panel when desktop collapse button is clicked', () => {
-    renderHome()
-    
-    // Find the Prompt panel collapse button (desktop header button with aria-label from config)
-    const chatPanel = screen.getByTestId('chat-panel')
-    const collapseButton = within(chatPanel).getByRole('button', { name: 'Prompt panel' })
-    
-    // Click should not throw even though the function is empty
-    expect(() => fireEvent.click(collapseButton)).not.toThrow()
-  })
-
   // Kill isDesktop initial state and desktop detection mutants
 
 

@@ -1,6 +1,5 @@
 import type { ReactElement, ReactNode } from 'react'
 import { cloneElement, isValidElement } from 'react'
-import { ChevronDown } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import '../styles/App.css'
 
@@ -12,13 +11,10 @@ export type PanelConfig = {
   iconColorClass: string
   textColorClass: string
   testId: string
-  ariaLabel?: string
 }
 
 export type PanelProps = {
   config: PanelConfig
-  isCollapsed: boolean
-  onToggleCollapse: () => void
   additionalHeaderActions?: ReactNode
   headerBadge?: ReactNode
   children: ReactNode
@@ -28,8 +24,6 @@ export type PanelProps = {
 
 export default function Panel({
   config,
-  isCollapsed,
-  onToggleCollapse,
   additionalHeaderActions,
   headerBadge,
   children,
@@ -39,66 +33,28 @@ export default function Panel({
   const Icon = config.icon
 
   // Helper to safely get data-testid from props
-  const getDataTestId = (element: ReactNode): string | undefined => {
-    if (isValidElement(element)) {
-      const props = element.props as Record<string, unknown>
-      return typeof props['data-testid'] === 'string' ? props['data-testid'] : undefined
-    }
-    return undefined
+  // This helper assumes element is a valid ReactElement (caller must verify first)
+  const getDataTestId = (element: ReactElement): string | undefined => {
+    const props = element.props as Record<string, unknown>
+    return typeof props['data-testid'] === 'string' ? props['data-testid'] : undefined
   }
 
   // Clone additionalHeaderActions to add unique test IDs for mobile and desktop
   const mobileHeaderActions = additionalHeaderActions && isValidElement(additionalHeaderActions)
     ? cloneElement(additionalHeaderActions as ReactElement<Record<string, unknown>>, {
-        'data-testid': getDataTestId(additionalHeaderActions) 
-          ? `${getDataTestId(additionalHeaderActions)}-mobile`
+        'data-testid': getDataTestId(additionalHeaderActions as ReactElement) 
+          ? `${getDataTestId(additionalHeaderActions as ReactElement)}-mobile`
           : undefined,
       } as Record<string, unknown>)
     : additionalHeaderActions
 
   const desktopHeaderActions = additionalHeaderActions && isValidElement(additionalHeaderActions)
     ? cloneElement(additionalHeaderActions as ReactElement<Record<string, unknown>>, {
-        'data-testid': getDataTestId(additionalHeaderActions)
-          ? `${getDataTestId(additionalHeaderActions)}-desktop`
+        'data-testid': getDataTestId(additionalHeaderActions as ReactElement)
+          ? `${getDataTestId(additionalHeaderActions as ReactElement)}-desktop`
           : undefined,
       } as Record<string, unknown>)
     : additionalHeaderActions
-
-  if (isCollapsed) {
-    return (
-      <>
-        {/* Mobile collapsed button - horizontal */}
-        <button
-          type="button"
-          onClick={onToggleCollapse}
-          className="md:hidden w-full rounded-2xl border ${config.borderColorClass} ${config.bgColorClass} px-4 py-3 shadow-sm flex items-center justify-between"
-          aria-expanded="false"
-          aria-label={config.ariaLabel || `Expand ${config.title}`}
-          data-testid={config.testId}
-        >
-          <div className={`flex items-center gap-2 ${config.textColorClass}`}>
-            <Icon size={18} className={config.iconColorClass} />
-            <h2 className="font-semibold text-sm uppercase tracking-wide">{config.title}</h2>
-          </div>
-          <ChevronDown size={18} className="text-emerald-600" />
-        </button>
-
-        {/* Desktop collapsed button - vertical */}
-        <button
-          type="button"
-          onClick={onToggleCollapse}
-          className={`hidden md:flex flex-col items-center justify-center rounded-2xl border ${config.borderColorClass} ${config.bgColorClass} shadow-sm hover:border-emerald-300 hover:bg-white transition-colors px-3 py-4 min-h-[180px] vertical-text`}
-          aria-expanded="false"
-          aria-label={config.ariaLabel || `Expand ${config.title}`}
-        >
-          <span className={`flex items-center gap-2 ${config.textColorClass}`}>
-            <Icon size={18} className={`${config.iconColorClass} rotate-90`} />
-            <span className="font-semibold text-sm uppercase tracking-wide">{config.title}</span>
-          </span>
-        </button>
-      </>
-    )
-  }
 
   return (
     <div
@@ -110,7 +66,7 @@ export default function Panel({
         return acc
       }, {} as Record<string, string>)}
     >
-      {/* Mobile: Static header (no collapse button) */}
+      {/* Mobile: Static header */}
       <div className={`md:hidden w-full p-4 border-b ${config.borderColorClass} ${config.bgColorClass} flex justify-between items-center`}>
         <div className={`flex items-center gap-2 ${config.textColorClass}`}>
           <Icon size={18} className={config.iconColorClass} />
@@ -122,20 +78,14 @@ export default function Panel({
         </div>
       </div>
 
-      {/* Desktop: Collapsible header button */}
+      {/* Desktop: Static header */}
       <div
         className={`hidden md:flex w-full text-left p-4 border-b ${config.borderColorClass} ${config.bgColorClass} justify-between items-center`}
       >
-        <button
-          type="button"
-          onClick={onToggleCollapse}
-          className={`flex items-center gap-2 ${config.textColorClass} cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 bg-transparent border-0 p-0 hover:opacity-80`}
-          aria-label={config.ariaLabel || `Collapse ${config.title}`}
-          aria-expanded="true"
-        >
+        <div className={`flex items-center gap-2 ${config.textColorClass}`}>
           <Icon size={18} className={config.iconColorClass} />
           <h2 className="font-semibold text-sm uppercase tracking-wide">{config.title}</h2>
-        </button>
+        </div>
         <div className="flex items-center gap-2">
           {headerBadge}
           {desktopHeaderActions}
