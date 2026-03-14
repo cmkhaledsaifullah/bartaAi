@@ -192,7 +192,7 @@ describe('Prompt', () => {
           id: 'msg-1',
           role: 'assistant',
           content: 'Answer',
-          type: 'retrieval',
+          type: 'answer',
           retrieved: [
             { text: 'Chunk 1', score: 1, source: 'A', sourceId: 1 },
             { text: 'Chunk 2', score: 0.9, source: 'B', sourceId: 2 },

@@ -6,7 +6,7 @@ export default defineConfig({
     environment: 'node',
     testTimeout: 60000,
     hookTimeout: 60000,
-    reporters: 'dot',
+    reporters: ['./vitest.e2e.reporter.js'],
     sequence: {
       concurrent: false,
     },
