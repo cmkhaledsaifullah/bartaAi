@@ -1,0 +1,461 @@
+
+> bartaai@0.0.0 test:mutation
+> stryker run
+
+[32m23:47:52 (31683) INFO ProjectReader[39m Found 14 of 94 file(s) to be mutated.
+[32m23:47:52 (31683) INFO Instrumenter[39m Instrumented 14 source file(s) with 487 mutant(s)
+[32m23:47:53 (31683) INFO ConcurrencyTokenProvider[39m Creating 7 test runner process(es).
+[32m23:47:53 (31683) INFO BroadcastReporter[39m Detected that current console does not support the "progress" reporter, downgrading to "progress-append-only" reporter
+[32m23:47:55 (31683) INFO DryRunExecutor[39m Starting initial test run (vitest test runner with "perTest" coverage analysis). This may take a while.
+[32m23:48:02 (31683) INFO DryRunExecutor[39m Initial test run succeeded. Ran 179 tests in 6 seconds (net 1388.0817490000054 ms, overhead 5531.918250999995 ms).
+Mutation testing 10% (elapsed: <1m, remaining: ~1m) 24/422 tested (0 survived, 0 timed out)
+Mutation testing 22% (elapsed: <1m, remaining: ~1m) 64/422 tested (1 survived, 0 timed out)
+Mutation testing 28% (elapsed: <1m, remaining: ~1m) 99/422 tested (1 survived, 0 timed out)
+Mutation testing 39% (elapsed: <1m, remaining: ~1m) 134/422 tested (4 survived, 0 timed out)
+Mutation testing 47% (elapsed: <1m, remaining: <1m) 176/422 tested (4 survived, 0 timed out)
+Mutation testing 52% (elapsed: ~1m, remaining: <1m) 211/422 tested (10 survived, 0 timed out)
+Mutation testing 61% (elapsed: ~1m, remaining: <1m) 265/422 tested (12 survived, 0 timed out)
+Mutation testing 65% (elapsed: ~1m, remaining: <1m) 313/422 tested (14 survived, 0 timed out)
+Mutation testing 73% (elapsed: ~1m, remaining: <1m) 345/422 tested (17 survived, 0 timed out)
+Mutation testing 90% (elapsed: ~1m, remaining: <1m) 383/422 tested (18 survived, 0 timed out)
+
+All tests
+  App.test.tsx
+    ✓ App renders the knowledge base header and default articles (killed 1)
+  Footer.test.tsx
+    ✓ Footer renders desktop footer with copyright text (killed 1)
+    ✓ Footer does not render mobile navigation when activeTab is missing (killed 2)
+    ✓ Footer does not render mobile navigation when onTabChange is missing (killed 1)
+    ✓ Footer renders mobile navigation when both activeTab and onTabChange are provided (killed 2)
+    ~ Footer passes correct props to PanelNavigation in mobile mode (covered 23)
+    ~ Footer verifies mobile bottom tab bar has correct z-index and styling (covered 23)
+    ~ Footer verifies desktop footer has correct styling classes (covered 6)
+  Header.test.tsx
+    ✓ Header renders the logo and title (killed 1)
+    ~ Header does not render panel navigation when activeTab is not provided (covered 14)
+    ~ Header renders panel navigation when activeTab and onTabChange are provided (covered 31)
+    ✓ Header calls handleSignIn when desktop sign in button is clicked (killed 2)
+    ✓ Header opens mobile side panel when menu button is clicked (killed 4)
+    ✓ Header closes mobile side panel when close button is clicked (killed 3)
+    ✓ Header closes mobile side panel when overlay is clicked (killed 5)
+    ✓ Header calls handleSignIn and closes side panel when mobile sign in button is clicked (killed 2)
+    ✓ Header renders mobile side panel initially closed (killed 1)
+    ~ Header renders with activeTab and handles tab changes (covered 31)
+    ~ Header does not show overlay when side panel is closed (covered 14)
+    ~ Header shows overlay when side panel is open (covered 17)
+    ✓ Header does not render panel navigation when only activeTab is provided (killed 3)
+    ~ Header does not render panel navigation when only onTabChange is provided (covered 14)
+    ✓ Header verifies both activeTab and onTabChange are required for navigation (killed 2)
+  Home.test.tsx
+    ✓ Home mounts the Bengali font link and cleans it up on unmount (killed 12)
+    ✓ Home displays the initial welcome system message in the chat stream (killed 10)
+    ✓ Home renders knowledge base summary and first article preview (killed 12)
+    ✓ Home renders prompt example shortcuts with the provided copy (killed 2)
+    ✓ Home highlights the active article card (killed 8)
+    ✓ Home toggles between article text and chunk view (killed 7)
+    ✓ Home keeps preview chunk cards neutral when no highlight keywords are provided (killed 2)
+    ✓ Home syncs view-mode buttons with preview content (killed 20)
+    ✓ Home toggles the settings panel and button styles (killed 17)
+    ✓ Home keeps the search action disabled for empty or whitespace-only queries (killed 5)
+    ✓ Home ignores Enter submissions that contain only whitespace (killed 4)
+    ✓ Home does not run searches when non-Enter keys are pressed (killed 2)
+    ✓ Home returns the cricket fallback answer when the second article is most relevant (killed 37)
+    ✓ Home matches retrieved context regardless of casing (killed 6)
+    ✓ Home does not render retrieved context when no matches are found (killed 4)
+    ✓ Home announces vector search and LLM workflow steps with descriptive copy (killed 14)
+    ✓ Home clears the query input and exposes rag step identifiers (killed 3)
+    ✓ Home submits via Enter key and applies role-specific chat styling (killed 39)
+    ✓ Home assigns stable message identifiers for each role (killed 2)
+    ✓ Home records the unique source list on assistant messages (killed 1)
+    ✓ Home calls Gemini when an API key is provided and displays the response (killed 13)
+    ✓ Home surfaces API errors inside the chat stream for invalid keys (killed 11)
+    ✓ Home surfaces the unknown error fallback when the Gemini call rejects outright (killed 1)
+    ✓ Home shows processing and success RAG step indicators during retrieval (killed 21)
+    ✓ Home scrolls to the latest message when chat history updates (killed 1)
+    ✓ Home shows a warning RAG step when no article context matches the query (killed 12)
+    ✓ Home disables and then re-enables the query input around a search run (killed 2)
+    ✓ Home renders role-specific avatars with matching indicators (killed 4)
+    ✓ Home orders retrieved context by score and limits to three best sentences (killed 3)
+    ✓ Home sorts retrieved context by score even when the most relevant chunk appears last (killed 3)
+    ~ Home verifies exact optional chaining path for Gemini candidates array access (covered 292)
+    ~ Home verifies exact optional chaining path for Gemini content object access (covered 292)
+    ~ Home verifies exact optional chaining path for Gemini parts array access (covered 292)
+    ~ Home verifies exact optional chaining path for Gemini text property access (covered 292)
+    ~ Home verifies answer variable initializes to empty string not other value (covered 272)
+    ~ Home verifies Bengali font link cleanup depends on empty array dependency (covered 152)
+    ~ Home removes Bengali font link on component unmount (covered 152)
+    ✓ Home verifies scroll behavior triggers on chat history changes (killed 1)
+    ~ Home verifies ragSteps initializes to empty array not string array (covered 152)
+    ✓ Home verifies scrollIntoView with smooth behavior on message update (killed 2)
+    ~ Home verifies answer variable starts empty not "Stryker was here!" (covered 272)
+    ~ Home verifies removing ?. from parts[0] breaks with null parts (covered 292)
+    ~ Home verifies removing ?. from [0].text breaks with empty parts array (covered 292)
+    ~ Home verifies default activeTab value is prompt not empty string (covered 152)
+    ~ Home verifies scrollIntoView is called with optional chaining (covered 203)
+    ✓ Home verifies activeTab prompt comparison shows Prompt panel and hides Knowledge panel (killed 1)
+    ✓ Home verifies activeTab knowledge comparison shows Knowledge panel and hides Prompt panel (killed 1)
+    ~ Home verifies activeTab comparison uses strict equality for prompt (covered 183)
+    ~ Home verifies activeTab comparison uses strict equality for knowledge (covered 183)
+    ~ Home verifies activeTab string comparison exact values (covered 183)
+    ~ Home verifies useEffect dependency array for font link is empty (covered 152)
+    ~ Home verifies ragSteps initializes to empty array (covered 152)
+    ~ Home verifies answer variable starts empty (covered 208)
+    ~ Home verifies optional chaining for scrollIntoView (covered 152)
+  homeHelpers.test.ts
+    ✓ homeHelpers extractSearchKeywords trims whitespace and ignores short tokens (killed 5)
+    ✓ homeHelpers extractSearchKeywords strips punctuation, lowercases, and deduplicates tokens (killed 1)
+    ~ homeHelpers extractSearchKeywords keeps Bengali grapheme clusters intact (covered 11)
+    ✓ homeHelpers extractSearchKeywords returns empty array when no keywords match (killed 1)
+    ~ homeHelpers extractSearchKeywords verifies trim is called before lowercase to handle padded words (covered 11)
+    ~ homeHelpers splitArticleIntoSentences respects Bengali punctuation boundaries (covered 4)
+    ✓ homeHelpers splitArticleIntoSentences removes whitespace spillover between sentences (killed 1)
+    ~ homeHelpers buildGeminiPrompt weaves the context and question into the template (covered 1)
+    ✓ homeHelpers buildGeminiRequest targets the Gemini endpoint with headers and payload (killed 3)
+    ✓ homeHelpers resetRagStepsState clears all rag steps via the provided setter (killed 1)
+    ✓ homeHelpers collectUniqueSources removes duplicates while preserving order (killed 1)
+    ✓ homeHelpers buildContextText joins retrieved sentences with blank lines (killed 2)
+  KnowledgeBase.test.tsx
+    ~ KnowledgeBase renders article list metadata and counts (covered 42)
+    ~ KnowledgeBase invokes onSelectArticle when an article card is clicked (covered 42)
+    ~ KnowledgeBase switches view modes via the toggle buttons (covered 43)
+    ~ KnowledgeBase renders chunk cards when the view mode is set to chunks (covered 70)
+    ~ KnowledgeBase renders knowledge base panel (covered 43)
+    ~ KnowledgeBase verifies article list keys are unique and non-empty (covered 42)
+    ✓ ChunkCards highlights any chunk that matches at least one trimmed keyword (killed 10)
+    ✓ ChunkCards renders chunk numbers, lengths, and keeps non-matching chunks neutral (killed 2)
+    ✓ ChunkCards renders neutral chunks when highlightKeywords prop is omitted (killed 1)
+    ~ ChunkCards reports its normalized keyword count via data attributes (covered 26)
+    ✓ ChunkCards trims highlight keywords before matching chunk text (killed 1)
+    ~ ChunkCards matches highlight keywords regardless of casing (covered 28)
+    ✓ ChunkCards ignores keywords that collapse to empty strings after trimming (killed 3)
+    ~ ChunkCards verifies chunk keys include index (covered 19)
+    ~ ChunkCards verifies highlightKeywords defaults to empty array (covered 20)
+  KnowledgePanel.test.tsx
+    ~ KnowledgeBase renders article list metadata and counts (covered 42)
+    ~ KnowledgeBase invokes onSelectArticle when an article card is clicked (covered 42)
+    ~ KnowledgeBase switches view modes via the toggle buttons (covered 43)
+    ✓ KnowledgeBase renders chunk cards when the view mode is set to chunks (killed 1)
+    ✓ ChunkCards highlights any chunk that matches at least one trimmed keyword (killed 1)
+    ✓ ChunkCards renders chunk numbers, lengths, and keeps non-matching chunks neutral (killed 1)
+    ~ ChunkCards renders neutral chunks when highlightKeywords prop is omitted (covered 20)
+    ~ ChunkCards reports its normalized keyword count via data attributes (covered 26)
+    ✓ ChunkCards trims highlight keywords before matching chunk text (killed 1)
+    ~ ChunkCards matches highlight keywords regardless of casing (covered 28)
+    ~ ChunkCards ignores keywords that collapse to empty strings after trimming (covered 24)
+  mockResponses.test.ts
+    ✓ mockResponses generateMockResponse returns NO_CONTEXT_MESSAGE when topChunks array is empty (killed 2)
+    ~ mockResponses generateMockResponse returns specific mock response for source ID 1 (covered 5)
+    ~ mockResponses generateMockResponse returns specific mock response for source ID 2 (covered 5)
+    ~ mockResponses generateMockResponse returns GENERIC_MOCK_RESPONSE for unknown source ID (covered 5)
+    ~ mockResponses generateMockResponse returns GENERIC_MOCK_RESPONSE when source ID is 0 (covered 5)
+    ~ mockResponses generateMockResponse uses only the first chunk when multiple chunks are provided (covered 5)
+    ~ mockResponses generateMockResponse returns NO_CONTEXT_MESSAGE not GENERIC_MOCK_RESPONSE when array is empty (covered 5)
+    ~ mockResponses generateMockResponse verifies the empty check is not bypassed (covered 6)
+    ~ mockResponses generateMockResponse does not return empty string when topChunks is empty (covered 5)
+    ~ mockResponses generateMockResponse verifies early return prevents accessing first chunk when empty (covered 5)
+  Panel.test.tsx
+    ~ Panel renders the panel with children (covered 13)
+    ✓ Panel renders mobile static header (killed 1)
+    ✓ Panel renders desktop static header (killed 1)
+    ~ Panel applies config colors to mobile and desktop headers (covered 13)
+    ~ Panel renders the icon from config (covered 13)
+    ~ Panel renders headerBadge when provided (covered 13)
+    ✓ Panel renders additionalHeaderActions when provided (killed 2)
+    ✓ Panel applies custom containerClassName (killed 1)
+    ✓ Panel applies default containerClassName when not provided (killed 1)
+    ✓ Panel applies dataAttributes as data- prefixed attributes (killed 2)
+    ~ Panel renders with complementary role (covered 13)
+    ~ Panel renders both mobile and desktop headers (covered 13)
+    ✓ Panel clones additionalHeaderActions without testid for non-ReactElement (killed 2)
+    ~ Panel handles additionalHeaderActions without data-testid (covered 19)
+    ✓ Panel verifies typeof check for data-testid returns undefined for non-string types (killed 1)
+    ✓ Panel verifies mobile header has all required className tokens (killed 1)
+    ✓ Panel verifies desktop header has all required className tokens (killed 1)
+    ~ Panel verifies textColorClass is applied to mobile and desktop icon containers (covered 13)
+  PanelNavigation.test.tsx
+    ✓ PanelNavigation desktop variant renders buttons for all registered panels (killed 1)
+    ✓ PanelNavigation desktop variant highlights the active tab (killed 3)
+    ✓ PanelNavigation desktop variant does not highlight inactive tabs (killed 1)
+    ~ PanelNavigation desktop variant calls onTabChange when a panel button is clicked (covered 17)
+    ~ PanelNavigation mobile variant renders buttons for all registered panels (covered 17)
+    ~ PanelNavigation mobile variant highlights the active tab (covered 17)
+    ~ PanelNavigation mobile variant calls onTabChange when a panel button is clicked (covered 17)
+    ✓ PanelNavigation mutant killing tests verifies variant comparison uses exact string desktop (killed 7)
+    ~ PanelNavigation mutant killing tests verifies className template literal is not empty (covered 17)
+    ✓ PanelNavigation mutant killing tests verifies active button has color classes not empty string (killed 1)
+    ✓ PanelNavigation mutant killing tests verifies inactive button has default classes not empty string (killed 1)
+    ~ PanelNavigation mutant killing tests verifies isDesktop is false when variant is not desktop (covered 17)
+    ~ PanelNavigation mutant killing tests verifies variant comparison is strict equality not empty string (covered 18)
+    ✓ PanelNavigation mutant killing tests verifies inactive icon has text-slate-500 class not empty string (killed 1)
+  panelRegistry.test.ts
+    ✘ panelRegistry contains the expected panels (covered 0)
+    ✘ panelRegistry has prompt panel with correct configuration (covered 0)
+    ✘ panelRegistry has knowledge panel with correct configuration (covered 0)
+    ✓ panelRegistry getPanelById returns the correct panel for a valid id (killed 4)
+    ✓ panelRegistry getPanelById returns undefined for an invalid id (killed 1)
+    ~ panelRegistry getPanelById returns the knowledge panel by id (covered 5)
+  Prompt.test.tsx
+    ~ Prompt renders chat history and retrieval context bubbles (covered 92)
+    ✓ Prompt prefills the query input when an example question is selected (killed 2)
+    ~ Prompt invokes onSubmit when clicking run search or pressing Enter (covered 98)
+    ~ Prompt disables submission when the query is empty (covered 92)
+    ~ Prompt disables submission while a search is running (covered 91)
+    ✓ Prompt toggles the settings panel and updates the API key input (killed 1)
+    ~ Prompt shows rag steps when processing is active (covered 115)
+    ✓ Prompt closes settings panel when clicking outside (killed 7)
+    ✓ Prompt does not close settings panel when clicking inside the settings panel (killed 4)
+    ~ Prompt does not close settings panel when clicking the settings button (covered 104)
+    ~ Prompt does not trigger click outside handler when settings are closed (covered 102)
+    ✓ Prompt verifies data-sources uses pipe separator (killed 1)
+    ~ Prompt verifies retrieved chunk keys are unique (covered 88)
+    ~ Prompt verifies warning status renders warning icon (covered 114)
+    ~ Prompt verifies mousedown event listener cleanup (covered 92)
+    ~ Prompt verifies logical operator for showSettings check (covered 105)
+
+[Survived] MethodExpression
+src/utils/homeHelpers.ts:26:20
+-       .map((word) => word.trim().toLowerCase())
++       .map((word) => word.toLowerCase())
+Tests ran:
+    Home returns the cricket fallback answer when the second article is most relevant
+    Home matches retrieved context regardless of casing
+    Home does not render retrieved context when no matches are found
+  and 28 more tests!
+
+
+[Survived] ArrayDeclaration
+src/views/Home.tsx:46:6
+-     }, [])
++     }, ["Stryker was here"])
+Tests ran:
+    Home mounts the Bengali font link and cleans it up on unmount
+    Home displays the initial welcome system message in the chat stream
+    Home renders knowledge base summary and first article preview
+  and 52 more tests!
+
+
+[Survived] ArrayDeclaration
+src/views/Home.tsx:55:55
+-     const [ragSteps, setRagSteps] = useState<RagStep[]>([])
++     const [ragSteps, setRagSteps] = useState<RagStep[]>(["Stryker was here"])
+Tests ran:
+    Home mounts the Bengali font link and cleans it up on unmount
+    Home displays the initial welcome system message in the chat stream
+    Home renders knowledge base summary and first article preview
+  and 52 more tests!
+
+
+[Survived] OptionalChaining
+src/views/Home.tsx:60:5
+-       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
++       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
+Tests ran:
+    Home mounts the Bengali font link and cleans it up on unmount
+    Home displays the initial welcome system message in the chat stream
+    Home renders knowledge base summary and first article preview
+  and 52 more tests!
+
+
+[Survived] StringLiteral
+src/views/Home.tsx:132:20
+-         let answer = ''
++         let answer = "Stryker was here!"
+Tests ran:
+    Home returns the cricket fallback answer when the second article is most relevant
+    Home matches retrieved context regardless of casing
+    Home does not render retrieved context when no matches are found
+  and 24 more tests!
+
+
+[Survived] OptionalChaining
+src/views/Home.tsx:148:11
+-             data.candidates?.[0]?.content?.parts?.[0]?.text ?? NO_CONTEXT_MESSAGE
++             data.candidates?.[0]?.content?.parts?.[0].text ?? NO_CONTEXT_MESSAGE
+Tests ran:
+    Home calls Gemini when an API key is provided and displays the response
+    Home verifies exact optional chaining path for Gemini candidates array access
+    Home verifies exact optional chaining path for Gemini content object access
+  and 4 more tests!
+
+
+[Survived] OptionalChaining
+src/views/Home.tsx:148:11
+-             data.candidates?.[0]?.content?.parts?.[0]?.text ?? NO_CONTEXT_MESSAGE
++             data.candidates?.[0]?.content?.parts[0]?.text ?? NO_CONTEXT_MESSAGE
+Tests ran:
+    Home calls Gemini when an API key is provided and displays the response
+    Home verifies exact optional chaining path for Gemini candidates array access
+    Home verifies exact optional chaining path for Gemini content object access
+  and 4 more tests!
+
+
+[Survived] OptionalChaining
+src/views/Home.tsx:148:11
+-             data.candidates?.[0]?.content?.parts?.[0]?.text ?? NO_CONTEXT_MESSAGE
++             data.candidates?.[0]?.content.parts?.[0]?.text ?? NO_CONTEXT_MESSAGE
+Tests ran:
+    Home calls Gemini when an API key is provided and displays the response
+    Home verifies exact optional chaining path for Gemini candidates array access
+    Home verifies exact optional chaining path for Gemini content object access
+  and 4 more tests!
+
+
+[Survived] OptionalChaining
+src/views/Home.tsx:148:11
+-             data.candidates?.[0]?.content?.parts?.[0]?.text ?? NO_CONTEXT_MESSAGE
++             data.candidates?.[0].content?.parts?.[0]?.text ?? NO_CONTEXT_MESSAGE
+Tests ran:
+    Home calls Gemini when an API key is provided and displays the response
+    Home verifies exact optional chaining path for Gemini candidates array access
+    Home verifies exact optional chaining path for Gemini content object access
+  and 4 more tests!
+
+
+[Survived] OptionalChaining
+src/views/Home.tsx:148:11
+-             data.candidates?.[0]?.content?.parts?.[0]?.text ?? NO_CONTEXT_MESSAGE
++             data.candidates[0]?.content?.parts?.[0]?.text ?? NO_CONTEXT_MESSAGE
+Tests ran:
+    Home calls Gemini when an API key is provided and displays the response
+    Home verifies exact optional chaining path for Gemini candidates array access
+    Home verifies exact optional chaining path for Gemini content object access
+  and 4 more tests!
+
+
+[Survived] ArrayDeclaration
+src/views/KnowledgeBase.tsx:11:23
+-     highlightKeywords = [],
++     highlightKeywords = ["Stryker was here"],
+Tests ran:
+    KnowledgeBase renders knowledge base panel
+
+
+[Survived] StringLiteral
+src/views/KnowledgeBase.tsx:32:20
+-                 key={`article-${article.id}`}
++                 key={``}
+Tests ran:
+    Home renders knowledge base summary and first article preview
+    Home highlights the active article card
+    Home toggles between article text and chunk view
+  and 17 more tests!
+
+
+[Survived] StringLiteral
+src/views/KnowledgeBase.tsx:113:18
+-               key={`chunk-${idx}`}
++               key={``}
+Tests ran:
+    Home toggles between article text and chunk view
+    Home keeps preview chunk cards neutral when no highlight keywords are provided
+    Home syncs view-mode buttons with preview content
+  and 18 more tests!
+
+
+[Survived] LogicalOperator
+src/views/Prompt.tsx:30:9
+-           showSettings &&
+-           settingsRef.current &&
++           showSettings || settingsRef.current &&
+Tests ran:
+    Prompt closes settings panel when clicking outside
+    Prompt does not close settings panel when clicking inside the settings panel
+    Prompt does not close settings panel when clicking the settings button
+  and 2 more tests!
+
+
+[Survived] BlockStatement
+src/views/Prompt.tsx:41:18
+-       return () => {
+-         document.removeEventListener('mousedown', handleClickOutside)
+-       }
++       return () => {}
+Tests ran:
+    Home mounts the Bengali font link and cleans it up on unmount
+    Home displays the initial welcome system message in the chat stream
+    Home renders knowledge base summary and first article preview
+  and 68 more tests!
+
+
+[Survived] ArrayDeclaration
+src/views/Prompt.tsx:44:6
+-     }, [showSettings, onToggleSettings])
++     }, [])
+Tests ran:
+    Home mounts the Bengali font link and cleans it up on unmount
+    Home displays the initial welcome system message in the chat stream
+    Home renders knowledge base summary and first article preview
+  and 68 more tests!
+
+
+[Survived] StringLiteral
+src/views/Prompt.tsx:42:36
+-         document.removeEventListener('mousedown', handleClickOutside)
++         document.removeEventListener("", handleClickOutside)
+Tests ran:
+    Home mounts the Bengali font link and cleans it up on unmount
+    Home displays the initial welcome system message in the chat stream
+    Home renders knowledge base summary and first article preview
+  and 68 more tests!
+
+
+[Survived] StringLiteral
+src/views/Prompt.tsx:125:53
+-               data-sources={msg.sources?.join('|') ?? ''}
++               data-sources={msg.sources?.join('|') ?? "Stryker was here!"}
+Tests ran:
+    Home mounts the Bengali font link and cleans it up on unmount
+    Home displays the initial welcome system message in the chat stream
+    Home renders knowledge base summary and first article preview
+  and 67 more tests!
+
+
+[Survived] StringLiteral
+src/views/Prompt.tsx:170:30
+-                           key={`${msg.id}-chunk-${chunkIndex}`}
++                           key={``}
+Tests ran:
+    Home returns the cricket fallback answer when the second article is most relevant
+    Home matches retrieved context regardless of casing
+    Home announces vector search and LLM workflow steps with descriptive copy
+  and 23 more tests!
+
+
+[Survived] ConditionalExpression
+src/views/Prompt.tsx:207:20
+-                     {step.status === 'warning' && (
++                     {true && (
+Tests ran:
+    Home returns the cricket fallback answer when the second article is most relevant
+    Home matches retrieved context regardless of casing
+    Home does not render retrieved context when no matches are found
+  and 29 more tests!
+
+
+Ran 10.18 tests per mutant on average.
+----------------------|------------------|----------|-----------|------------|----------|----------|
+                      | % Mutation score |          |           |            |          |          |
+File                  |  total | covered | # killed | # timeout | # survived | # no cov | # errors |
+----------------------|--------|---------|----------|-----------|------------|----------|----------|
+All files             |  95.23 |   95.23 |      399 |         0 |         20 |        0 |        3 |
+ components           | 100.00 |  100.00 |       40 |         0 |          0 |        0 |        0 |
+  Panel.tsx           | 100.00 |  100.00 |       22 |         0 |          0 |        0 |        0 |
+  PanelNavigation.tsx | 100.00 |  100.00 |       18 |         0 |          0 |        0 |        0 |
+ config               | 100.00 |  100.00 |        5 |         0 |          0 |        0 |        0 |
+  constants.ts        |    n/a |     n/a |        0 |         0 |          0 |        0 |        0 |
+  panelConfigs.ts     |    n/a |     n/a |        0 |         0 |          0 |        0 |        0 |
+  panelRegistry.ts    | 100.00 |  100.00 |        5 |         0 |          0 |        0 |        0 |
+ utils                |  97.62 |   97.62 |       41 |         0 |          1 |        0 |        0 |
+  homeHelpers.ts      |  97.22 |   97.22 |       35 |         0 |          1 |        0 |        0 |
+  mockResponses.ts    | 100.00 |  100.00 |        6 |         0 |          0 |        0 |        0 |
+ views                |  94.28 |   94.28 |      313 |         0 |         19 |        0 |        3 |
+  App.tsx             | 100.00 |  100.00 |        1 |         0 |          0 |        0 |        0 |
+  Footer.tsx          | 100.00 |  100.00 |        6 |         0 |          0 |        0 |        0 |
+  Header.tsx          | 100.00 |  100.00 |       23 |         0 |          0 |        0 |        0 |
+  Home.tsx            |  92.74 |   92.74 |      115 |         0 |          9 |        0 |        0 |
+  KnowledgeBase.tsx   |  94.92 |   94.92 |       56 |         0 |          3 |        0 |        0 |
+  Prompt.tsx          |  94.12 |   94.12 |      112 |         0 |          7 |        0 |        3 |
+----------------------|--------|---------|----------|-----------|------------|----------|----------|
+[32m23:49:51 (31683) INFO MutationTestReportHelper[39m Final mutation score of 95.23 is greater than or equal to break threshold 90
+[32m23:49:51 (31683) INFO HtmlReporter[39m Your report can be found at: file:///Users/cmkhaledsaifullah/Repos/bartaAi/reports/mutation/mutation.html
+[32m23:49:51 (31683) INFO MutationTestExecutor[39m Done in 1 minute and 59 seconds.

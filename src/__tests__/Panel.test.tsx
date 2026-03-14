@@ -207,4 +207,73 @@ describe('Panel', () => {
     // The cloned elements should not have data-testid set (it would be undefined)
     expect(screen.getByTestId('test-panel')).toBeInTheDocument()
   })
+
+  it('verifies typeof check for data-testid returns undefined for non-string types', () => {
+    render(
+      <Panel
+        config={mockConfig}
+        additionalHeaderActions={
+          <button data-testid={123 as unknown as string}>Action</button>
+        }
+      >
+        <div>Content</div>
+      </Panel>
+    )
+
+    // When data-testid is not a string, cloned elements should not have testid
+    const panel = screen.getByTestId('test-panel')
+    expect(panel).toBeInTheDocument()
+    
+    // The buttons should not have the mobile/desktop suffixes
+    expect(screen.queryByTestId('123-mobile')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('123-desktop')).not.toBeInTheDocument()
+  })
+
+  it('verifies mobile header has all required className tokens', () => {
+    const { container } = render(
+      <Panel config={mockConfig}>
+        <div>Content</div>
+      </Panel>
+    )
+
+    const mobileHeaderContent = container.querySelector('.md\\:hidden .flex.items-center.gap-2.text-emerald-800')
+    expect(mobileHeaderContent).toBeInTheDocument()
+    
+    // Verify all classes are present
+    const header = container.querySelector('.md\\:hidden.w-full.p-4')
+    expect(header).toHaveClass('md:hidden', 'w-full', 'p-4', 'border-b', 'bg-emerald-50', 'border-emerald-200')
+  })
+
+  it('verifies desktop header has all required className tokens', () => {
+    const { container } = render(
+      <Panel config={mockConfig}>
+        <div>Content</div>
+      </Panel>
+    )
+
+    const desktopHeaderContent = container.querySelector('.hidden.md\\:flex .flex.items-center.gap-2.text-emerald-800')
+    expect(desktopHeaderContent).toBeInTheDocument()
+    
+    // Verify all classes are present (second element with these classes)
+    const headers = container.querySelectorAll('.hidden.md\\:flex')
+    const desktopHeader = headers[0]
+    expect(desktopHeader).toHaveClass('hidden', 'md:flex', 'w-full', 'p-4', 'border-b', 'bg-emerald-50', 'border-emerald-200')
+  })
+
+  it('verifies textColorClass is applied to mobile and desktop icon containers', () => {
+    const customConfig = {
+      ...mockConfig,
+      textColorClass: 'text-red-500',
+    }
+    
+    const { container } = render(
+      <Panel config={customConfig}>
+        <div>Content</div>
+      </Panel>
+    )
+
+    const coloredDivs = container.querySelectorAll('.text-red-500')
+    // Should have at least 2: one for mobile, one for desktop
+    expect(coloredDivs.length).toBeGreaterThanOrEqual(2)
+  })
 })

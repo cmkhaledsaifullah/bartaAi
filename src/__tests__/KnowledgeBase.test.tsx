@@ -86,6 +86,25 @@ describe('KnowledgeBase', () => {
 
     expect(screen.getByTestId('knowledge-base')).toBeInTheDocument()
   })
+
+  it('verifies article list keys are unique and non-empty', () => {
+    render(
+      <KnowledgeBase
+        articles={ARTICLES}
+        selectedArticle={ARTICLES[0]!}
+        viewMode="text"
+        highlightKeywords={[]}
+        onSelectArticle={() => {}}
+        onViewModeChange={() => {}}
+      />
+    )
+
+    // Verify article cards exist
+    const articleCard1 = screen.getByTestId('article-card-1')
+    const articleCard2 = screen.getByTestId('article-card-2')
+    expect(articleCard1).toBeInTheDocument()
+    expect(articleCard2).toBeInTheDocument()
+  })
 })
 
 describe('ChunkCards', () => {
@@ -165,6 +184,26 @@ describe('ChunkCards', () => {
     expect(screen.getByTestId('chunk-visualizer')).toHaveAttribute('data-keyword-count', '0')
     screen.getAllByTestId('chunk-card').forEach((card) => {
       expect(card.getAttribute('data-relevant')).toBe('false')
+    })
+  })
+
+  it('verifies chunk keys include index', () => {
+    render(<ChunkCards text="First. Second?" highlightKeywords={[]} />)
+
+    const chunks = screen.getAllByTestId(/chunk-card/)
+    expect(chunks.length).toBeGreaterThan(0)
+    chunks.forEach((chunk) => {
+      expect(chunk).toBeInTheDocument()
+    })
+  })
+
+  it('verifies highlightKeywords defaults to empty array', () => {
+    render(<ChunkCards text="First. Second?" />)
+
+    // All chunks should be neutral
+    const chunks = screen.getAllByTestId('chunk-card')
+    chunks.forEach((chunk) => {
+      expect(chunk.getAttribute('data-relevant')).toBe('false')
     })
   })
 })

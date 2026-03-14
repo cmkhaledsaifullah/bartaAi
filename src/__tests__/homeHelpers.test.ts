@@ -26,6 +26,19 @@ describe('homeHelpers', () => {
     it('returns empty array when no keywords match', () => {
       expect(extractSearchKeywords('!@# $%^ &*()')).toEqual([])
     })
+
+    it('verifies trim is called before lowercase to handle padded words', () => {
+      // If trim() is removed, '  METRO  ' would become '  metro  ' (with spaces)
+      // and would be different from 'metro'
+      const result = extractSearchKeywords('  METRO  ')
+      expect(result).toContain('metro')
+      expect(result).not.toContain('  metro  ')
+      
+      // Also verify deduplication works after trimming
+      const dedupResult = extractSearchKeywords('  METRO  metro  MeTrO  ')
+      expect(dedupResult).toEqual(['metro'])
+      expect(dedupResult.length).toBe(1)
+    })
   })
 
   describe('splitArticleIntoSentences', () => {
