@@ -63,8 +63,6 @@ export type KnowledgeBaseProps = {
   highlightKeywords?: string[]
   onSelectArticle: (article: Article) => void
   onViewModeChange: (mode: ViewMode) => void
-  isCollapsed: boolean
-  onToggleCollapse: () => void
 }
 
 export type PromptProps = {
@@ -81,9 +79,6 @@ export type PromptProps = {
   onSubmit: () => void
   ragSteps: RagStep[]
   messagesEndRef: MutableRefObject<HTMLDivElement | null>
-  isCollapsed: boolean
-  onToggleCollapse: () => void
-  isKnowledgeCollapsed?: boolean
 }
 
 export type HomeProps = {

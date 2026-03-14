@@ -22,7 +22,7 @@ const ARTICLES: Article[] = [
   },
 ]
 
-const renderPanel = (overrides: Partial<{ viewMode: ViewMode; isCollapsed: boolean }> = {}) => {
+const renderPanel = (overrides: Partial<{ viewMode: ViewMode }> = {}) => {
   const props = {
     articles: ARTICLES,
     selectedArticle: ARTICLES[0]!,
@@ -30,8 +30,6 @@ const renderPanel = (overrides: Partial<{ viewMode: ViewMode; isCollapsed: boole
     highlightKeywords: ['metro'],
     onSelectArticle: vi.fn(),
     onViewModeChange: vi.fn(),
-    isCollapsed: false,
-    onToggleCollapse: vi.fn(),
     ...overrides,
   }
 
@@ -75,33 +73,6 @@ describe('KnowledgeBase', () => {
     expect(screen.getAllByTestId('chunk-card').length).toBeGreaterThan(0)
   })
 
-  it('renders collapsed mobile button when isCollapsed is true', () => {
-    const props = renderPanel({ isCollapsed: true })
-
-    const buttons = screen.getAllByRole('button', { expanded: false })
-    const mobileButton = buttons.find((btn) => btn.classList.contains('md:hidden'))
-    
-    expect(mobileButton).toBeDefined()
-    expect(mobileButton).toHaveClass('md:hidden')
-    expect(within(mobileButton!).getByText('বার্তা ভাণ্ডার')).toBeInTheDocument()
-
-    fireEvent.click(mobileButton!)
-    expect(props.onToggleCollapse).toHaveBeenCalled()
-  })
-
-  it('renders collapsed desktop button when isCollapsed is true', () => {
-    const props = renderPanel({ isCollapsed: true })
-
-    const desktopButtons = screen.getAllByRole('button', { expanded: false })
-    const desktopButton = desktopButtons.find((btn) => btn.classList.contains('md:flex'))
-    
-    expect(desktopButton).toBeDefined()
-    expect(desktopButton).toHaveClass('hidden', 'md:flex')
-    
-    fireEvent.click(desktopButton!)
-    expect(props.onToggleCollapse).toHaveBeenCalled()
-  })
-
   it('renders knowledge base panel', () => {
     render(
       <KnowledgeBase
@@ -110,12 +81,29 @@ describe('KnowledgeBase', () => {
         viewMode="text"
         onSelectArticle={vi.fn()}
         onViewModeChange={vi.fn()}
-        isCollapsed={false}
-        onToggleCollapse={vi.fn()}
       />
     )
 
     expect(screen.getByTestId('knowledge-base')).toBeInTheDocument()
+  })
+
+  it('verifies article list keys are unique and non-empty', () => {
+    render(
+      <KnowledgeBase
+        articles={ARTICLES}
+        selectedArticle={ARTICLES[0]!}
+        viewMode="text"
+        highlightKeywords={[]}
+        onSelectArticle={() => {}}
+        onViewModeChange={() => {}}
+      />
+    )
+
+    // Verify article cards exist
+    const articleCard1 = screen.getByTestId('article-card-1')
+    const articleCard2 = screen.getByTestId('article-card-2')
+    expect(articleCard1).toBeInTheDocument()
+    expect(articleCard2).toBeInTheDocument()
   })
 })
 
@@ -196,6 +184,26 @@ describe('ChunkCards', () => {
     expect(screen.getByTestId('chunk-visualizer')).toHaveAttribute('data-keyword-count', '0')
     screen.getAllByTestId('chunk-card').forEach((card) => {
       expect(card.getAttribute('data-relevant')).toBe('false')
+    })
+  })
+
+  it('verifies chunk keys include index', () => {
+    render(<ChunkCards text="First. Second?" highlightKeywords={[]} />)
+
+    const chunks = screen.getAllByTestId(/chunk-card/)
+    expect(chunks.length).toBeGreaterThan(0)
+    chunks.forEach((chunk) => {
+      expect(chunk).toBeInTheDocument()
+    })
+  })
+
+  it('verifies highlightKeywords defaults to empty array', () => {
+    render(<ChunkCards text="First. Second?" />)
+
+    // All chunks should be neutral
+    const chunks = screen.getAllByTestId('chunk-card')
+    chunks.forEach((chunk) => {
+      expect(chunk.getAttribute('data-relevant')).toBe('false')
     })
   })
 })

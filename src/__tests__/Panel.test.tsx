@@ -1,5 +1,5 @@
-import { cleanup, render, screen, fireEvent } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it } from 'vitest'
 import { MessageSquare } from 'lucide-react'
 import Panel from '../components/Panel'
 import type { PanelConfig } from '../components/Panel'
@@ -16,556 +16,264 @@ const mockConfig: PanelConfig = {
   iconColorClass: 'text-emerald-600',
   textColorClass: 'text-emerald-800',
   testId: 'test-panel',
-  ariaLabel: 'Test Panel Area',
 }
 
 describe('Panel', () => {
-  describe('when collapsed', () => {
-    it('renders mobile collapsed button', () => {
-      const onToggleCollapse = vi.fn()
-      render(
-        <Panel
-          config={mockConfig}
-          isCollapsed={true}
-          onToggleCollapse={onToggleCollapse}
-        >
-          <div>Content</div>
-        </Panel>
-      )
+  it('renders the panel with children', () => {
+    render(
+      <Panel config={mockConfig}>
+        <div data-testid="panel-content">Panel Content</div>
+      </Panel>
+    )
 
-      const buttons = screen.getAllByRole('button', { name: 'Test Panel Area' })
-      const mobileButton = buttons[0] // First one is mobile
-      expect(mobileButton).toBeInTheDocument()
-      expect(mobileButton).toHaveClass('md:hidden')
-    })
-
-    it('renders desktop collapsed button', () => {
-      const onToggleCollapse = vi.fn()
-      const { container } = render(
-        <Panel
-          config={mockConfig}
-          isCollapsed={true}
-          onToggleCollapse={onToggleCollapse}
-        >
-          <div>Content</div>
-        </Panel>
-      )
-
-      const desktopButton = container.querySelector('.hidden.md\\:flex')
-      expect(desktopButton).toBeInTheDocument()
-    })
-
-    it('calls onToggleCollapse when mobile collapsed button is clicked', () => {
-      const onToggleCollapse = vi.fn()
-      render(
-        <Panel
-          config={mockConfig}
-          isCollapsed={true}
-          onToggleCollapse={onToggleCollapse}
-        >
-          <div>Content</div>
-        </Panel>
-      )
-
-      const buttons = screen.getAllByRole('button', { name: 'Test Panel Area' })
-      fireEvent.click(buttons[0]) // Mobile button
-      expect(onToggleCollapse).toHaveBeenCalledTimes(1)
-    })
-
-    it('uses default aria-label when not provided', () => {
-      const onToggleCollapse = vi.fn()
-      const configWithoutAriaLabel = { ...mockConfig, ariaLabel: undefined }
-      render(
-        <Panel
-          config={configWithoutAriaLabel}
-          isCollapsed={true}
-          onToggleCollapse={onToggleCollapse}
-        >
-          <div>Content</div>
-        </Panel>
-      )
-
-      expect(screen.getAllByRole('button', { name: 'Expand Test Panel' }).length).toBeGreaterThan(0)
-    })
-
-    it('does not render children when collapsed', () => {
-      const onToggleCollapse = vi.fn()
-      render(
-        <Panel
-          config={mockConfig}
-          isCollapsed={true}
-          onToggleCollapse={onToggleCollapse}
-        >
-          <div data-testid="panel-content">Content</div>
-        </Panel>
-      )
-
-      expect(screen.queryByTestId('panel-content')).not.toBeInTheDocument()
-    })
+    expect(screen.getByTestId('test-panel')).toBeInTheDocument()
+    expect(screen.getByTestId('panel-content')).toBeInTheDocument()
+    expect(screen.getByText('Panel Content')).toBeInTheDocument()
   })
 
-  describe('when expanded', () => {
-    it('renders the panel with children', () => {
-      const onToggleCollapse = vi.fn()
-      render(
-        <Panel
-          config={mockConfig}
-          isCollapsed={false}
-          onToggleCollapse={onToggleCollapse}
-        >
-          <div data-testid="panel-content">Panel Content</div>
-        </Panel>
-      )
+  it('renders mobile static header', () => {
+    const { container } = render(
+      <Panel config={mockConfig}>
+        <div>Content</div>
+      </Panel>
+    )
 
-      expect(screen.getByTestId('test-panel')).toBeInTheDocument()
-      expect(screen.getByTestId('panel-content')).toBeInTheDocument()
-      expect(screen.getByText('Panel Content')).toBeInTheDocument()
-    })
-
-    it('renders mobile static header', () => {
-      const onToggleCollapse = vi.fn()
-      const { container } = render(
-        <Panel
-          config={mockConfig}
-          isCollapsed={false}
-          onToggleCollapse={onToggleCollapse}
-        >
-          <div>Content</div>
-        </Panel>
-      )
-
-      const mobileHeader = container.querySelector('.md\\:hidden.w-full.p-4')
-      expect(mobileHeader).toBeInTheDocument()
-      const headers = screen.getAllByText('Test Panel')
-      expect(headers.length).toBeGreaterThan(0)
-    })
-
-    it('renders desktop collapsible header', () => {
-      const onToggleCollapse = vi.fn()
-      render(
-        <Panel
-          config={mockConfig}
-          isCollapsed={false}
-          onToggleCollapse={onToggleCollapse}
-        >
-          <div>Content</div>
-        </Panel>
-      )
-
-      const collapseButton = screen.getByRole('button', { name: 'Test Panel Area' })
-      expect(collapseButton).toBeInTheDocument()
-    })
-
-    it('calls onToggleCollapse when desktop header button is clicked', () => {
-      const onToggleCollapse = vi.fn()
-      render(
-        <Panel
-          config={mockConfig}
-          isCollapsed={false}
-          onToggleCollapse={onToggleCollapse}
-        >
-          <div>Content</div>
-        </Panel>
-      )
-
-      const collapseButton = screen.getByRole('button', { name: 'Test Panel Area' })
-      fireEvent.click(collapseButton)
-      expect(onToggleCollapse).toHaveBeenCalledTimes(1)
-    })
-
-    it('renders with additional header actions', () => {
-      const onToggleCollapse = vi.fn()
-      render(
-        <Panel
-          config={mockConfig}
-          isCollapsed={false}
-          onToggleCollapse={onToggleCollapse}
-          additionalHeaderActions={
-            <button data-testid="custom-action">Action</button>
-          }
-        >
-          <div>Content</div>
-        </Panel>
-      )
-
-      expect(screen.getByTestId('custom-action-mobile')).toBeInTheDocument()
-      expect(screen.getByTestId('custom-action-desktop')).toBeInTheDocument()
-    })
-
-    it('renders with header badge', () => {
-      const onToggleCollapse = vi.fn()
-      render(
-        <Panel
-          config={mockConfig}
-          isCollapsed={false}
-          onToggleCollapse={onToggleCollapse}
-          headerBadge={<span data-testid="badge">New</span>}
-        >
-          <div>Content</div>
-        </Panel>
-      )
-
-      expect(screen.getAllByTestId('badge')).toHaveLength(2) // Both mobile and desktop
-    })
-
-    it('renders with custom container className', () => {
-      const onToggleCollapse = vi.fn()
-      render(
-        <Panel
-          config={mockConfig}
-          isCollapsed={false}
-          onToggleCollapse={onToggleCollapse}
-          containerClassName="custom-container-class"
-        >
-          <div>Content</div>
-        </Panel>
-      )
-
-      const panel = screen.getByTestId('test-panel')
-      expect(panel).toHaveClass('custom-container-class')
-    })
-
-    it('renders with data attributes', () => {
-      const onToggleCollapse = vi.fn()
-      render(
-        <Panel
-          config={mockConfig}
-          isCollapsed={false}
-          onToggleCollapse={onToggleCollapse}
-          dataAttributes={{
-            'custom-attr': 'value',
-            'another-attr': true,
-            'number-attr': 42,
-          }}
-        >
-          <div>Content</div>
-        </Panel>
-      )
-
-      const panel = screen.getByTestId('test-panel')
-      expect(panel).toHaveAttribute('data-custom-attr', 'value')
-      expect(panel).toHaveAttribute('data-another-attr', 'true')
-      expect(panel).toHaveAttribute('data-number-attr', '42')
-    })
-
-    it('uses default aria-label when not provided in expanded state', () => {
-      const onToggleCollapse = vi.fn()
-      const configWithoutAriaLabel = { ...mockConfig, ariaLabel: undefined }
-      render(
-        <Panel
-          config={configWithoutAriaLabel}
-          isCollapsed={false}
-          onToggleCollapse={onToggleCollapse}
-        >
-          <div>Content</div>
-        </Panel>
-      )
-
-      expect(screen.getByRole('button', { name: 'Collapse Test Panel' })).toBeInTheDocument()
-    })
-
-    it('handles non-ReactElement additionalHeaderActions', () => {
-      const onToggleCollapse = vi.fn()
-      render(
-        <Panel
-          config={mockConfig}
-          isCollapsed={false}
-          onToggleCollapse={onToggleCollapse}
-          additionalHeaderActions="Text Action"
-        >
-          <div>Content</div>
-        </Panel>
-      )
-
-      expect(screen.getAllByText('Text Action')).toHaveLength(2) // Both mobile and desktop
-    })
-
-    it('handles additionalHeaderActions without data-testid', () => {
-      const onToggleCollapse = vi.fn()
-      render(
-        <Panel
-          config={mockConfig}
-          isCollapsed={false}
-          onToggleCollapse={onToggleCollapse}
-          additionalHeaderActions={<button>No TestId</button>}
-        >
-          <div>Content</div>
-        </Panel>
-      )
-
-      expect(screen.getAllByRole('button', { name: /no testid/i })).toHaveLength(2)
-    })
+    const mobileHeader = container.querySelector('.md\\:hidden.w-full.p-4')
+    expect(mobileHeader).toBeInTheDocument()
+    const headers = screen.getAllByText('Test Panel')
+    expect(headers.length).toBeGreaterThanOrEqual(1)
   })
 
-  describe('styling and classes', () => {
-    it('applies config color classes correctly', () => {
-      const onToggleCollapse = vi.fn()
-      const { container } = render(
-        <Panel
-          config={mockConfig}
-          isCollapsed={false}
-          onToggleCollapse={onToggleCollapse}
-        >
-          <div>Content</div>
-        </Panel>
-      )
+  it('renders desktop static header', () => {
+    const { container } = render(
+      <Panel config={mockConfig}>
+        <div>Content</div>
+      </Panel>
+    )
 
-      const mobileHeader = container.querySelector('.bg-emerald-50.border-emerald-200')
-      expect(mobileHeader).toBeInTheDocument()
-    })
+    const desktopHeader = container.querySelector('.hidden.md\\:flex.w-full.text-left.p-4')
+    expect(desktopHeader).toBeInTheDocument()
   })
 
-  describe('mutant killing tests', () => {
-    it('verifies collapsed button className includes textColor and gap', () => {
-      const onToggleCollapse = vi.fn()
-      const { container } = render(
-        <Panel
-          config={mockConfig}
-          isCollapsed={true}
-          onToggleCollapse={onToggleCollapse}
-        >
-          <div>Content</div>
-        </Panel>
-      )
+  it('applies config colors to mobile and desktop headers', () => {
+    const { container } = render(
+      <Panel config={mockConfig}>
+        <div>Content</div>
+      </Panel>
+    )
 
-      // Find the span with the icon and text
-      const spans = container.querySelectorAll('span')
-      const iconSpan = Array.from(spans).find(span => span.textContent?.includes('Test Panel'))
-      expect(iconSpan?.className).toContain('flex')
-      expect(iconSpan?.className).toContain('items-center')
-      expect(iconSpan?.className).toContain('gap-2')
-      expect(iconSpan?.className).toContain('text-emerald-800')
-    })
+    const mobileHeader = container.querySelector('.bg-emerald-50.border-emerald-200')
+    const desktopHeader = container.querySelectorAll('.bg-emerald-50.border-emerald-200')[1]
+    expect(mobileHeader).toBeInTheDocument()
+    expect(desktopHeader).toBeInTheDocument()
+  })
 
-    it('verifies aria-label uses OR operator not AND operator', () => {
-      const onToggleCollapse = vi.fn()
-      const configWithoutAriaLabel = { ...mockConfig, ariaLabel: undefined }
-      render(
-        <Panel
-          config={configWithoutAriaLabel}
-          isCollapsed={true}
-          onToggleCollapse={onToggleCollapse}
-        >
-          <div>Content</div>
-        </Panel>
-      )
+  it('renders the icon from config', () => {
+    const { container } = render(
+      <Panel config={mockConfig}>
+        <div>Content</div>
+      </Panel>
+    )
 
-      // Should use fallback when ariaLabel is undefined (OR logic)
-      const buttons = screen.getAllByRole('button', { name: 'Expand Test Panel' })
-      expect(buttons.length).toBeGreaterThan(0)
-    })
+    const icons = container.querySelectorAll('.text-emerald-600')
+    expect(icons.length).toBeGreaterThanOrEqual(2) // mobile and desktop
+  })
 
-    it('verifies aria-label template literal is not empty', () => {
-      const onToggleCollapse = vi.fn()
-      const configWithoutAriaLabel = { ...mockConfig, ariaLabel: undefined }
-      render(
-        <Panel
-          config={configWithoutAriaLabel}
-          isCollapsed={true}
-          onToggleCollapse={onToggleCollapse}
-        >
-          <div>Content</div>
-        </Panel>
-      )
+  it('renders headerBadge when provided', () => {
+    render(
+      <Panel
+        config={mockConfig}
+        headerBadge={<span data-testid="test-badge">Badge</span>}
+      >
+        <div>Content</div>
+      </Panel>
+    )
 
-      // Aria label should not be empty string
-      const buttons = screen.getAllByRole('button')
-      const ariaLabels = buttons.map(b => b.getAttribute('aria-label'))
-      expect(ariaLabels.some(label => label && label !== '')).toBe(true)
-    })
+    const badges = screen.getAllByTestId('test-badge')
+    expect(badges).toHaveLength(2) // mobile and desktop
+    const badgeText = screen.getAllByText('Badge')
+    expect(badgeText).toHaveLength(2)
+  })
 
-    it('verifies containerClassName has default value not empty', () => {
-      const onToggleCollapse = vi.fn()
-      render(
-        <Panel
-          config={mockConfig}
-          isCollapsed={false}
-          onToggleCollapse={onToggleCollapse}
-        >
-          <div>Content</div>
-        </Panel>
-      )
+  it('renders additionalHeaderActions when provided', () => {
+    render(
+      <Panel
+        config={mockConfig}
+        additionalHeaderActions={
+          <button data-testid="action-btn">Action</button>
+        }
+      >
+        <div>Content</div>
+      </Panel>
+    )
 
-      const panel = screen.getByTestId('test-panel')
-      // Should have default border and background classes
-      expect(panel.className).toContain('border')
-      expect(panel.className).toContain('rounded')
-    })
+    expect(screen.getByTestId('action-btn-mobile')).toBeInTheDocument()
+    expect(screen.getByTestId('action-btn-desktop')).toBeInTheDocument()
+  })
 
-    it('verifies conditional expressions for aria-label use correct booleans', () => {
-      const onToggleCollapse = vi.fn()
-      
-      // With ariaLabel provided
-      const { unmount } = render(
-        <Panel
-          config={mockConfig}
-          isCollapsed={true}
-          onToggleCollapse={onToggleCollapse}
-        >
-          <div>Content</div>
-        </Panel>
-      )
-      
-      expect(screen.getAllByRole('button', { name: 'Test Panel Area' }).length).toBeGreaterThan(0)
-      
-      unmount()
-      
-      // Without ariaLabel
-      const configWithoutAriaLabel = { ...mockConfig, ariaLabel: undefined }
-      render(
-        <Panel
-          config={configWithoutAriaLabel}
-          isCollapsed={true}
-          onToggleCollapse={onToggleCollapse}
-        >
-          <div>Content</div>
-        </Panel>
-      )
-      
-      expect(screen.getAllByRole('button', { name: 'Expand Test Panel' }).length).toBeGreaterThan(0)
-    })
+  it('applies custom containerClassName', () => {
+    const customClass = 'custom-bg custom-border'
+    const { container } = render(
+      <Panel config={mockConfig} containerClassName={customClass}>
+        <div>Content</div>
+      </Panel>
+    )
 
-    it('verifies collapsed button inner div has non-empty className with textColorClass', () => {
-      const onToggleCollapse = vi.fn()
-      const { container } = render(
-        <Panel
-          config={mockConfig}
-          isCollapsed={true}
-          onToggleCollapse={onToggleCollapse}
-        >
-          <div>Content</div>
-        </Panel>
-      )
+    const panel = container.querySelector('.custom-bg.custom-border')
+    expect(panel).toBeInTheDocument()
+  })
 
-      // Mobile button inner div
-      const mobileButton = container.querySelector('.md\\:hidden.w-full')
-      const mobileInnerDiv = mobileButton?.querySelector('.flex.items-center.gap-2')
-      expect(mobileInnerDiv).toBeInTheDocument()
-      expect(mobileInnerDiv?.className).toContain('text-emerald-800')
-    })
+  it('applies default containerClassName when not provided', () => {
+    const { container } = render(
+      <Panel config={mockConfig}>
+        <div>Content</div>
+      </Panel>
+    )
 
-    it('verifies collapsed icon has non-empty className with rotation', () => {
-      const onToggleCollapse = vi.fn()
-      const { container } = render(
-        <Panel
-          config={mockConfig}
-          isCollapsed={true}
-          onToggleCollapse={onToggleCollapse}
-        >
-          <div>Content</div>
-        </Panel>
-      )
+    const panel = container.querySelector('.bg-white.border.border-slate-200')
+    expect(panel).toBeInTheDocument()
+  })
 
-      // Desktop button icon should have rotate-90 class
-      const desktopButton = container.querySelector('.hidden.md\\:flex.flex-col')
-      const icon = desktopButton?.querySelector('svg.rotate-90')
-      expect(icon).toBeInTheDocument()
-      // SVGs use class attribute, not className property
-      const iconClassAttr = icon?.getAttribute('class')
-      expect(iconClassAttr).toContain('text-emerald-600')
-      expect(iconClassAttr).toContain('rotate-90')
-    })
+  it('applies dataAttributes as data- prefixed attributes', () => {
+    render(
+      <Panel
+        config={mockConfig}
+        dataAttributes={{ custom: 'value', count: 42 }}
+      >
+        <div>Content</div>
+      </Panel>
+    )
 
-    it('verifies expanded mobile header has non-empty className', () => {
-      const onToggleCollapse = vi.fn()
-      const { container } = render(
-        <Panel
-          config={mockConfig}
-          isCollapsed={false}
-          onToggleCollapse={onToggleCollapse}
-        >
-          <div>Content</div>
-        </Panel>
-      )
+    const panel = screen.getByTestId('test-panel')
+    expect(panel).toHaveAttribute('data-custom', 'value')
+    expect(panel).toHaveAttribute('data-count', '42')
+  })
 
-      const mobileHeader = container.querySelector('.md\\:hidden.w-full.p-4.border-b')
-      expect(mobileHeader).toBeInTheDocument()
-      expect(mobileHeader?.className).toContain('bg-emerald-50')
-      expect(mobileHeader?.className).toContain('border-emerald-200')
-      expect(mobileHeader?.className).toContain('flex')
-      expect(mobileHeader?.className).toContain('justify-between')
-    })
+  it('renders with complementary role', () => {
+    render(
+      <Panel config={mockConfig}>
+        <div>Content</div>
+      </Panel>
+    )
 
-    it('verifies expanded desktop header has non-empty className', () => {
-      const onToggleCollapse = vi.fn()
-      const { container } = render(
-        <Panel
-          config={mockConfig}
-          isCollapsed={false}
-          onToggleCollapse={onToggleCollapse}
-        >
-          <div>Content</div>
-        </Panel>
-      )
+    const panel = screen.getByTestId('test-panel')
+    expect(panel).toHaveAttribute('role', 'complementary')
+  })
 
-      const desktopHeader = container.querySelector('.hidden.md\\:flex.w-full.text-left.p-4.border-b')
-      expect(desktopHeader).toBeInTheDocument()
-      expect(desktopHeader?.className).toContain('bg-emerald-50')
-      expect(desktopHeader?.className).toContain('border-emerald-200')
-      expect(desktopHeader?.className).toContain('justify-between')
-    })
+  it('renders both mobile and desktop headers', () => {
+    const { container } = render(
+      <Panel config={mockConfig}>
+        <div>Content</div>
+      </Panel>
+    )
 
-    it('verifies expanded desktop button has non-empty className with textColorClass', () => {
-      const onToggleCollapse = vi.fn()
-      render(
-        <Panel
-          config={mockConfig}
-          isCollapsed={false}
-          onToggleCollapse={onToggleCollapse}
-        >
-          <div>Content</div>
-        </Panel>
-      )
+    const mobileHeader = container.querySelector('.md\\:hidden')
+    const desktopHeader = container.querySelector('.hidden.md\\:flex')
+    expect(mobileHeader).toBeInTheDocument()
+    expect(desktopHeader).toBeInTheDocument()
+  })
 
-      const collapseButton = screen.getByRole('button', { name: 'Test Panel Area' })
-      expect(collapseButton.className).toContain('flex')
-      expect(collapseButton.className).toContain('items-center')
-      expect(collapseButton.className).toContain('gap-2')
-      expect(collapseButton.className).toContain('text-emerald-800')
-      expect(collapseButton.className).toContain('cursor-pointer')
-    })
+  it('clones additionalHeaderActions without testid for non-ReactElement', () => {
+    render(
+      <Panel
+        config={mockConfig}
+        additionalHeaderActions="Simple Text"
+      >
+        <div>Content</div>
+      </Panel>
+    )
 
-    it('verifies aria-label template literal includes title text', () => {
-      const onToggleCollapse = vi.fn()
-      const configWithoutAriaLabel = { ...mockConfig, ariaLabel: undefined }
-      
-      // Collapsed state
-      const { unmount } = render(
-        <Panel
-          config={configWithoutAriaLabel}
-          isCollapsed={true}
-          onToggleCollapse={onToggleCollapse}
-        >
-          <div>Content</div>
-        </Panel>
-      )
+    // Should render the text as-is
+    const panel = screen.getByTestId('test-panel')
+    expect(panel).toBeInTheDocument()
+  })
 
-      const buttons = screen.getAllByRole('button')
-      buttons.forEach(button => {
-        const ariaLabel = button.getAttribute('aria-label')
-        expect(ariaLabel).toBeTruthy()
-        expect(ariaLabel).toContain('Test Panel')
-        expect(ariaLabel).not.toBe('')
-      })
+  it('handles additionalHeaderActions without data-testid', () => {
+    render(
+      <Panel
+        config={mockConfig}
+        additionalHeaderActions={
+          <button className="action-btn">Action Without TestId</button>
+        }
+      >
+        <div>Content</div>
+      </Panel>
+    )
 
-      unmount()
+    // The panel should render, and the action button should appear twice (mobile + desktop)
+    const actionButtons = screen.getAllByRole('button', { name: /Action Without TestId/i })
+    expect(actionButtons.length).toBeGreaterThanOrEqual(2)
+    
+    // The cloned elements should not have data-testid set (it would be undefined)
+    expect(screen.getByTestId('test-panel')).toBeInTheDocument()
+  })
 
-      // Expanded state
-      render(
-        <Panel
-          config={configWithoutAriaLabel}
-          isCollapsed={false}
-          onToggleCollapse={onToggleCollapse}
-        >
-          <div>Content</div>
-        </Panel>
-      )
+  it('verifies typeof check for data-testid returns undefined for non-string types', () => {
+    render(
+      <Panel
+        config={mockConfig}
+        additionalHeaderActions={
+          <button data-testid={123 as unknown as string}>Action</button>
+        }
+      >
+        <div>Content</div>
+      </Panel>
+    )
 
-      const collapseButton = screen.getByRole('button', { name: /Test Panel/i })
-      const ariaLabel = collapseButton.getAttribute('aria-label')
-      expect(ariaLabel).toContain('Collapse')
-      expect(ariaLabel).toContain('Test Panel')
-      expect(ariaLabel).not.toBe('')
-    })
+    // When data-testid is not a string, cloned elements should not have testid
+    const panel = screen.getByTestId('test-panel')
+    expect(panel).toBeInTheDocument()
+    
+    // The buttons should not have the mobile/desktop suffixes
+    expect(screen.queryByTestId('123-mobile')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('123-desktop')).not.toBeInTheDocument()
+  })
+
+  it('verifies mobile header has all required className tokens', () => {
+    const { container } = render(
+      <Panel config={mockConfig}>
+        <div>Content</div>
+      </Panel>
+    )
+
+    const mobileHeaderContent = container.querySelector('.md\\:hidden .flex.items-center.gap-2.text-emerald-800')
+    expect(mobileHeaderContent).toBeInTheDocument()
+    
+    // Verify all classes are present
+    const header = container.querySelector('.md\\:hidden.w-full.p-4')
+    expect(header).toHaveClass('md:hidden', 'w-full', 'p-4', 'border-b', 'bg-emerald-50', 'border-emerald-200')
+  })
+
+  it('verifies desktop header has all required className tokens', () => {
+    const { container } = render(
+      <Panel config={mockConfig}>
+        <div>Content</div>
+      </Panel>
+    )
+
+    const desktopHeaderContent = container.querySelector('.hidden.md\\:flex .flex.items-center.gap-2.text-emerald-800')
+    expect(desktopHeaderContent).toBeInTheDocument()
+    
+    // Verify all classes are present (second element with these classes)
+    const headers = container.querySelectorAll('.hidden.md\\:flex')
+    const desktopHeader = headers[0]
+    expect(desktopHeader).toHaveClass('hidden', 'md:flex', 'w-full', 'p-4', 'border-b', 'bg-emerald-50', 'border-emerald-200')
+  })
+
+  it('verifies textColorClass is applied to mobile and desktop icon containers', () => {
+    const customConfig = {
+      ...mockConfig,
+      textColorClass: 'text-red-500',
+    }
+    
+    const { container } = render(
+      <Panel config={customConfig}>
+        <div>Content</div>
+      </Panel>
+    )
+
+    const coloredDivs = container.querySelectorAll('.text-red-500')
+    // Should have at least 2: one for mobile, one for desktop
+    expect(coloredDivs.length).toBeGreaterThanOrEqual(2)
   })
 })

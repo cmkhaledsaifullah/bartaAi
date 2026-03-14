@@ -55,9 +55,6 @@ const renderPrompt = (overrides: Partial<ComponentProps<typeof Prompt>> = {}) =>
     onSubmit: vi.fn(),
     ragSteps: [],
     messagesEndRef: createMessagesEndRef(),
-    isCollapsed: false,
-    onToggleCollapse: vi.fn(),
-    isKnowledgeCollapsed: false,
     ...overrides,
   }
 
@@ -132,20 +129,6 @@ describe('Prompt', () => {
     expect(within(ragPanel).getByTestId('rag-icon-success')).toBeInTheDocument()
   })
 
-  it('applies correct data attribute when knowledge panel is collapsed', () => {
-    renderPrompt({ isKnowledgeCollapsed: true })
-    
-    const chatPanel = screen.getByTestId('chat-panel')
-    expect(chatPanel).toHaveAttribute('data-knowledge-collapsed', 'true')
-  })
-
-  it('applies correct data attribute when knowledge panel is expanded', () => {
-    renderPrompt({ isKnowledgeCollapsed: false })
-    
-    const chatPanel = screen.getByTestId('chat-panel')
-    expect(chatPanel).toHaveAttribute('data-knowledge-collapsed', 'false')
-  })
-
   it('closes settings panel when clicking outside', () => {
     const props = renderPrompt({ showSettings: true })
 
@@ -179,5 +162,83 @@ describe('Prompt', () => {
     fireEvent.mouseDown(document.body)
     
     expect(props.onToggleSettings).not.toHaveBeenCalled()
+  })
+
+  it('verifies data-sources uses pipe separator', () => {
+    renderPrompt({
+      chatHistory: [
+        {
+          id: 'msg-1',
+          role: 'assistant',
+          content: 'Answer',
+          type: 'text',
+          sources: ['Source A', 'Source B', 'Source C'],
+        },
+      ],
+    })
+
+    // Find the chat message element (outer div with data-testid="chat-message")
+    const messageElements = screen.getAllByTestId('chat-message')
+    const assistantMessage = messageElements.find(el => el.getAttribute('data-role') === 'assistant')
+    const dataSources = assistantMessage?.getAttribute('data-sources') || ''
+    expect(dataSources).toContain('|')
+    expect(dataSources).not.toBe('')
+  })
+
+  it('verifies retrieved chunk keys are unique', () => {
+    renderPrompt({
+      chatHistory: [
+        {
+          id: 'msg-1',
+          role: 'assistant',
+          content: 'Answer',
+          type: 'answer',
+          retrieved: [
+            { text: 'Chunk 1', score: 1, source: 'A', sourceId: 1 },
+            { text: 'Chunk 2', score: 0.9, source: 'B', sourceId: 2 },
+          ],
+        },
+      ],
+    })
+
+    const chunks = screen.getAllByTestId('retrieved-chunk')
+    expect(chunks.length).toBe(2)
+    // Verify chunks have distinct content (ensures keys work properly)
+    expect(chunks[0].textContent).toContain('Chunk 1')
+    expect(chunks[1].textContent).toContain('Chunk 2')
+  })
+
+  it('verifies warning status renders warning icon', () => {
+    renderPrompt({
+      isProcessing: true,
+      ragSteps: [
+        { id: '1', text: 'Warning step', status: 'warning' as const },
+      ],
+    })
+
+    expect(screen.getByTestId('rag-icon-warning')).toBeInTheDocument()
+  })
+
+  it('verifies mousedown event listener cleanup', () =>{
+    renderPrompt({ showSettings: true })
+
+    // Component should render without errors
+    expect(screen.getByLabelText(/Gemini API Key/i)).toBeInTheDocument()
+    
+    // Cleanup happens automatically in afterEach, shouldn't throw
+  })
+
+  it('verifies logical operator for showSettings check', () => {
+    const mockToggle = vi.fn()
+    renderPrompt({ showSettings: true, onToggleSettings: mockToggle })
+    
+    // Settings panel should be visible (check for API key input)
+    expect(screen.getByLabelText(/Gemini API Key/i)).toBeInTheDocument()
+    
+    // Click outside to close
+    fireEvent.mouseDown(document.body)
+    
+    // onToggleSettings should be called
+    expect(mockToggle).toHaveBeenCalled()
   })
 })

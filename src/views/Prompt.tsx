@@ -19,9 +19,6 @@ export default function Prompt({
   onSubmit,
   ragSteps,
   messagesEndRef,
-  isCollapsed,
-  onToggleCollapse,
-  isKnowledgeCollapsed = false,
 }: PromptProps) {
   const apiKeyFieldId = 'gemini-api-key'
   const settingsRef = useRef<HTMLDivElement>(null)
@@ -88,11 +85,8 @@ export default function Prompt({
   return (
     <Panel
       config={promptConfig}
-      isCollapsed={isCollapsed}
-      onToggleCollapse={onToggleCollapse}
       additionalHeaderActions={settingsButton}
       containerClassName="bg-white/90 border border-slate-200 rounded-2xl shadow-xl"
-      dataAttributes={{ 'knowledge-collapsed': isKnowledgeCollapsed }}
     >
       {showSettings && (
         <div

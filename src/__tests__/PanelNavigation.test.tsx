@@ -170,5 +170,26 @@ describe('PanelNavigation', () => {
       const mobileNav = screen.getByRole('navigation')
       expect(mobileNav).toHaveAttribute('data-variant', 'mobile')
     })
+
+    it('verifies inactive icon has text-slate-500 class not empty string', () => {
+      const onTabChange = vi.fn()
+      const { container } = render(
+        <PanelNavigation activeTab="prompt" onTabChange={onTabChange} variant="desktop" />
+      )
+      
+      // Get all icons (SVGs)
+      const icons = container.querySelectorAll('svg')
+      
+      // Find an inactive button's icon (not the active one)
+      const inactiveIcon = Array.from(icons).find(icon => {
+        const className = icon.getAttribute('class') || ''
+        return className.includes('text-slate-500')
+      })
+      
+      expect(inactiveIcon).toBeDefined()
+      const inactiveIconClass = inactiveIcon?.getAttribute('class') || ''
+      expect(inactiveIconClass).toContain('text-slate-500')
+      expect(inactiveIconClass).not.toBe('')
+    })
   })
 })

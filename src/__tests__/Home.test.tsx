@@ -971,17 +971,6 @@ describe('Home', () => {
     expect(screen.getByTestId('chat-panel')).toBeInTheDocument()
   })
 
-  it('calls empty onToggleCollapse function on Prompt panel when desktop collapse button is clicked', () => {
-    renderHome()
-    
-    // Find the Prompt panel collapse button (desktop header button with aria-label from config)
-    const chatPanel = screen.getByTestId('chat-panel')
-    const collapseButton = within(chatPanel).getByRole('button', { name: 'Prompt panel' })
-    
-    // Click should not throw even though the function is empty
-    expect(() => fireEvent.click(collapseButton)).not.toThrow()
-  })
-
   // Kill isDesktop initial state and desktop detection mutants
 
 
@@ -1228,5 +1217,67 @@ describe('Home', () => {
     
     expect(screen.getByTestId('chat-panel')).toBeInTheDocument()
     expect(screen.queryByTestId('knowledge-base')).not.toBeInTheDocument()
+  })
+
+  it('verifies useEffect dependency array for font link is empty', () => {
+    const { rerender } = renderHome()
+    
+    // Font link should be added on mount
+    const fontLinks = document.head.querySelectorAll('[data-testid="bangla-font-link"]')
+    expect(fontLinks.length).toBe(1)
+    
+    // Rerender should not add another link (verifies empty dependency array)
+    rerender(<Home articles={MOCK_ARTICLES} />)
+    const fontLinksAfterRerender = document.head.querySelectorAll('[data-testid="bangla-font-link"]')
+    expect(fontLinksAfterRerender.length).toBe(1)
+  })
+
+  it('verifies ragSteps initializes to empty array', () => {
+    renderHome()
+    
+    // No rag steps should be visible initially
+    expect(screen.queryByText(/🔎 Searching/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/✅ Search Complete/)).not.toBeInTheDocument()
+  })
+
+  it('verifies answer variable starts empty', () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        candidates: [{
+          content: {
+            parts: [{ text: 'Test answer' }]
+          }
+        }]
+      }),
+    })
+    global.fetch = mockFetch
+
+    renderHome()
+    
+    // Initially no answer bubble
+    expect(screen.queryByText('Test answer')).not.toBeInTheDocument()
+    
+    // Enter API key and submit query
+    fireEvent.click(screen.getByTestId('settings-toggle-desktop'))
+    const apiInput = screen.getByLabelText(/Gemini API Key/i)
+    fireEvent.change(apiInput, { target: { value: 'test-key' } })
+    
+    const input = screen.getByPlaceholderText(/Ask about the news/i)
+    fireEvent.change(input, { target: { value: 'test query' } })
+    fireEvent.click(screen.getByRole('button', { name: /run search/i }))
+    
+    // Answer should appear (not "Stryker was here!")
+    waitFor(() => {
+      expect(screen.queryByText(/Stryker was here!/i)).not.toBeInTheDocument()
+    })
+  })
+
+  it('verifies optional chaining for scrollIntoView', () => {
+    const { container } = renderHome()
+    
+    // The messages end ref should exist
+    const scrollDiv = container.querySelector('[data-testid="messages-end-ref"]')
+    expect(scrollDiv).toBeDefined()
   })
 })

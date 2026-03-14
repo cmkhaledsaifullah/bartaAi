@@ -11,8 +11,6 @@ export default function KnowledgeBase({
   highlightKeywords = [],
   onSelectArticle,
   onViewModeChange,
-  isCollapsed,
-  onToggleCollapse,
 }: KnowledgeBaseProps) {
   const headerBadge = (
     <div className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full font-medium">
@@ -23,8 +21,6 @@ export default function KnowledgeBase({
   return (
     <Panel
       config={knowledgeBaseConfig}
-      isCollapsed={isCollapsed}
-      onToggleCollapse={onToggleCollapse}
       headerBadge={headerBadge}
     >
       <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3 sm:space-y-4">
