@@ -22,10 +22,10 @@ const CHAT_HISTORY: ChatMessage[] = [
   {
     id: 'bot-1',
     role: 'assistant',
-    content: 'মেট্রোরেলে নতুন সময়সূচি প্রকাশ হয়েছে।',
+    content: 'মেট্রোরেলে নতুন সময়সূচি প্রকাশ হয়েছে।',
     type: 'answer',
     retrieved: [
-      { text: 'মেট্রোরেল সকাল ৭টায় শুরু হয়।', score: 3, source: 'Metro Desk', sourceId: 1 },
+      { text: 'মেট্রোরেল সকাল ৭টায় শুরু হয়।', score: 3, source: 'Metro Desk', sourceId: 1 },
     ],
     sources: ['Metro Desk'],
   },
@@ -43,14 +43,10 @@ const createMessagesEndRef = (): MutableRefObject<HTMLDivElement | null> => ({
 const renderPrompt = (overrides: Partial<ComponentProps<typeof Prompt>> = {}) => {
   const props: ComponentProps<typeof Prompt> = {
     chatHistory: CHAT_HISTORY,
-    showSettings: false,
-    onToggleSettings: vi.fn(),
-    apiKey: '',
-    onApiKeyChange: vi.fn(),
     query: '',
     isProcessing: false,
     placeholder: PLACEHOLDER,
-    exampleQuestions: ['মেট্রোরেল নিয়ে আপডেট কি?', 'How is Bangladesh doing in Cricket?'],
+    exampleQuestions: ['মেট্রোরেল নিয়ে আপডেট কি?', 'How is Bangladesh doing in Cricket?'],
     onQueryChange: vi.fn(),
     onSubmit: vi.fn(),
     ragSteps: [],
@@ -72,7 +68,7 @@ describe('Prompt', () => {
 
     expect(screen.getByText('স্বাগতম! বার্তাAI প্রস্তুত।')).toBeInTheDocument()
     expect(screen.getByText('মেট্রোরেল আপডেট দিন')).toBeInTheDocument()
-    expect(screen.getByText('মেট্রোরেলে নতুন সময়সূচি প্রকাশ হয়েছে।')).toBeInTheDocument()
+    expect(screen.getByText('মেট্রোরেলে নতুন সময়সূচি প্রকাশ হয়েছে।')).toBeInTheDocument()
 
     const retrievalContext = screen.getByTestId('retrieval-context')
     expect(within(retrievalContext).getByText(/Source:/)).toBeInTheDocument()
@@ -81,9 +77,9 @@ describe('Prompt', () => {
   it('prefills the query input when an example question is selected', () => {
     const props = renderPrompt()
 
-    fireEvent.click(screen.getByRole('button', { name: /মেট্রোরেল নিয়ে আপডেট কি\?/i }))
+    fireEvent.click(screen.getByRole('button', { name: /মেট্রোরেল নিয়ে আপডেট কি\?/i }))
 
-    expect(props.onQueryChange).toHaveBeenCalledWith('মেট্রোরেল নিয়ে আপডেট কি?')
+    expect(props.onQueryChange).toHaveBeenCalledWith('মেট্রোরেল নিয়ে আপডেট কি?')
   })
 
   it('invokes onSubmit when pressing Enter', () => {
@@ -95,11 +91,9 @@ describe('Prompt', () => {
   })
 
   it('does not prevent Enter key when query is empty', () => {
-    const props = renderPrompt()
+    renderPrompt()
     const input = screen.getByPlaceholderText(PLACEHOLDER) as HTMLInputElement
     expect(input.value).toBe('')
-    // The component doesn't prevent Enter when empty, onSubmit will be called
-    // but the parent component handles the validation
   })
 
   it('disables input while a search is running', () => {
@@ -108,59 +102,12 @@ describe('Prompt', () => {
     expect(input.disabled).toBe(true)
   })
 
-  it('toggles the settings panel and updates the API key input', () => {
-    const props = renderPrompt()
-
-    fireEvent.click(screen.getByTestId('settings-toggle-desktop'))
-    expect(props.onToggleSettings).toHaveBeenCalledTimes(1)
-
-    const apiProps = renderPrompt({ showSettings: true })
-    const apiInput = screen.getByLabelText(/Gemini API Key/i)
-    fireEvent.change(apiInput, { target: { value: 'secret-key' } })
-    expect(apiProps.onApiKeyChange).toHaveBeenCalledWith('secret-key')
-  })
-
   it('shows rag steps when processing is active', () => {
     renderPrompt({ isProcessing: true, ragSteps: RAG_STEPS })
 
     const ragPanel = screen.getByTestId('rag-steps-panel')
     expect(within(ragPanel).getAllByTestId('rag-step')).toHaveLength(2)
     expect(within(ragPanel).getByTestId('rag-icon-success')).toBeInTheDocument()
-  })
-
-  it('closes settings panel when clicking outside', () => {
-    const props = renderPrompt({ showSettings: true })
-
-    // Click outside the settings panel
-    fireEvent.mouseDown(document.body)
-    
-    expect(props.onToggleSettings).toHaveBeenCalledTimes(1)
-  })
-
-  it('does not close settings panel when clicking inside the settings panel', () => {
-    const props = renderPrompt({ showSettings: true })
-
-    const apiInput = screen.getByLabelText(/Gemini API Key/i)
-    fireEvent.mouseDown(apiInput)
-    
-    expect(props.onToggleSettings).not.toHaveBeenCalled()
-  })
-
-  it('does not close settings panel when clicking the settings button', () => {
-    const props = renderPrompt({ showSettings: true })
-
-    const settingsButton = screen.getByTestId('settings-toggle-desktop')
-    fireEvent.mouseDown(settingsButton)
-    
-    expect(props.onToggleSettings).not.toHaveBeenCalled()
-  })
-
-  it('does not trigger click outside handler when settings are closed', () => {
-    const props = renderPrompt({ showSettings: false })
-
-    fireEvent.mouseDown(document.body)
-    
-    expect(props.onToggleSettings).not.toHaveBeenCalled()
   })
 
   it('verifies data-sources uses pipe separator', () => {
@@ -176,7 +123,6 @@ describe('Prompt', () => {
       ],
     })
 
-    // Find the chat message element (outer div with data-testid="chat-message")
     const messageElements = screen.getAllByTestId('chat-message')
     const assistantMessage = messageElements.find(el => el.getAttribute('data-role') === 'assistant')
     const dataSources = assistantMessage?.getAttribute('data-sources') || ''
@@ -202,7 +148,6 @@ describe('Prompt', () => {
 
     const chunks = screen.getAllByTestId('retrieved-chunk')
     expect(chunks.length).toBe(2)
-    // Verify chunks have distinct content (ensures keys work properly)
     expect(chunks[0].textContent).toContain('Chunk 1')
     expect(chunks[1].textContent).toContain('Chunk 2')
   })
@@ -218,26 +163,51 @@ describe('Prompt', () => {
     expect(screen.getByTestId('rag-icon-warning')).toBeInTheDocument()
   })
 
-  it('verifies mousedown event listener cleanup', () =>{
-    renderPrompt({ showSettings: true })
+  it('renders user avatar with User icon', () => {
+    renderPrompt()
 
-    // Component should render without errors
-    expect(screen.getByLabelText(/Gemini API Key/i)).toBeInTheDocument()
-    
-    // Cleanup happens automatically in afterEach, shouldn't throw
+    const userAvatars = screen.getAllByTestId('chat-avatar').filter(el => el.dataset.role === 'user')
+    expect(userAvatars.length).toBeGreaterThan(0)
+    expect(within(userAvatars[0]).getByTestId('user-indicator')).toBeInTheDocument()
   })
 
-  it('verifies logical operator for showSettings check', () => {
-    const mockToggle = vi.fn()
-    renderPrompt({ showSettings: true, onToggleSettings: mockToggle })
-    
-    // Settings panel should be visible (check for API key input)
-    expect(screen.getByLabelText(/Gemini API Key/i)).toBeInTheDocument()
-    
-    // Click outside to close
-    fireEvent.mouseDown(document.body)
-    
-    // onToggleSettings should be called
-    expect(mockToggle).toHaveBeenCalled()
+  it('renders assistant avatar with logo', () => {
+    renderPrompt()
+
+    const assistantAvatars = screen.getAllByTestId('chat-avatar').filter(el => el.dataset.role === 'assistant')
+    expect(assistantAvatars.length).toBeGreaterThan(0)
+    expect(within(assistantAvatars[0]).getByTestId('assistant-icon')).toBeInTheDocument()
+  })
+
+  it('renders error message with red styling', () => {
+    renderPrompt({
+      chatHistory: [
+        {
+          id: 'err-1',
+          role: 'assistant',
+          content: 'Error: Something went wrong',
+          type: 'error',
+        },
+      ],
+    })
+
+    const errorText = screen.getByText('Error: Something went wrong')
+    expect(errorText).toHaveClass('text-red-500')
+  })
+
+  it('renders single unified view with chat history and search input', () => {
+    renderPrompt()
+
+    expect(screen.getAllByTestId('chat-message').length).toBeGreaterThan(0)
+    expect(screen.getByPlaceholderText(PLACEHOLDER)).toBeInTheDocument()
+  })
+
+  it('renders example questions as buttons', () => {
+    renderPrompt()
+
+    const exampleButtons = screen.getAllByRole('button').filter(btn =>
+      btn.textContent?.includes('Example'),
+    )
+    expect(exampleButtons).toHaveLength(2)
   })
 })

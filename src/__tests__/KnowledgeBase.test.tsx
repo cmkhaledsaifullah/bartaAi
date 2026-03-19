@@ -204,5 +204,70 @@ describe('ChunkCards', () => {
     chunks.forEach((chunk) => {
       expect(chunk.getAttribute('data-relevant')).toBe('false')
     })
+
+    // keyword count should be 0
+    expect(screen.getByTestId('chunk-visualizer')).toHaveAttribute('data-keyword-count', '0')
+  })
+
+  it('renders unique article card keys by verifying all articles are in the DOM', () => {
+    const manyArticles: Article[] = [
+      { id: 10, source: 'A', date: '2023-01-01', title: 'Article 10', content: 'Content 10.', url: '#' },
+      { id: 20, source: 'B', date: '2023-01-02', title: 'Article 20', content: 'Content 20.', url: '#' },
+      { id: 30, source: 'C', date: '2023-01-03', title: 'Article 30', content: 'Content 30.', url: '#' },
+    ]
+
+    render(
+      <KnowledgeBase
+        articles={manyArticles}
+        selectedArticle={manyArticles[0]!}
+        viewMode="text"
+        onSelectArticle={vi.fn()}
+        onViewModeChange={vi.fn()}
+      />
+    )
+
+    // If keys were empty (mutant: key={``}), React would deduplicate and only render one
+    expect(screen.getByTestId('article-card-10')).toBeInTheDocument()
+    expect(screen.getByTestId('article-card-20')).toBeInTheDocument()
+    expect(screen.getByTestId('article-card-30')).toBeInTheDocument()
+    expect(screen.getByText('Article 10')).toBeInTheDocument()
+    expect(screen.getByText('Article 20')).toBeInTheDocument()
+    expect(screen.getByText('Article 30')).toBeInTheDocument()
+  })
+
+  it('renders all chunks when keys are unique', () => {
+    // Text with 3 sentences using Bengali/supported punctuation to verify all chunk cards render
+    render(
+      <ChunkCards
+        text="First sentence here। Second sentence here? Third sentence here!"
+        highlightKeywords={[]}
+      />
+    )
+
+    const chunks = screen.getAllByTestId('chunk-card')
+    expect(chunks).toHaveLength(3)
+    expect(within(chunks[0]!).getByText(/Chunk #1/)).toBeInTheDocument()
+    expect(within(chunks[1]!).getByText(/Chunk #2/)).toBeInTheDocument()
+    expect(within(chunks[2]!).getByText(/Chunk #3/)).toBeInTheDocument()
+  })
+
+  it('does not mark chunks as relevant when highlightKeywords defaults to empty array', () => {
+    render(
+      <KnowledgeBase
+        articles={ARTICLES}
+        selectedArticle={ARTICLES[0]!}
+        viewMode="chunks"
+        onSelectArticle={vi.fn()}
+        onViewModeChange={vi.fn()}
+      />
+    )
+
+    // highlightKeywords is not passed, so it defaults to []
+    // If the default was ["Stryker was here"], chunks could incorrectly match
+    const chunks = screen.getAllByTestId('chunk-card')
+    chunks.forEach((chunk) => {
+      expect(chunk.getAttribute('data-relevant')).toBe('false')
+    })
+    expect(screen.getByTestId('chunk-visualizer')).toHaveAttribute('data-keyword-count', '0')
   })
 })

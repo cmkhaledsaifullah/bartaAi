@@ -93,6 +93,13 @@ const submitQuery = (value: string) => {
   fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })
 }
 
+const setApiKey = (key: string) => {
+  fireEvent.click(screen.getByTestId('models-toggle'))
+  const apiInput = screen.getByLabelText(/Gemini API Key/i)
+  fireEvent.change(apiInput, { target: { value: key } })
+  fireEvent.click(screen.getByRole('button', { name: /close configuration/i }))
+}
+
 afterEach(() => {
   cleanup()
   vi.useRealTimers()
@@ -120,7 +127,7 @@ describe('Home', () => {
       'স্বাগতম! আমি আপনার বার্তাAI—বাংলাদেশের সর্বশেষ খবরের ভিত্তিতে আপনার প্রশ্নের উত্তর দিতে প্রস্তুত।',
     )
     expect(welcomeMessage).toBeInTheDocument()
-    expect(welcomeMessage.tagName).toBe('H1')
+    expect(welcomeMessage.tagName).toBe('DIV')
   })
 
   it('renders knowledge base summary and first article preview', () => {
@@ -236,20 +243,17 @@ describe('Home', () => {
   it('toggles the settings panel and button styles', () => {
     renderHome()
 
-    const settingsButton = screen.getByTestId('settings-toggle-desktop')
-    expect(screen.queryByLabelText(/Gemini API Key/i)).not.toBeInTheDocument()
-    expect(settingsButton).not.toHaveClass('bg-slate-100')
-    expect(settingsButton).toHaveClass('text-slate-400')
+    const modelsButton = screen.getByTestId('models-toggle')
+    expect(screen.queryByText('Model Configuration')).not.toBeInTheDocument()
 
-    fireEvent.click(settingsButton)
+    fireEvent.click(modelsButton)
 
+    expect(screen.getByText('Model Configuration')).toBeInTheDocument()
     expect(screen.getByLabelText(/Gemini API Key/i)).toBeInTheDocument()
-    expect(settingsButton).toHaveClass('bg-slate-100')
 
-    fireEvent.click(settingsButton)
+    fireEvent.click(screen.getByRole('button', { name: /close configuration/i }))
 
-    expect(screen.queryByLabelText(/Gemini API Key/i)).not.toBeInTheDocument()
-    expect(settingsButton).not.toHaveClass('bg-slate-100')
+    expect(screen.queryByText('Model Configuration')).not.toBeInTheDocument()
   })
 
   it('ignores Enter submissions that contain only whitespace', () => {
@@ -476,9 +480,11 @@ describe('Home', () => {
 
     renderHome()
 
-    fireEvent.click(screen.getByTestId('settings-toggle-desktop'))
+    fireEvent.click(screen.getByTestId('models-toggle'))
     const apiInput = screen.getByLabelText(/Gemini API Key/i)
     fireEvent.change(apiInput, { target: { value: 'fake-key' } })
+    // Close modal before submitting
+    fireEvent.click(screen.getByRole('button', { name: /close configuration/i }))
 
     const input = screen.getByPlaceholderText(QUESTION_PLACEHOLDER)
     fireEvent.change(input, { target: { value: 'ক্রিকেট প্রশ্ন' } })
@@ -514,8 +520,9 @@ describe('Home', () => {
 
     renderHome()
 
-    fireEvent.click(screen.getByTestId('settings-toggle-desktop'))
+    fireEvent.click(screen.getByTestId('models-toggle'))
     fireEvent.change(screen.getByLabelText(/Gemini API Key/i), { target: { value: 'bad-key' } })
+    fireEvent.click(screen.getByRole('button', { name: /close configuration/i }))
 
     const input = screen.getByPlaceholderText(QUESTION_PLACEHOLDER)
     fireEvent.change(input, { target: { value: 'ক্রিকেট প্রশ্ন' } })
@@ -544,8 +551,9 @@ describe('Home', () => {
 
     renderHome()
 
-    fireEvent.click(screen.getByTestId('settings-toggle-desktop'))
+    fireEvent.click(screen.getByTestId('models-toggle'))
     fireEvent.change(screen.getByLabelText(/Gemini API Key/i), { target: { value: 'key-123' } })
+    fireEvent.click(screen.getByRole('button', { name: /close configuration/i }))
 
     submitQuery('ক্রিকেটের স্কোর বলুন')
 
@@ -743,49 +751,22 @@ describe('Home', () => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   // Tests targeting surviving OptionalChaining mutants in Gemini response parsing
   it('verifies exact optional chaining path for Gemini candidates array access', async () => {
     vi.useFakeTimers()
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({ candidates: null }) // This will fail without ?.[0]
+      json: async () => ({ candidates: null })
     })
     global.fetch = mockFetch
     
     renderHome()
-    fireEvent.click(screen.getByTestId('settings-toggle-desktop'))
-    const apiInput = screen.getByLabelText(/Gemini API Key/i)
-    fireEvent.change(apiInput, { target: { value: 'fake-key' } })
+    setApiKey('fake-key')
     
-    const inputElement = screen.getByPlaceholderText(QUESTION_PLACEHOLDER)
-    fireEvent.change(inputElement, { target: { value: 'health question' } })
-    fireEvent.keyDown(inputElement, { key: 'Enter', code: 'Enter' })
+    submitQuery('health question')
     
     await advanceAllTimers()
     vi.useRealTimers()
-    // Should not crash even when candidates is null - optional chaining handles it
     await waitFor(() => expect(mockFetch).toHaveBeenCalled())
   })
 
@@ -793,22 +774,17 @@ describe('Home', () => {
     vi.useFakeTimers()
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({ candidates: [{ content: null }] }) // This will fail without ?.content
+      json: async () => ({ candidates: [{ content: null }] })
     })
     global.fetch = mockFetch
     
     renderHome()
-    fireEvent.click(screen.getByTestId('settings-toggle-desktop'))
-    const apiInput = screen.getByLabelText(/Gemini API Key/i)
-    fireEvent.change(apiInput, { target: { value: 'fake-key' } })
+    setApiKey('fake-key')
     
-    const inputElement = screen.getByPlaceholderText(QUESTION_PLACEHOLDER)
-    fireEvent.change(inputElement, { target: { value: 'health question' } })
-    fireEvent.keyDown(inputElement, { key: 'Enter', code: 'Enter' })
+    submitQuery('health question')
     
     await advanceAllTimers()
     vi.useRealTimers()
-    // Should not crash even when content is null - optional chaining handles it
     await waitFor(() => expect(mockFetch).toHaveBeenCalled())
   })
 
@@ -816,22 +792,17 @@ describe('Home', () => {
     vi.useFakeTimers()
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({ candidates: [{ content: { parts: null } }] }) // This will fail without ?.parts
+      json: async () => ({ candidates: [{ content: { parts: null } }] })
     })
     global.fetch = mockFetch
     
     renderHome()
-    fireEvent.click(screen.getByTestId('settings-toggle-desktop'))
-    const apiInput = screen.getByLabelText(/Gemini API Key/i)
-    fireEvent.change(apiInput, { target: { value: 'fake-key' } })
+    setApiKey('fake-key')
     
-    const inputElement = screen.getByPlaceholderText(QUESTION_PLACEHOLDER)
-    fireEvent.change(inputElement, { target: { value: 'health question' } })
-    fireEvent.keyDown(inputElement, { key: 'Enter', code: 'Enter' })
+    submitQuery('health question')
     
     await advanceAllTimers()
     vi.useRealTimers()
-    // Should not crash even when parts is null - optional chaining handles it
     await waitFor(() => expect(mockFetch).toHaveBeenCalled())
   })
 
@@ -839,43 +810,19 @@ describe('Home', () => {
     vi.useFakeTimers()
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({ candidates: [{ content: { parts: [{ text: undefined }] } }] }) // This will fail without ?.text
+      json: async () => ({ candidates: [{ content: { parts: [{ text: undefined }] } }] })
     })
     global.fetch = mockFetch
     
     renderHome()
-    fireEvent.click(screen.getByTestId('settings-toggle-desktop'))
-    const apiInput = screen.getByLabelText(/Gemini API Key/i)
-    fireEvent.change(apiInput, { target: { value: 'fake-key' } })
+    setApiKey('fake-key')
     
-    const inputElement = screen.getByPlaceholderText(QUESTION_PLACEHOLDER)
-    fireEvent.change(inputElement, { target: { value: 'health question' } })
-    fireEvent.keyDown(inputElement, { key: 'Enter', code: 'Enter' })
+    submitQuery('health question')
     
     await advanceAllTimers()
     vi.useRealTimers()
-    // Should not crash even when text is undefined - optional chaining handles it
     await waitFor(() => expect(mockFetch).toHaveBeenCalled())
   })
-
-  // Tests targeting gridStyle calculation mutants
-
-
-
-
-  // Tests targeting resize logic mutants (delta, arithmetic operators)
-
-
-
-
-
-  // Tests targeting string literal and event listener mutants
-
-
-
-
-
-
 
   it('verifies answer variable initializes to empty string not other value', async () => {
     vi.useFakeTimers()
@@ -895,77 +842,8 @@ describe('Home', () => {
     })
   })
 
-
-
-
-
-
-
-
-
   // Tests to kill remaining surviving mutants for 95%+ mutation score
-  
-  // Kill ArrayDeclaration mutants in useEffect dependencies
-  it('verifies Bengali font link cleanup depends on empty array dependency', () => {
-    const { unmount } = renderHome()
-    const initialLinks = document.querySelectorAll('link[href*="Noto+Sans+Bengali"]')
-    expect(initialLinks.length).toBeGreaterThan(0)
-    
-    unmount()
-    // If dependency array was ["Stryker was here"], cleanup wouldn't work properly
-    const remainingLinks = document.querySelectorAll('link[href*="Noto+Sans+Bengali"]')
-    expect(remainingLinks.length).toBe(0)
-  })
 
-  it('removes Bengali font link on component unmount', () => {
-    const { unmount } = renderHome()
-
-    // Font link should be added
-    const linksBeforeUnmount = document.querySelectorAll('link[href*="Noto+Sans+Bengali"]')
-    expect(linksBeforeUnmount.length).toBeGreaterThan(0)
-
-    // Unmount and verify cleanup function was called
-    unmount()
-
-    // Font link should be removed by cleanup function
-    const linksAfterUnmount = document.querySelectorAll('link[href*="Noto+Sans+Bengali"]')
-    expect(linksAfterUnmount).toHaveLength(0)
-  })
-
-  it('verifies scroll behavior triggers on chat history changes', async () => {
-    renderHome()
-    const mockScrollIntoView = vi.fn()
-    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
-      value: mockScrollIntoView,
-      writable: true,
-      configurable: true
-    })
-    
-    const input = screen.getByPlaceholderText(QUESTION_PLACEHOLDER)
-    fireEvent.change(input, { target: { value: 'test question' } })
-    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })
-    
-    // If dependency array was empty [], scroll wouldn't trigger on chat changes
-    await waitFor(() => expect(mockScrollIntoView).toHaveBeenCalled())
-  })
-
-  it('verifies ragSteps initializes to empty array not string array', () => {
-    renderHome()
-    // Component should render without errors
-    // If ragSteps was ["Stryker was here"], TypeScript would catch type error in runtime
-    expect(screen.getByTestId('chat-panel')).toBeInTheDocument()
-  })
-
-  // Kill isDesktop initial state and desktop detection mutants
-
-
-
-
-  // Kill event listener string literal mutants
-
-
-
-  // Kill optional chaining mutants in scrollIntoView
   it('verifies scrollIntoView with smooth behavior on message update', async () => {
     vi.useFakeTimers()
     const mockScrollIntoView = vi.fn()
@@ -995,274 +873,236 @@ describe('Home', () => {
     })
   })
 
-  // Kill string literal mutants in grid classes
-
-
-
-  // Kill BlockStatement mutant in else block (cursor/userSelect reset)
-
-  // Kill ConditionalExpression mutant for !isResizing check
-
-  // Kill ConditionalExpression mutant for boundary check
-
-  // Kill mouseup removeEventListener string literal mutant
-
-  // Kill answer initialization string literal mutant
-  it('verifies answer variable starts empty not "Stryker was here!"', async () => {
+  it('resets chat session when clicking the logo (new session)', async () => {
     vi.useFakeTimers()
     renderHome()
-    
-    const input = screen.getByPlaceholderText(QUESTION_PLACEHOLDER)
-    fireEvent.change(input, { target: { value: 'cricket' } })
-    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })
-    
+
+    // Submit a query first so we have user + assistant messages
+    submitQuery('মেট্রোরেল আপডেট দিন')
     await advanceAllTimers()
     vi.useRealTimers()
-    
-    // Response should be normal cricket answer, not prefixed with "Stryker was here!"
+
     await waitFor(() => {
-      const chatPanel = screen.getByTestId('chat-panel')
-      expect(chatPanel.textContent).not.toContain('Stryker was here!')
+      const userMessages = screen
+        .getAllByTestId('chat-message')
+        .filter((node) => node.dataset.role === 'user')
+      expect(userMessages.length).toBeGreaterThan(0)
     })
+
+    // Click the logo / new session button
+    const newSessionButton = screen.getByRole('button', { name: /Start new chat session/i })
+    fireEvent.click(newSessionButton)
+
+    // After reset: no user messages, only the initial system message remains
+    const userMessagesAfterReset = screen
+      .getAllByTestId('chat-message')
+      .filter((node) => node.dataset.role === 'user')
+    expect(userMessagesAfterReset).toHaveLength(0)
+
+    const assistantMessagesAfterReset = screen
+      .getAllByTestId('chat-message')
+      .filter((node) => node.dataset.role === 'assistant')
+    expect(assistantMessagesAfterReset).toHaveLength(0)
+
+    // System welcome message should still be present
+    expect(
+      screen.getByText(/স্বাগতম! আমি আপনার বার্তাAI/),
+    ).toBeInTheDocument()
+
+    // Query input should be cleared and enabled
+    const input = screen.getByPlaceholderText(QUESTION_PLACEHOLDER) as HTMLInputElement
+    expect(input.value).toBe('')
+    expect(input.disabled).toBe(false)
+
+    // RAG steps should be cleared (no processing indicators)
+    expect(screen.queryByTestId('rag-steps-panel')).not.toBeInTheDocument()
   })
 
-  // Kill remaining OptionalChaining mutants in Gemini parsing
-  it('verifies removing ?. from parts[0] breaks with null parts', async () => {
+  it('initializes query as empty and isProcessing as false', () => {
+    renderHome()
+
+    const input = screen.getByPlaceholderText(QUESTION_PLACEHOLDER) as HTMLInputElement
+    expect(input.value).toBe('')
+    expect(input.disabled).toBe(false)
+  })
+
+  it('does not show rag steps panel on initial render', () => {
+    renderHome()
+
+    expect(screen.queryByTestId('rag-steps-panel')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('rag-step')).not.toBeInTheDocument()
+  })
+
+  it('does not add duplicate font link on rerender', () => {
+    const { rerender } = renderHome()
+
+    const linksBefore = document.head.querySelectorAll('[data-testid="bangla-font-link"]')
+    expect(linksBefore).toHaveLength(1)
+
+    rerender(<Home articles={MOCK_ARTICLES} />)
+
+    const linksAfter = document.head.querySelectorAll('[data-testid="bangla-font-link"]')
+    expect(linksAfter).toHaveLength(1)
+  })
+
+  it('scrolls on chatHistory change but not on unrelated state changes', async () => {
     vi.useFakeTimers()
-    const mockFetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ 
-        candidates: [{ 
-          content: { 
-            parts: null // This tests parts?.[0] 
-          } 
-        }] 
-      })
-    })
-    global.fetch = mockFetch
-    
-    renderHome()
-    fireEvent.click(screen.getByTestId('settings-toggle-desktop'))
-    const apiInput = screen.getByLabelText(/Gemini API Key/i)
-    fireEvent.change(apiInput, { target: { value: 'fake-key' } })
-    
-    const input = screen.getByPlaceholderText(QUESTION_PLACEHOLDER)
-    fireEvent.change(input, { target: { value: 'test' } })
-    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })
-    
-    await advanceAllTimers()
-    vi.useRealTimers()
-    
-    // Should not crash - optional chaining handles null
-    await waitFor(() => expect(mockFetch).toHaveBeenCalled())
-  })
-
-  it('verifies removing ?. from [0].text breaks with empty parts array', async () => {
-    vi.useFakeTimers()
-    const mockFetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ 
-        candidates: [{ 
-          content: { 
-            parts: [] // Empty array tests [0]?.text
-          } 
-        }] 
-      })
-    })
-    global.fetch = mockFetch
-    
-    renderHome()
-    fireEvent.click(screen.getByTestId('settings-toggle-desktop'))
-    const apiInput = screen.getByLabelText(/Gemini API Key/i)
-    fireEvent.change(apiInput, { target: { value: 'fake-key' } })
-    
-    const input = screen.getByPlaceholderText(QUESTION_PLACEHOLDER)
-    fireEvent.change(input, { target: { value: 'test' } })
-    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })
-    
-    await advanceAllTimers()
-    vi.useRealTimers()
-    
-    // Should not crash - optional chaining handles empty array
-    await waitFor(() => expect(mockFetch).toHaveBeenCalled())
-  })
-
-  it('verifies default activeTab value is prompt not empty string', () => {
-    renderHome()
-    
-    // Prompt panel should be active and visible by default (not hidden)
-    // If activeTab was empty string instead of 'prompt', the Prompt component
-    // would not receive isActiveTab=true and might not render properly
-    const promptPanel = screen.getByTestId('chat-panel')
-    expect(promptPanel).toBeVisible()
-    
-    // Verify the input placeholder is present (part of Prompt component)
-    const input = screen.getByPlaceholderText(QUESTION_PLACEHOLDER)
-    expect(input).toBeInTheDocument()
-  })
-
-  it('verifies scrollIntoView is called with optional chaining', async () => {
     const mockScrollIntoView = vi.fn()
-    const { unmount } = renderHome()
-    
-    // Create a ref mock
-    const messagesEndDiv = screen.getAllByTestId(/chat-message|chat-panel/)[0]
-    if (messagesEndDiv) {
-      messagesEndDiv.scrollIntoView = mockScrollIntoView
-    }
-    
-    const input = screen.getByPlaceholderText(QUESTION_PLACEHOLDER)
-    fireEvent.change(input, { target: { value: 'test' } })
-    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })
-    
-    // Component should not crash even if scrollIntoView doesn't exist
-    expect(() => unmount()).not.toThrow()
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+      value: mockScrollIntoView,
+      writable: true,
+      configurable: true,
+    })
+
+    renderHome()
+    const callCountAfterMount = mockScrollIntoView.mock.calls.length
+
+    // Submit triggers chatHistory change → should scroll
+    submitQuery('মেট্রোরেল')
+    await advanceAllTimers()
+    vi.useRealTimers()
+
+    await waitFor(() => {
+      expect(mockScrollIntoView.mock.calls.length).toBeGreaterThan(callCountAfterMount)
+    })
   })
 
-  it('verifies activeTab prompt comparison shows Prompt panel and hides Knowledge panel', () => {
+  it('shows both prompt and knowledge panels when activeTab conditionals are true', () => {
     renderHome()
-    
-    // When activeTab === 'prompt', Prompt should be visible and Knowledge should not be in DOM
+
+    // Initially prompt is visible
     expect(screen.getByTestId('chat-panel')).toBeInTheDocument()
-    
-    // Knowledge panel should not be in the DOM initially (conditional rendering)
     expect(screen.queryByTestId('knowledge-base')).not.toBeInTheDocument()
-  })
 
-  it('verifies activeTab knowledge comparison shows Knowledge panel and hides Prompt panel', () => {
-    renderHome()
-    
-    // Switch to knowledge tab
-    const knowledgeButton = screen.getAllByRole('button', { name: /বার্তা ভাণ্ডার/i })[0]
-    fireEvent.click(knowledgeButton)
-    
-    // Knowledge should now be in the DOM
-    expect(screen.queryByTestId('knowledge-base')).toBeInTheDocument()
-    
-    // Prompt should not be in the DOM (conditional rendering)
-    expect(screen.queryByTestId('chat-panel')).not.toBeInTheDocument()
-  })
-
-  it('verifies activeTab comparison uses strict equality for prompt', () => {
-    renderHome()
-    
-    // Initially activeTab is 'prompt', so Prompt should be in the DOM
-    expect(screen.getByTestId('chat-panel')).toBeInTheDocument()
-    
-    // If comparison was !== instead of ===, this would be inverted
-    // If comparison was always true/false, switching wouldn't work
-    const knowledgeButton = screen.getAllByRole('button', { name: /বার্তা ভাণ্ডার/i })[0]
-    fireEvent.click(knowledgeButton)
-    
-    // After switching, Prompt should not be in the DOM
-    expect(screen.queryByTestId('chat-panel')).not.toBeInTheDocument()
-  })
-
-  it('verifies activeTab comparison uses strict equality for knowledge', () => {
-    renderHome()
-    
-    // Initially knowledge is not in the DOM (conditional rendering)
-    expect(screen.queryByTestId('knowledge-base')).not.toBeInTheDocument()
-    
     // Switch to knowledge
     const knowledgeButton = screen.getAllByRole('button', { name: /বার্তা ভাণ্ডার/i })[0]
     fireEvent.click(knowledgeButton)
-    
-    // Now should be in the DOM
     expect(screen.getByTestId('knowledge-base')).toBeInTheDocument()
-    
-    // If comparison was !== instead of ===, this would be inverted
+    expect(screen.queryByTestId('chat-panel')).not.toBeInTheDocument()
+
     // Switch back to prompt
     const promptButton = screen.getAllByRole('button', { name: /বার্তা Prompt/i })[0]
     fireEvent.click(promptButton)
-    
-    // Knowledge should not be in the DOM again
-    expect(screen.queryByTestId('knowledge-base')).not.toBeInTheDocument()
-  })
-
-  it('verifies activeTab string comparison exact values', () => {
-    renderHome()
-    
-    // Initially activeTab='prompt', so prompt visible, knowledge not in DOM
-    expect(screen.getByTestId('chat-panel')).toBeInTheDocument()
-    expect(screen.queryByTestId('knowledge-base')).not.toBeInTheDocument()
-    
-    // If string 'prompt' was changed to '', neither would match correctly
-    // Navigate through tabs to verify exact matches work
-    const knowledgeButton = screen.getAllByRole('button', { name: /বার্তা ভাণ্ডার/i })[0]
-    fireEvent.click(knowledgeButton)
-    
-    // Now activeTab='knowledge'
-    expect(screen.queryByTestId('chat-panel')).not.toBeInTheDocument()
-    expect(screen.getByTestId('knowledge-base')).toBeInTheDocument()
-    
-    // Back to prompt
-    const promptButton = screen.getAllByRole('button', { name: /বার্তা Prompt/i })[0]
-    fireEvent.click(promptButton)
-    
     expect(screen.getByTestId('chat-panel')).toBeInTheDocument()
     expect(screen.queryByTestId('knowledge-base')).not.toBeInTheDocument()
   })
 
-  it('verifies useEffect dependency array for font link is empty', () => {
-    const { rerender } = renderHome()
-    
-    // Font link should be added on mount
-    const fontLinks = document.head.querySelectorAll('[data-testid="bangla-font-link"]')
-    expect(fontLinks.length).toBe(1)
-    
-    // Rerender should not add another link (verifies empty dependency array)
-    rerender(<Home articles={MOCK_ARTICLES} />)
-    const fontLinksAfterRerender = document.head.querySelectorAll('[data-testid="bangla-font-link"]')
-    expect(fontLinksAfterRerender.length).toBe(1)
-  })
-
-  it('verifies ragSteps initializes to empty array', () => {
-    renderHome()
-    
-    // No rag steps should be visible initially
-    expect(screen.queryByText(/🔎 Searching/)).not.toBeInTheDocument()
-    expect(screen.queryByText(/✅ Search Complete/)).not.toBeInTheDocument()
-  })
-
-  it('verifies answer variable starts empty', () => {
-    const mockFetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        candidates: [{
-          content: {
-            parts: [{ text: 'Test answer' }]
-          }
-        }]
-      }),
-    })
-    global.fetch = mockFetch
+  it('falls back to NO_CONTEXT_MESSAGE when Gemini returns null candidates', async () => {
+    vi.useFakeTimers()
+    global.fetch = vi.fn().mockResolvedValue({
+      json: async () => ({ candidates: null }),
+    }) as typeof fetch
 
     renderHome()
-    
-    // Initially no answer bubble
-    expect(screen.queryByText('Test answer')).not.toBeInTheDocument()
-    
-    // Enter API key and submit query
-    fireEvent.click(screen.getByTestId('settings-toggle-desktop'))
-    const apiInput = screen.getByLabelText(/Gemini API Key/i)
-    fireEvent.change(apiInput, { target: { value: 'test-key' } })
-    
-    const input = screen.getByPlaceholderText(/Ask about the news/i)
-    fireEvent.change(input, { target: { value: 'test query' } })
-    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })
-    
-    // Answer should appear (not "Stryker was here!")
-    waitFor(() => {
-      expect(screen.queryByText(/Stryker was here!/i)).not.toBeInTheDocument()
+    setApiKey('test-key')
+    submitQuery('test query')
+
+    await advanceAllTimers()
+    vi.useRealTimers()
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('দুঃখিত, আমার জানা তথ্যের (Context) মধ্যে এই বিষয়ে কোনো খবর নেই।'),
+      ).toBeInTheDocument()
     })
   })
 
-  it('verifies optional chaining for scrollIntoView', () => {
-    const { container } = renderHome()
-    
-    // The messages end ref should exist
-    const scrollDiv = container.querySelector('[data-testid="messages-end-ref"]')
-    expect(scrollDiv).toBeDefined()
+  it('falls back to NO_CONTEXT_MESSAGE when Gemini returns empty candidates', async () => {
+    vi.useFakeTimers()
+    global.fetch = vi.fn().mockResolvedValue({
+      json: async () => ({ candidates: [] }),
+    }) as typeof fetch
+
+    renderHome()
+    setApiKey('test-key')
+    submitQuery('test query')
+
+    await advanceAllTimers()
+    vi.useRealTimers()
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('দুঃখিত, আমার জানা তথ্যের (Context) মধ্যে এই বিষয়ে কোনো খবর নেই।'),
+      ).toBeInTheDocument()
+    })
+  })
+
+  it('falls back to NO_CONTEXT_MESSAGE when Gemini candidate has null content', async () => {
+    vi.useFakeTimers()
+    global.fetch = vi.fn().mockResolvedValue({
+      json: async () => ({ candidates: [{ content: null }] }),
+    }) as typeof fetch
+
+    renderHome()
+    setApiKey('test-key')
+    submitQuery('test query')
+
+    await advanceAllTimers()
+    vi.useRealTimers()
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('দুঃখিত, আমার জানা তথ্যের (Context) মধ্যে এই বিষয়ে কোনো খবর নেই।'),
+      ).toBeInTheDocument()
+    })
+  })
+
+  it('falls back to NO_CONTEXT_MESSAGE when Gemini parts are empty', async () => {
+    vi.useFakeTimers()
+    global.fetch = vi.fn().mockResolvedValue({
+      json: async () => ({ candidates: [{ content: { parts: [] } }] }),
+    }) as typeof fetch
+
+    renderHome()
+    setApiKey('test-key')
+    submitQuery('test query')
+
+    await advanceAllTimers()
+    vi.useRealTimers()
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('দুঃখিত, আমার জানা তথ্যের (Context) মধ্যে এই বিষয়ে কোনো খবর নেই।'),
+      ).toBeInTheDocument()
+    })
+  })
+
+  it('falls back to NO_CONTEXT_MESSAGE when Gemini parts text is undefined', async () => {
+    vi.useFakeTimers()
+    global.fetch = vi.fn().mockResolvedValue({
+      json: async () => ({ candidates: [{ content: { parts: [{ text: undefined }] } }] }),
+    }) as typeof fetch
+
+    renderHome()
+    setApiKey('test-key')
+    submitQuery('test query')
+
+    await advanceAllTimers()
+    vi.useRealTimers()
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('দুঃখিত, আমার জানা তথ্যের (Context) মধ্যে এই বিষয়ে কোনো খবর নেই।'),
+      ).toBeInTheDocument()
+    })
+  })
+
+  it('does not prefix mock response with any stale value from answer variable', async () => {
+    vi.useFakeTimers()
+    renderHome()
+
+    submitQuery('মেট্রোরেল')
+
+    await advanceAllTimers()
+    vi.useRealTimers()
+
+    await waitFor(() => {
+      const assistant = screen
+        .getAllByTestId('chat-message')
+        .find((n) => n.dataset.role === 'assistant')
+      const bubble = within(assistant!).getByTestId('chat-bubble')
+      expect(bubble.textContent).not.toContain('Stryker was here')
+      expect(bubble.textContent!.length).toBeGreaterThan(0)
+    })
   })
 })

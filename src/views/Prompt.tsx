@@ -1,5 +1,5 @@
 import type { ChangeEvent, KeyboardEvent } from 'react'
-import { CheckCircle2, Cpu, Loader2, User } from 'lucide-react'
+import { CheckCircle2, Cpu, Loader2, Search, User } from 'lucide-react'
 import type { PromptProps, ChatMessage } from '../types'
 import Panel from '../components/Panel'
 import { promptConfig } from '../config/panelConfigs'
@@ -32,15 +32,26 @@ export default function Prompt({
 
   const renderSearchInput = () => (
     <>
-      <input
-        type="text"
-        value={query}
-        onChange={handleInputChange}
-        onKeyDown={handleKeyDown}
-        placeholder={placeholder}
-        disabled={isProcessing}
-        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-bangla text-sm"
-      />
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={query}
+          onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          disabled={isProcessing}
+          className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-bangla text-sm"
+        />
+        <button
+          type="button"
+          onClick={onSubmit}
+          disabled={isProcessing}
+          aria-label="Run search"
+          className="px-4 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+        >
+          <Search size={18} />
+        </button>
+      </div>
       <div className="mt-3 grid gap-2 sm:grid-cols-2 text-center">
         {exampleQuestions.map((question, index) => (
           <button

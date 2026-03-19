@@ -49,7 +49,7 @@ export default function Header({ activeTab, onTabChange, showModels, onToggleMod
 
   return (
     <>
-      <header className="bg-white border-b border-slate-200 px-4 sm:px-6 py-4 flex flex-row items-center justify-between gap-4">
+      <header className="relative z-[65] bg-white border-b border-slate-200 px-4 sm:px-6 py-4 flex flex-row items-center justify-between gap-4">
         <button 
           onClick={() => {
             onTabChange?.('prompt')
