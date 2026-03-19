@@ -26,8 +26,8 @@ export const SELECTORS = {
   viewToggleChunks: '[data-testid="view-toggle-chunks"]',
   viewToggleText: '[data-testid="view-toggle-text"]',
   chunkVisualizer: '[data-testid="chunk-visualizer"]',
-  settingsToggleDesktop: '[data-testid="settings-toggle-desktop"]',
-  apiKeyInput: 'input[type="password"][placeholder*="Enter key"]',
+  settingsToggleDesktop: '[data-testid="models-toggle"]',
+  apiKeyInput: 'input[type="password"][placeholder*="API key"]',
 } as const
 
 /**

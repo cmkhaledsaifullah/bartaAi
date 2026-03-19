@@ -12,7 +12,6 @@ const mockConfig: PanelConfig = {
   icon: MessageSquare,
   title: 'Test Panel',
   bgColorClass: 'bg-emerald-50',
-  borderColorClass: 'border-emerald-200',
   iconColorClass: 'text-emerald-600',
   textColorClass: 'text-emerald-800',
   testId: 'test-panel',
@@ -31,52 +30,52 @@ describe('Panel', () => {
     expect(screen.getByText('Panel Content')).toBeInTheDocument()
   })
 
-  it('renders mobile static header', () => {
+  it('does not render header when no badge or actions provided', () => {
     const { container } = render(
       <Panel config={mockConfig}>
         <div>Content</div>
       </Panel>
     )
 
-    const mobileHeader = container.querySelector('.md\\:hidden.w-full.p-4')
-    expect(mobileHeader).toBeInTheDocument()
-    const headers = screen.getAllByText('Test Panel')
-    expect(headers.length).toBeGreaterThanOrEqual(1)
+    // No header should be rendered
+    const mobileHeader = container.querySelector('.md\\:hidden.w-full.p-3')
+    const desktopHeader = container.querySelector('.hidden.md\\:flex.w-full.p-3')
+    expect(mobileHeader).not.toBeInTheDocument()
+    expect(desktopHeader).not.toBeInTheDocument()
   })
 
-  it('renders desktop static header', () => {
+  it('renders simplified header when badge or actions provided', () => {
     const { container } = render(
-      <Panel config={mockConfig}>
+      <Panel
+        config={mockConfig}
+        headerBadge={<span data-testid="badge">Badge</span>}
+      >
         <div>Content</div>
       </Panel>
     )
 
-    const desktopHeader = container.querySelector('.hidden.md\\:flex.w-full.text-left.p-4')
+    const desktopHeader = container.querySelector('.hidden.md\\:flex.w-full.p-3')
     expect(desktopHeader).toBeInTheDocument()
+    expect(screen.getAllByTestId('badge')).toHaveLength(2) // mobile and desktop
   })
 
-  it('applies config colors to mobile and desktop headers', () => {
+
+
+  it('header does not render icon or title', () => {
     const { container } = render(
-      <Panel config={mockConfig}>
+      <Panel
+        config={mockConfig}
+        headerBadge={<span>Badge</span>}
+      >
         <div>Content</div>
       </Panel>
     )
 
-    const mobileHeader = container.querySelector('.bg-emerald-50.border-emerald-200')
-    const desktopHeader = container.querySelectorAll('.bg-emerald-50.border-emerald-200')[1]
-    expect(mobileHeader).toBeInTheDocument()
-    expect(desktopHeader).toBeInTheDocument()
-  })
-
-  it('renders the icon from config', () => {
-    const { container } = render(
-      <Panel config={mockConfig}>
-        <div>Content</div>
-      </Panel>
-    )
-
+    // Title should not be in the document
+    expect(screen.queryByText('Test Panel')).not.toBeInTheDocument()
+    // Icon color class should not be present in headers
     const icons = container.querySelectorAll('.text-emerald-600')
-    expect(icons.length).toBeGreaterThanOrEqual(2) // mobile and desktop
+    expect(icons.length).toBe(0)
   })
 
   it('renders headerBadge when provided', () => {
@@ -124,13 +123,16 @@ describe('Panel', () => {
   })
 
   it('applies default containerClassName when not provided', () => {
-    const { container } = render(
+    render(
       <Panel config={mockConfig}>
         <div>Content</div>
       </Panel>
     )
 
-    const panel = container.querySelector('.bg-white.border.border-slate-200')
+    const panel = screen.getByTestId('test-panel')
+    // Default now has no background/border styling
+    expect(panel).not.toHaveClass('bg-white')
+    expect(panel).not.toHaveClass('border-slate-200')
     expect(panel).toBeInTheDocument()
   })
 
@@ -160,15 +162,18 @@ describe('Panel', () => {
     expect(panel).toHaveAttribute('role', 'complementary')
   })
 
-  it('renders both mobile and desktop headers', () => {
+  it('renders both mobile and desktop headers when badge or actions provided', () => {
     const { container } = render(
-      <Panel config={mockConfig}>
+      <Panel
+        config={mockConfig}
+        headerBadge={<span>Badge</span>}
+      >
         <div>Content</div>
       </Panel>
     )
 
-    const mobileHeader = container.querySelector('.md\\:hidden')
-    const desktopHeader = container.querySelector('.hidden.md\\:flex')
+    const mobileHeader = container.querySelector('.md\\:hidden.w-full.p-3')
+    const desktopHeader = container.querySelector('.hidden.md\\:flex.w-full.p-3')
     expect(mobileHeader).toBeInTheDocument()
     expect(desktopHeader).toBeInTheDocument()
   })
@@ -229,51 +234,51 @@ describe('Panel', () => {
     expect(screen.queryByTestId('123-desktop')).not.toBeInTheDocument()
   })
 
-  it('verifies mobile header has all required className tokens', () => {
+  it('verifies mobile header has required classes when badge provided', () => {
     const { container } = render(
-      <Panel config={mockConfig}>
+      <Panel
+        config={mockConfig}
+        headerBadge={<span>Badge</span>}
+      >
         <div>Content</div>
       </Panel>
     )
 
-    const mobileHeaderContent = container.querySelector('.md\\:hidden .flex.items-center.gap-2.text-emerald-800')
-    expect(mobileHeaderContent).toBeInTheDocument()
-    
-    // Verify all classes are present
-    const header = container.querySelector('.md\\:hidden.w-full.p-4')
-    expect(header).toHaveClass('md:hidden', 'w-full', 'p-4', 'border-b', 'bg-emerald-50', 'border-emerald-200')
+    const header = container.querySelector('.md\\:hidden.w-full.p-3')
+    expect(header).toHaveClass('md:hidden', 'w-full', 'p-3', 'flex', 'justify-end', 'items-center', 'gap-2')
   })
 
-  it('verifies desktop header has all required className tokens', () => {
+  it('verifies desktop header has required classes when badge provided', () => {
     const { container } = render(
-      <Panel config={mockConfig}>
+      <Panel
+        config={mockConfig}
+        headerBadge={<span>Badge</span>}
+      >
         <div>Content</div>
       </Panel>
     )
 
-    const desktopHeaderContent = container.querySelector('.hidden.md\\:flex .flex.items-center.gap-2.text-emerald-800')
-    expect(desktopHeaderContent).toBeInTheDocument()
-    
-    // Verify all classes are present (second element with these classes)
-    const headers = container.querySelectorAll('.hidden.md\\:flex')
-    const desktopHeader = headers[0]
-    expect(desktopHeader).toHaveClass('hidden', 'md:flex', 'w-full', 'p-4', 'border-b', 'bg-emerald-50', 'border-emerald-200')
+    const desktopHeader = container.querySelector('.hidden.md\\:flex.w-full.p-3')
+    expect(desktopHeader).toHaveClass('hidden', 'md:flex', 'w-full', 'p-3', 'justify-end', 'items-center', 'gap-2')
   })
 
-  it('verifies textColorClass is applied to mobile and desktop icon containers', () => {
+  it('verifies textColorClass is not applied to headers', () => {
     const customConfig = {
       ...mockConfig,
       textColorClass: 'text-red-500',
     }
     
     const { container } = render(
-      <Panel config={customConfig}>
+      <Panel
+        config={customConfig}
+        headerBadge={<span>Badge</span>}
+      >
         <div>Content</div>
       </Panel>
     )
 
     const coloredDivs = container.querySelectorAll('.text-red-500')
-    // Should have at least 2: one for mobile, one for desktop
-    expect(coloredDivs.length).toBeGreaterThanOrEqual(2)
+    // Should have 0 because text color is no longer applied to headers
+    expect(coloredDivs.length).toBe(0)
   })
 })

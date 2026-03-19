@@ -7,7 +7,6 @@ export type PanelConfig = {
   icon: LucideIcon
   title: string
   bgColorClass: string
-  borderColorClass: string
   iconColorClass: string
   textColorClass: string
   testId: string
@@ -27,11 +26,9 @@ export default function Panel({
   additionalHeaderActions,
   headerBadge,
   children,
-  containerClassName = 'bg-white border border-slate-200 rounded-2xl shadow-sm',
+  containerClassName = '',
   dataAttributes = {},
 }: PanelProps) {
-  const Icon = config.icon
-
   // Helper to safely get data-testid from props
   // This helper assumes element is a valid ReactElement (caller must verify first)
   const getDataTestId = (element: ReactElement): string | undefined => {
@@ -66,31 +63,22 @@ export default function Panel({
         return acc
       }, {} as Record<string, string>)}
     >
-      {/* Mobile: Static header */}
-      <div className={`md:hidden w-full p-4 border-b ${config.borderColorClass} ${config.bgColorClass} flex justify-between items-center`}>
-        <div className={`flex items-center gap-2 ${config.textColorClass}`}>
-          <Icon size={18} className={config.iconColorClass} />
-          <h2 className="font-semibold text-sm uppercase tracking-wide">{config.title}</h2>
-        </div>
-        <div className="flex items-center gap-2">
-          {headerBadge}
-          {mobileHeaderActions}
-        </div>
-      </div>
+      {/* Simplified header - only shows badge and actions, no icon/title */}
+      {(headerBadge || additionalHeaderActions) && (
+        <>
+          {/* Mobile: Header bar */}
+          <div className="md:hidden w-full p-3 flex justify-end items-center gap-2">
+            {headerBadge}
+            {mobileHeaderActions}
+          </div>
 
-      {/* Desktop: Static header */}
-      <div
-        className={`hidden md:flex w-full text-left p-4 border-b ${config.borderColorClass} ${config.bgColorClass} justify-between items-center`}
-      >
-        <div className={`flex items-center gap-2 ${config.textColorClass}`}>
-          <Icon size={18} className={config.iconColorClass} />
-          <h2 className="font-semibold text-sm uppercase tracking-wide">{config.title}</h2>
-        </div>
-        <div className="flex items-center gap-2">
-          {headerBadge}
-          {desktopHeaderActions}
-        </div>
-      </div>
+          {/* Desktop: Header bar */}
+          <div className="hidden md:flex w-full p-3 justify-end items-center gap-2">
+            {headerBadge}
+            {desktopHeaderActions}
+          </div>
+        </>
+      )}
 
       {/* Panel content */}
       {children}

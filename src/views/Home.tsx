@@ -64,6 +64,13 @@ export default function Home({ articles }: HomeProps) {
     setRagSteps((prev) => [...prev, { text, status, id: `step-${Date.now()}-${Math.random()}` }])
   }
 
+  const handleNewSession = () => {
+    setChatHistory([INITIAL_CHAT_MESSAGE])
+    setQuery('')
+    setIsProcessing(false)
+    setRagSteps([])
+  }
+
   const handleSearch = async () => {
     if (!query.trim()) {
       return
@@ -182,17 +189,21 @@ export default function Home({ articles }: HomeProps) {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
-      <Header activeTab={activeTab} onTabChange={setActiveTab} />
+      <Header 
+        activeTab={activeTab} 
+        onTabChange={setActiveTab}
+        showModels={showSettings}
+        onToggleModels={() => setShowSettings((prev) => !prev)}
+        apiKey={apiKey}
+        onApiKeyChange={setApiKey}
+        onNewSession={handleNewSession}
+      />
 
       <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 md:px-8 lg:px-12 pb-24 md:pb-4 flex-1">
         {/* Tab visibility controlled here for consistent mobile and desktop experience */}
         {activeTab === 'prompt' && (
           <Prompt
             chatHistory={chatHistory}
-            showSettings={showSettings}
-            onToggleSettings={() => setShowSettings((prev) => !prev)}
-            apiKey={apiKey}
-            onApiKeyChange={setApiKey}
             query={query}
             isProcessing={isProcessing}
             placeholder={PROMPT_PLACEHOLDER}

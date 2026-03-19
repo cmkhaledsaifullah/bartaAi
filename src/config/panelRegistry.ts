@@ -20,9 +20,4 @@ export const panelRegistry: PanelConfigWithId[] = [
   },
 ]
 
-/**
- * Get panel configuration by ID
- */
-export function getPanelById(id: string): PanelConfigWithId | undefined {
-  return panelRegistry.find((panel) => panel.id === id)
-}
+

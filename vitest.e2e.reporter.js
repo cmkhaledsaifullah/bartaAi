@@ -78,7 +78,7 @@ export default class E2EReporter {
 
   cleanErrorMessage(message) {
     // Remove ANSI color codes
-    // eslint-disable-next-line no-control-regex
+     
     const withoutAnsi = message.replace(/\u001b\[\d+m/g, '')
     
     // Get the first line or first 150 characters
