@@ -67,10 +67,6 @@ export type KnowledgeBaseProps = {
 
 export type PromptProps = {
   chatHistory: ChatMessage[]
-  showSettings: boolean
-  onToggleSettings: () => void
-  apiKey: string
-  onApiKeyChange: (value: string) => void
   query: string
   isProcessing: boolean
   placeholder: string

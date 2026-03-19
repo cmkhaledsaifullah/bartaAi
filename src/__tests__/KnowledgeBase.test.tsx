@@ -45,7 +45,6 @@ describe('KnowledgeBase', () => {
   it('renders article list metadata and counts', () => {
     renderPanel()
 
-    expect(screen.getAllByText('বার্তা ভাণ্ডার').length).toBeGreaterThan(0)
     expect(screen.getAllByText('2 Articles').length).toBeGreaterThan(0)
     expect(screen.getByTestId('article-card-1')).toHaveClass('bg-blue-50')
     expect(screen.getByTestId('article-card-2')).toHaveClass('bg-white')

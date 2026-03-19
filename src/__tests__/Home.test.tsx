@@ -90,7 +90,7 @@ const advanceTimersBy = async (ms: number) => {
 const submitQuery = (value: string) => {
   const input = screen.getByPlaceholderText(QUESTION_PLACEHOLDER)
   fireEvent.change(input, { target: { value } })
-  fireEvent.click(screen.getByRole('button', { name: /run search/i }))
+  fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })
 }
 
 afterEach(() => {
@@ -113,17 +113,14 @@ describe('Home', () => {
     expect(document.head.querySelector('link[data-testid="bangla-font-link"]')).toBeNull()
   })
 
-  it('displays the initial welcome system message in the chat stream', () => {
+  it('displays the initial welcome system message in the centered view', () => {
     renderHome()
 
-    const systemMessage = screen
-      .getAllByTestId('chat-message')
-      .find((node) => node.dataset.role === 'system') as HTMLElement | undefined
-
-    expect(systemMessage).toBeDefined()
-    expect(systemMessage).toHaveTextContent(
+    const welcomeMessage = screen.getByText(
       'স্বাগতম! আমি আপনার বার্তাAI—বাংলাদেশের সর্বশেষ খবরের ভিত্তিতে আপনার প্রশ্নের উত্তর দিতে প্রস্তুত।',
     )
+    expect(welcomeMessage).toBeInTheDocument()
+    expect(welcomeMessage.tagName).toBe('H1')
   })
 
   it('renders knowledge base summary and first article preview', () => {
@@ -255,18 +252,6 @@ describe('Home', () => {
     expect(settingsButton).not.toHaveClass('bg-slate-100')
   })
 
-  it('keeps the search action disabled for empty or whitespace-only queries', () => {
-    renderHome()
-
-    const searchButton = screen.getByRole('button', { name: /run search/i }) as HTMLButtonElement
-    expect(searchButton.disabled).toBe(true)
-
-    const input = screen.getByPlaceholderText(QUESTION_PLACEHOLDER)
-    fireEvent.change(input, { target: { value: '   ' } })
-
-    expect(searchButton.disabled).toBe(true)
-  })
-
   it('ignores Enter submissions that contain only whitespace', () => {
     renderHome()
 
@@ -348,7 +333,7 @@ describe('Home', () => {
 
     const input = screen.getByPlaceholderText(QUESTION_PLACEHOLDER)
     fireEvent.change(input, { target: { value: 'মেট্রোরেল আপডেট দিন' } })
-    fireEvent.click(screen.getByRole('button', { name: /run search/i }))
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })
 
     await advanceTimersBy(1600)
     expect(screen.getByText('Searching vector database (ChromaDB simulated)...')).toBeInTheDocument()
@@ -367,7 +352,7 @@ describe('Home', () => {
 
     const input = screen.getByPlaceholderText(QUESTION_PLACEHOLDER) as HTMLInputElement
     fireEvent.change(input, { target: { value: 'প্রথম অনুসন্ধান' } })
-    fireEvent.click(screen.getByRole('button', { name: /run search/i }))
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })
 
     expect(input.value).toBe('')
 
@@ -497,7 +482,7 @@ describe('Home', () => {
 
     const input = screen.getByPlaceholderText(QUESTION_PLACEHOLDER)
     fireEvent.change(input, { target: { value: 'ক্রিকেট প্রশ্ন' } })
-    fireEvent.click(screen.getByRole('button', { name: /run search/i }))
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })
 
     await advanceAllTimers()
     vi.useRealTimers()
@@ -534,7 +519,7 @@ describe('Home', () => {
 
     const input = screen.getByPlaceholderText(QUESTION_PLACEHOLDER)
     fireEvent.change(input, { target: { value: 'ক্রিকেট প্রশ্ন' } })
-    fireEvent.click(screen.getByRole('button', { name: /run search/i }))
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })
 
     await advanceAllTimers()
     vi.useRealTimers()
@@ -578,7 +563,7 @@ describe('Home', () => {
 
     const input = screen.getByPlaceholderText(QUESTION_PLACEHOLDER)
     fireEvent.change(input, { target: { value: 'মেট্রোরেল' } })
-    fireEvent.click(screen.getByRole('button', { name: /run search/i }))
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })
 
     await advanceTimersBy(1600)
 
@@ -648,7 +633,7 @@ describe('Home', () => {
 
     const input = screen.getByPlaceholderText(QUESTION_PLACEHOLDER)
     fireEvent.change(input, { target: { value: 'unmatchabletopic' } })
-    fireEvent.click(screen.getByRole('button', { name: /run search/i }))
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })
 
     await advanceTimersBy(1600)
 
@@ -677,7 +662,7 @@ describe('Home', () => {
 
     const input = screen.getByPlaceholderText(QUESTION_PLACEHOLDER) as HTMLInputElement
     fireEvent.change(input, { target: { value: 'ক্রিকেট স্কোর' } })
-    fireEvent.click(screen.getByRole('button', { name: /run search/i }))
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })
 
     expect(input.disabled).toBe(true)
 
@@ -693,7 +678,7 @@ describe('Home', () => {
 
     const input = screen.getByPlaceholderText(QUESTION_PLACEHOLDER)
     fireEvent.change(input, { target: { value: 'মেট্রোরেল আপডেট' } })
-    fireEvent.click(screen.getByRole('button', { name: /run search/i }))
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })
 
     await advanceAllTimers()
     vi.useRealTimers()
@@ -714,7 +699,7 @@ describe('Home', () => {
 
     const input = screen.getByPlaceholderText(QUESTION_PLACEHOLDER)
     fireEvent.change(input, { target: { value: 'রেল সংবাদ অগ্রগতি প্রকল্প' } })
-    fireEvent.click(screen.getByRole('button', { name: /run search/i }))
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })
 
     await advanceAllTimers()
     vi.useRealTimers()
@@ -796,7 +781,7 @@ describe('Home', () => {
     
     const inputElement = screen.getByPlaceholderText(QUESTION_PLACEHOLDER)
     fireEvent.change(inputElement, { target: { value: 'health question' } })
-    fireEvent.click(screen.getByRole('button', { name: /run search/i }))
+    fireEvent.keyDown(inputElement, { key: 'Enter', code: 'Enter' })
     
     await advanceAllTimers()
     vi.useRealTimers()
@@ -819,7 +804,7 @@ describe('Home', () => {
     
     const inputElement = screen.getByPlaceholderText(QUESTION_PLACEHOLDER)
     fireEvent.change(inputElement, { target: { value: 'health question' } })
-    fireEvent.click(screen.getByRole('button', { name: /run search/i }))
+    fireEvent.keyDown(inputElement, { key: 'Enter', code: 'Enter' })
     
     await advanceAllTimers()
     vi.useRealTimers()
@@ -842,7 +827,7 @@ describe('Home', () => {
     
     const inputElement = screen.getByPlaceholderText(QUESTION_PLACEHOLDER)
     fireEvent.change(inputElement, { target: { value: 'health question' } })
-    fireEvent.click(screen.getByRole('button', { name: /run search/i }))
+    fireEvent.keyDown(inputElement, { key: 'Enter', code: 'Enter' })
     
     await advanceAllTimers()
     vi.useRealTimers()
@@ -865,7 +850,7 @@ describe('Home', () => {
     
     const inputElement = screen.getByPlaceholderText(QUESTION_PLACEHOLDER)
     fireEvent.change(inputElement, { target: { value: 'health question' } })
-    fireEvent.click(screen.getByRole('button', { name: /run search/i }))
+    fireEvent.keyDown(inputElement, { key: 'Enter', code: 'Enter' })
     
     await advanceAllTimers()
     vi.useRealTimers()
@@ -898,7 +883,7 @@ describe('Home', () => {
     
     const input = screen.getByPlaceholderText(QUESTION_PLACEHOLDER)
     fireEvent.change(input, { target: { value: 'test question' } })
-    fireEvent.click(screen.getByRole('button', { name: /run search/i }))
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })
     
     // If answer starts as "Stryker was here!", the response would be malformed
     await advanceAllTimers()
@@ -958,7 +943,7 @@ describe('Home', () => {
     
     const input = screen.getByPlaceholderText(QUESTION_PLACEHOLDER)
     fireEvent.change(input, { target: { value: 'test question' } })
-    fireEvent.click(screen.getByRole('button', { name: /run search/i }))
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })
     
     // If dependency array was empty [], scroll wouldn't trigger on chat changes
     await waitFor(() => expect(mockScrollIntoView).toHaveBeenCalled())
@@ -996,7 +981,7 @@ describe('Home', () => {
     
     const input = screen.getByPlaceholderText(QUESTION_PLACEHOLDER)
     fireEvent.change(input, { target: { value: 'cricket' } })
-    fireEvent.click(screen.getByRole('button', { name: /run search/i }))
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })
     
     await advanceAllTimers()
     vi.useRealTimers()
@@ -1029,7 +1014,7 @@ describe('Home', () => {
     
     const input = screen.getByPlaceholderText(QUESTION_PLACEHOLDER)
     fireEvent.change(input, { target: { value: 'cricket' } })
-    fireEvent.click(screen.getByRole('button', { name: /run search/i }))
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })
     
     await advanceAllTimers()
     vi.useRealTimers()
@@ -1063,7 +1048,7 @@ describe('Home', () => {
     
     const input = screen.getByPlaceholderText(QUESTION_PLACEHOLDER)
     fireEvent.change(input, { target: { value: 'test' } })
-    fireEvent.click(screen.getByRole('button', { name: /run search/i }))
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })
     
     await advanceAllTimers()
     vi.useRealTimers()
@@ -1093,7 +1078,7 @@ describe('Home', () => {
     
     const input = screen.getByPlaceholderText(QUESTION_PLACEHOLDER)
     fireEvent.change(input, { target: { value: 'test' } })
-    fireEvent.click(screen.getByRole('button', { name: /run search/i }))
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })
     
     await advanceAllTimers()
     vi.useRealTimers()
@@ -1128,7 +1113,7 @@ describe('Home', () => {
     
     const input = screen.getByPlaceholderText(QUESTION_PLACEHOLDER)
     fireEvent.change(input, { target: { value: 'test' } })
-    fireEvent.click(screen.getByRole('button', { name: /run search/i }))
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })
     
     // Component should not crash even if scrollIntoView doesn't exist
     expect(() => unmount()).not.toThrow()
@@ -1265,7 +1250,7 @@ describe('Home', () => {
     
     const input = screen.getByPlaceholderText(/Ask about the news/i)
     fireEvent.change(input, { target: { value: 'test query' } })
-    fireEvent.click(screen.getByRole('button', { name: /run search/i }))
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })
     
     // Answer should appear (not "Stryker was here!")
     waitFor(() => {

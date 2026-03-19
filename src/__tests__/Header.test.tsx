@@ -2,6 +2,10 @@ import { cleanup, render, screen, fireEvent } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import Header from '../views/Header'
 
+const createConsoleLogSpy = () => {
+  return vi.spyOn(console, 'log').mockImplementation(() => {})
+}
+
 afterEach(() => {
   cleanup()
 })
@@ -27,7 +31,7 @@ describe('Header', () => {
   })
 
   it('calls handleSignIn when desktop sign in button is clicked', () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    const consoleSpy = createConsoleLogSpy()
     render(<Header />)
     
     const signInButtons = screen.getAllByRole('button', { name: /sign in/i })
@@ -84,7 +88,7 @@ describe('Header', () => {
   })
 
   it('calls handleSignIn and closes side panel when mobile sign in button is clicked', () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    const consoleSpy = createConsoleLogSpy()
     const { container } = render(<Header />)
     
     // Open the menu
