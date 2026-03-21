@@ -84,7 +84,7 @@ describe('Header', () => {
     const menuButton = screen.getByRole('button', { name: /open menu/i })
     fireEvent.click(menuButton)
     
-    const closeButton = screen.getByRole('button', { name: /close menu/i })
+    const closeButton = screen.getByRole('button', { name: /close side panel/i })
     fireEvent.click(closeButton)
     
     const sidePanel = container.querySelector('.translate-x-full')

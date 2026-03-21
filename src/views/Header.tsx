@@ -83,9 +83,9 @@ export default function Header({ activeTab, onTabChange, showModels, onToggleMod
 
         {/* Menu Button */}
         <button
-          onClick={() => setIsSidePanelOpen(true)}
+          onClick={() => setIsSidePanelOpen(prev => !prev)}
           className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors flex-shrink-0"
-          aria-label="Open menu"
+          aria-label={isSidePanelOpen ? 'Close menu' : 'Open menu'}
         >
           <Menu size={24} />
         </button>
@@ -111,7 +111,7 @@ export default function Header({ activeTab, onTabChange, showModels, onToggleMod
             <button
               onClick={() => setIsSidePanelOpen(false)}
               className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
-              aria-label="Close menu"
+              aria-label="Close side panel"
             >
               <X size={24} />
             </button>
@@ -120,19 +120,13 @@ export default function Header({ activeTab, onTabChange, showModels, onToggleMod
           {/* Mobile Menu Items */}
           <div className="p-4 space-y-3">
             <button
-              onClick={() => {
-                onToggleModels()
-                setIsSidePanelOpen(false)
-              }}
+              onClick={() => onToggleModels()}
               className="w-full px-6 py-3 bg-slate-100 text-slate-700 font-medium rounded-lg hover:bg-slate-200 transition-colors"
             >
               {MODEL_BUTTON_LABEL}
             </button>
             <button
-              onClick={() => {
-                handleSignIn()
-                setIsSidePanelOpen(false)
-              }}
+              onClick={() => handleSignIn()}
               className="w-full px-6 py-3 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors"
             >
               {SIGN_IN_BUTTON_LABEL}
