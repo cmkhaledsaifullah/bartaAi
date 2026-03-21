@@ -1,7 +1,18 @@
 import type { ChangeEvent } from 'react'
 import { useEffect, useRef, useState } from 'react'
-import { X } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 import PanelNavigation from '../components/PanelNavigation'
+import {
+  APP_NAME,
+  COPYRIGHT_TEXT,
+  MODEL_BUTTON_LABEL,
+  SIGN_IN_BUTTON_LABEL,
+  MODEL_CONFIG_TITLE,
+  API_KEY_LABEL,
+  API_KEY_PLACEHOLDER,
+  API_KEY_HELP_TEXT,
+  PANEL_PROMPT_ID,
+} from '../config/constants'
 
 interface HeaderProps {
   activeTab?: string
@@ -49,87 +60,48 @@ export default function Header({ activeTab, onTabChange, showModels, onToggleMod
 
   return (
     <>
-      <header className="relative z-[65] bg-white border-b border-slate-200 px-4 sm:px-6 py-4 flex flex-row items-center justify-between gap-4">
+      <header className="sticky top-0 z-[65] bg-white border-b border-slate-200 px-4 sm:px-6 py-4 flex flex-row items-center justify-between gap-4">
         <button 
           onClick={() => {
-            onTabChange?.('prompt')
+            onTabChange?.(PANEL_PROMPT_ID)
             onNewSession()
           }}
           className="flex items-center gap-2 sm:gap-3 min-w-0 hover:opacity-80 transition-opacity cursor-pointer"
           aria-label="Start new chat session"
         >
           <h1 className="font-bold text-slate-800 text-xl sm:text-2xl flex-shrink-0">
-            <span className="text-emerald-600 font-light">বার্তাAI</span>
+            <span className="text-emerald-600 font-light">{APP_NAME}</span>
           </h1>
         </button>
 
         {/* Desktop Panel Buttons - Centered */}
         {activeTab && onTabChange && (
-          <div className="hidden md:flex items-center gap-4 absolute left-1/2 transform -translate-x-1/2">
+          <div className="flex items-center gap-4 absolute left-1/2 transform -translate-x-1/2">
             <PanelNavigation activeTab={activeTab} onTabChange={onTabChange} variant="desktop" />
           </div>
         )}
 
-        {/* Desktop Actions */}
-        <div className="hidden md:flex items-center gap-3">
-          <button
-            ref={modelsButtonRef}
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation()
-              onToggleModels()
-            }}
-            data-testid="models-toggle"
-            className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-              showModels
-                ? 'bg-emerald-600 text-white'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
-            aria-label="Toggle model configuration"
-          >
-            Model
-          </button>
-          <button
-            onClick={handleSignIn}
-            className="px-6 py-2 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors flex-shrink-0"
-          >
-            Sign In
-          </button>
-        </div>
-
-        {/* Mobile Menu Button */}
+        {/* Menu Button */}
         <button
           onClick={() => setIsSidePanelOpen(true)}
-          className="md:hidden p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors flex-shrink-0"
+          className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors flex-shrink-0"
           aria-label="Open menu"
         >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 6h16M4 12h16M4 18h16"
-            />
-          </svg>
+          <Menu size={24} />
         </button>
       </header>
 
-      {/* Mobile Side Panel Overlay */}
+      {/* Side Panel Overlay */}
       {isSidePanelOpen && (
         <div
-          className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity"
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity"
           onClick={() => setIsSidePanelOpen(false)}
         />
       )}
 
-      {/* Mobile Side Panel */}
+      {/* Side Panel */}
       <div
-        className={`md:hidden fixed top-0 right-0 h-full w-64 bg-white shadow-xl z-50 transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 right-0 h-full w-64 bg-white shadow-xl z-50 transform transition-transform duration-300 ease-in-out ${
           isSidePanelOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
@@ -141,19 +113,7 @@ export default function Header({ activeTab, onTabChange, showModels, onToggleMod
               className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
               aria-label="Close menu"
             >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
+              <X size={24} />
             </button>
           </div>
 
@@ -166,7 +126,7 @@ export default function Header({ activeTab, onTabChange, showModels, onToggleMod
               }}
               className="w-full px-6 py-3 bg-slate-100 text-slate-700 font-medium rounded-lg hover:bg-slate-200 transition-colors"
             >
-              Model
+              {MODEL_BUTTON_LABEL}
             </button>
             <button
               onClick={() => {
@@ -175,8 +135,13 @@ export default function Header({ activeTab, onTabChange, showModels, onToggleMod
               }}
               className="w-full px-6 py-3 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors"
             >
-              Sign In
+              {SIGN_IN_BUTTON_LABEL}
             </button>
+          </div>
+
+          {/* Copyright at bottom */}
+          <div className="mt-auto p-4 border-t border-slate-200">
+            <p className="text-sm text-slate-500 text-center">{COPYRIGHT_TEXT}</p>
           </div>
         </div>
       </div>
@@ -197,7 +162,7 @@ export default function Header({ activeTab, onTabChange, showModels, onToggleMod
           >
             {/* Modal Header */}
             <div className="flex items-center justify-between p-4 border-b border-slate-200">
-              <h3 className="text-lg font-semibold text-slate-800">Model Configuration</h3>
+              <h3 className="text-lg font-semibold text-slate-800">{MODEL_CONFIG_TITLE}</h3>
               <button
                 onClick={onToggleModels}
                 className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
@@ -211,18 +176,18 @@ export default function Header({ activeTab, onTabChange, showModels, onToggleMod
             <div className="p-4 space-y-4">
               <div>
                 <label htmlFor={apiKeyFieldId} className="text-sm text-slate-700 font-medium block mb-2">
-                  Gemini API Key (Optional)
+                  {API_KEY_LABEL}
                 </label>
                 <input
                   type="password"
                   id={apiKeyFieldId}
                   value={apiKey}
                   onChange={handleApiKeyChange}
-                  placeholder="Enter your API key..."
+                  placeholder={API_KEY_PLACEHOLDER}
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 text-sm"
                 />
                 <p className="text-xs text-slate-500 mt-2">
-                  Without a key, the system will use mocked responses for demonstration purposes.
+                  {API_KEY_HELP_TEXT}
                 </p>
               </div>
             </div>

@@ -107,6 +107,19 @@ afterEach(() => {
 })
 
 describe('Home', () => {
+  it('renders the knowledge base header and default articles', () => {
+    renderHome()
+
+    expect(screen.getAllByText('বার্তা ভাণ্ডার').length).toBeGreaterThan(0)
+
+    // Switch to knowledge tab to see articles
+    const knowledgeButton = screen.getAllByRole('button', { name: /বার্তা ভাণ্ডার/i })[0]
+    fireEvent.click(knowledgeButton)
+
+    expect(screen.getByTestId('article-card-1')).toHaveTextContent('মেট্রোরেল')
+    expect(screen.getByTestId('article-card-2')).toHaveTextContent('বিশ্বকাপ ক্রিকেট')
+  })
+
   it('mounts the Bengali font link and cleans it up on unmount', () => {
     const { unmount } = renderHome()
 

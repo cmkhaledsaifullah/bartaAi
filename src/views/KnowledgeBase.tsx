@@ -13,7 +13,7 @@ export default function KnowledgeBase({
   onViewModeChange,
 }: KnowledgeBaseProps) {
   const headerBadge = (
-    <div className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full font-medium">
+    <div className="text-sm px-2 py-1 bg-blue-100 text-blue-700 rounded-full font-medium">
       {articles.length} Articles
     </div>
   )
@@ -40,8 +40,8 @@ export default function KnowledgeBase({
                 <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{article.source}</span>
                 <span className="text-[10px] text-slate-400">{article.date}</span>
               </div>
-              <h3 className="font-bangla font-semibold text-slate-800 mb-2 leading-snug">{article.title}</h3>
-              <p className="font-bangla text-xs text-slate-500 line-clamp-2">{article.content}</p>
+              <h3 className="font-bangla font-semibold text-lg text-slate-800 mb-2 leading-snug">{article.title}</h3>
+              <p className="font-bangla text-sm text-slate-500 line-clamp-2">{article.content}</p>
             </button>
           )
         })}
@@ -83,7 +83,7 @@ export default function KnowledgeBase({
           </div>
           <div data-testid="article-preview-body">
             {viewMode === 'text' ? (
-              <p className="font-bangla text-sm text-slate-700 leading-relaxed">{selectedArticle.content}</p>
+              <p className="font-bangla text-lg text-slate-700 leading-relaxed">{selectedArticle.content}</p>
             ) : (
               <ChunkCards text={selectedArticle.content} highlightKeywords={highlightKeywords} />
             )}
@@ -111,7 +111,7 @@ export function ChunkCards({ text, highlightKeywords = [] }: ChunkCardsProps) {
         return (
           <div
             key={`chunk-${idx}`}
-            className={`p-3 text-sm rounded border ${
+            className={`p-3 text-lg rounded border ${
               isRelevant ? 'bg-emerald-50 border-emerald-200 shadow-sm' : 'bg-white border-slate-100'
             }`}
             data-testid="chunk-card"

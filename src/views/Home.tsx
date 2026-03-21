@@ -21,6 +21,8 @@ import {
   NO_CONTEXT_MESSAGE,
   PROMPT_PLACEHOLDER,
   EXAMPLE_QUESTIONS,
+  PANEL_PROMPT_ID,
+  PANEL_KNOWLEDGE_ID,
 } from '../config/constants'
 import type {
   Article,
@@ -32,7 +34,6 @@ import type {
   GeminiResponse,
   HomeProps,
 } from '../types'
-import Footer from './Footer'
 import Header from './Header'
 
 export default function Home({ articles }: HomeProps) {
@@ -53,7 +54,7 @@ export default function Home({ articles }: HomeProps) {
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([INITIAL_CHAT_MESSAGE])
   const [isProcessing, setIsProcessing] = useState(false)
   const [ragSteps, setRagSteps] = useState<RagStep[]>([])
-  const [activeTab, setActiveTab] = useState<string>('prompt')
+  const [activeTab, setActiveTab] = useState<string>(PANEL_PROMPT_ID)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -199,9 +200,9 @@ export default function Home({ articles }: HomeProps) {
         onNewSession={handleNewSession}
       />
 
-      <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 md:px-8 lg:px-12 pb-24 md:pb-4 flex-1">
+      <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 md:px-8 lg:px-12 flex-1">
         {/* Tab visibility controlled here for consistent mobile and desktop experience */}
-        {activeTab === 'prompt' && (
+        {activeTab === PANEL_PROMPT_ID && (
           <Prompt
             chatHistory={chatHistory}
             query={query}
@@ -215,7 +216,7 @@ export default function Home({ articles }: HomeProps) {
           />
         )}
 
-        {activeTab === 'knowledge' && (
+        {activeTab === PANEL_KNOWLEDGE_ID && (
           <KnowledgeBase
             articles={articles}
             selectedArticle={selectedArticle}
@@ -226,8 +227,6 @@ export default function Home({ articles }: HomeProps) {
           />
         )}
       </div>
-
-      <Footer activeTab={activeTab} onTabChange={setActiveTab} />
     </div>
   )
 }

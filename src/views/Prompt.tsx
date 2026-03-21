@@ -3,6 +3,7 @@ import { CheckCircle2, Cpu, Loader2, Search, User } from 'lucide-react'
 import type { PromptProps, ChatMessage } from '../types'
 import Panel from '../components/Panel'
 import { promptConfig } from '../config/panelConfigs'
+import { APP_DISCLAIMER } from '../config/constants'
 
 export default function Prompt({
   chatHistory,
@@ -32,7 +33,7 @@ export default function Prompt({
 
   const renderSearchInput = () => (
     <>
-      <div className="flex gap-2">
+      <div className="flex gap-3">
         <input
           type="text"
           value={query}
@@ -40,18 +41,19 @@ export default function Prompt({
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           disabled={isProcessing}
-          className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-bangla text-sm"
+          className="flex-1 px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-bangla text-lg"
         />
         <button
           type="button"
           onClick={onSubmit}
           disabled={isProcessing}
           aria-label="Run search"
-          className="px-4 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+          className="px-5 py-4 bg-emerald-600 text-white rounded-2xl hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
         >
-          <Search size={18} />
+          <Search size={22} />
         </button>
       </div>
+      <p className="mt-2 text-xs text-slate-400 text-center">{APP_DISCLAIMER}</p>
       <div className="mt-3 grid gap-2 sm:grid-cols-2 text-center">
         {exampleQuestions.map((question, index) => (
           <button
@@ -78,22 +80,22 @@ export default function Prompt({
       data-sources={msg.sources?.join('|') ?? ''}
     >
       <div
-        className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+        className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
           msg.role === 'user' ? 'bg-slate-200' : 'bg-emerald-100 text-emerald-600'
         }`}
         data-testid="chat-avatar"
         data-role={msg.role}
       >
         {msg.role === 'user' ? (
-          <User size={18} className="text-slate-600" data-testid="user-indicator" />
+          <User size={22} className="text-slate-600" data-testid="user-indicator" />
         ) : (
-          <img src="/logo.svg" alt="BartaAI" className="w-5 h-5" data-testid="assistant-icon" />
+          <img src="/logo.svg" alt="BartaAI" className="w-6 h-6" data-testid="assistant-icon" />
         )}
       </div>
 
       <div className="flex-1 space-y-2">
         <div
-          className={`p-4 rounded-2xl text-sm leading-relaxed shadow-sm ${
+          className={`p-4 rounded-2xl text-lg leading-relaxed shadow-sm ${
             msg.role === 'user'
               ? 'bg-slate-800 text-white rounded-tr-none'
               : 'bg-white border border-slate-100 text-slate-700 rounded-tl-none'
@@ -140,49 +142,64 @@ export default function Prompt({
     </div>
   )
 
+  const isInitial = chatHistory.length <= 1
+
   return (
     <Panel config={promptConfig}>
-      <div className="flex-1 min-h-0 overflow-y-auto px-3 py-4 sm:px-6 sm:py-6 space-y-6 bg-slate-50/60">
-        {chatHistory.map((msg) => renderChatMessage(msg))}
-
-        {isProcessing && (
-          <div className="pl-12" data-testid="rag-steps-panel">
-            <div className="space-y-2">
-              {ragSteps.map((step) => (
-                <div
-                  key={step.id}
-                  className="flex items-center gap-3 text-xs animate-in slide-in-from-left-4 fade-in duration-300"
-                  data-testid="rag-step"
-                  data-status={step.status}
-                  data-step-id={step.id}
-                >
-                  {step.status === 'processing' && (
-                    <Loader2 data-testid="rag-icon-processing" size={12} className="animate-spin text-blue-500" />
-                  )}
-                  {step.status === 'success' && (
-                    <CheckCircle2 data-testid="rag-icon-success" size={12} className="text-emerald-500" />
-                  )}
-                  {step.status === 'warning' && (
-                    <div data-testid="rag-icon-warning" className="w-3 h-3 rounded-full bg-amber-400" />
-                  )}
-                  <span
-                    className={step.status === 'success' ? 'text-slate-600 font-medium' : 'text-slate-400'}
-                    data-testid="rag-step-text"
-                    data-status={step.status}
-                  >
-                    {step.text}
-                  </span>
-                </div>
-              ))}
+      {isInitial ? (
+        <div className="flex-1 min-h-0 flex flex-col items-center justify-center px-3 sm:px-6 bg-slate-50/60">
+          <div className="w-full max-w-2xl space-y-6">
+            {chatHistory.map((msg) => renderChatMessage(msg))}
+            <div className="px-4 py-4 sm:px-0">
+              {renderSearchInput()}
             </div>
           </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+        </div>
+      ) : (
+        <>
+          <div className="flex-1 min-h-0 overflow-y-auto px-3 py-4 sm:px-6 sm:py-6 space-y-6 bg-slate-50/60">
+            {chatHistory.map((msg) => renderChatMessage(msg))}
 
-      <div className="px-4 py-4 sm:px-6 sm:py-5">
-        {renderSearchInput()}
-      </div>
+            {isProcessing && (
+              <div className="pl-12" data-testid="rag-steps-panel">
+                <div className="space-y-2">
+                  {ragSteps.map((step) => (
+                    <div
+                      key={step.id}
+                      className="flex items-center gap-3 text-xs animate-in slide-in-from-left-4 fade-in duration-300"
+                      data-testid="rag-step"
+                      data-status={step.status}
+                      data-step-id={step.id}
+                    >
+                      {step.status === 'processing' && (
+                        <Loader2 data-testid="rag-icon-processing" size={12} className="animate-spin text-blue-500" />
+                      )}
+                      {step.status === 'success' && (
+                        <CheckCircle2 data-testid="rag-icon-success" size={12} className="text-emerald-500" />
+                      )}
+                      {step.status === 'warning' && (
+                        <div data-testid="rag-icon-warning" className="w-3 h-3 rounded-full bg-amber-400" />
+                      )}
+                      <span
+                        className={step.status === 'success' ? 'text-slate-600 font-medium' : 'text-slate-400'}
+                        data-testid="rag-step-text"
+                        data-status={step.status}
+                      >
+                        {step.text}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          <div className="sticky bottom-0 px-4 py-4 sm:px-6 sm:py-5 bg-white border-t border-slate-100">
+            {renderSearchInput()}
+          </div>
+        </>
+      )}
     </Panel>
   )
 }

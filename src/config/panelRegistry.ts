@@ -1,4 +1,5 @@
 import { promptConfig, knowledgeBaseConfig } from './panelConfigs'
+import { PANEL_PROMPT_ID, PANEL_KNOWLEDGE_ID } from './constants'
 import type { PanelConfig } from '../components/Panel'
 
 export type PanelConfigWithId = PanelConfig & {
@@ -11,11 +12,11 @@ export type PanelConfigWithId = PanelConfig & {
  */
 export const panelRegistry: PanelConfigWithId[] = [
   {
-    id: 'prompt',
+    id: PANEL_PROMPT_ID,
     ...promptConfig,
   },
   {
-    id: 'knowledge',
+    id: PANEL_KNOWLEDGE_ID,
     ...knowledgeBaseConfig,
   },
 ]
