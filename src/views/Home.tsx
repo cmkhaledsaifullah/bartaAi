@@ -35,6 +35,7 @@ import type {
   HomeProps,
 } from '../types'
 import Header from './Header'
+import { useChatStore } from '../store/chatStore'
 
 export default function Home({ articles }: HomeProps) {
   useEffect(() => {
@@ -65,11 +66,15 @@ export default function Home({ articles }: HomeProps) {
     setRagSteps((prev) => [...prev, { text, status, id: `step-${Date.now()}-${Math.random()}` }])
   }
 
+  const resetChat = useChatStore((state) => state.resetChat)
+  const startConversation = useChatStore((state) => state.startConversation)
+
   const handleNewSession = () => {
     setChatHistory([INITIAL_SYSTEM_MESSAGE])
     setQuery('')
     setIsProcessing(false)
     setRagSteps([])
+    resetChat()
   }
 
   const handleSearch = async () => {
@@ -88,6 +93,7 @@ export default function Home({ articles }: HomeProps) {
     setChatHistory((prev) => [...prev, userMsg])
     setQuery('')
     setIsProcessing(true)
+    startConversation()
     resetRagStepsState(setRagSteps)
 
     addRagStep('Generating query embeddings...', 'processing')
@@ -189,7 +195,7 @@ export default function Home({ articles }: HomeProps) {
 
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
+    <div className="h-screen overflow-hidden bg-slate-50 text-slate-900 font-sans flex flex-col">
       <Header 
         activeTab={activeTab} 
         onTabChange={setActiveTab}
@@ -200,7 +206,7 @@ export default function Home({ articles }: HomeProps) {
         onNewSession={handleNewSession}
       />
 
-      <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 md:px-8 lg:px-12 flex-1">
+      <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 md:px-8 lg:px-12 flex-1 min-h-0 overflow-hidden flex flex-col">
         {/* Tab visibility controlled here for consistent mobile and desktop experience */}
         {activeTab === TAB_CHAT_ID && (
           <Chat

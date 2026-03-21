@@ -1,8 +1,9 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import type { ComponentProps, MutableRefObject } from 'react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import Chat from '../views/Chat'
 import type { ChatMessage, RagStep } from '../types'
+import { useChatStore } from '../store/chatStore'
 
 const PLACEHOLDER = 'Ask about the news (e.g., মেট্রোরেল বা ক্রিকেট সম্পর্কে কিছু বলুন)...'
 
@@ -58,12 +59,17 @@ const renderChat = (overrides: Partial<ComponentProps<typeof Chat>> = {}) => {
   return props
 }
 
+beforeEach(() => {
+  useChatStore.setState({ isInitialChat: true })
+})
+
 afterEach(() => {
   cleanup()
 })
 
 describe('Chat', () => {
   it('renders chat history and retrieval context bubbles', () => {
+    useChatStore.setState({ isInitialChat: false })
     renderChat()
 
     expect(screen.getByText('স্বাগতম! বার্তাAI প্রস্তুত।')).toBeInTheDocument()
@@ -83,6 +89,7 @@ describe('Chat', () => {
   })
 
   it('invokes onSubmit when pressing Enter', () => {
+    useChatStore.setState({ isInitialChat: false })
     const props = renderChat({ query: 'বঙ্গবন্ধু স্যাটেলাইট আপডেট' })
 
     const input = screen.getByPlaceholderText(PLACEHOLDER)
@@ -97,12 +104,14 @@ describe('Chat', () => {
   })
 
   it('disables input while a search is running', () => {
+    useChatStore.setState({ isInitialChat: false })
     renderChat({ query: 'Ready', isProcessing: true })
     const input = screen.getByPlaceholderText(PLACEHOLDER) as HTMLInputElement
     expect(input.disabled).toBe(true)
   })
 
   it('shows rag steps when processing is active', () => {
+    useChatStore.setState({ isInitialChat: false })
     renderChat({ isProcessing: true, ragSteps: RAG_STEPS })
 
     const ragPanel = screen.getByTestId('rag-steps-panel')
@@ -111,6 +120,7 @@ describe('Chat', () => {
   })
 
   it('verifies data-sources uses pipe separator', () => {
+    useChatStore.setState({ isInitialChat: false })
     renderChat({
       chatHistory: [
         {
@@ -131,6 +141,7 @@ describe('Chat', () => {
   })
 
   it('verifies retrieved chunk keys are unique', () => {
+    useChatStore.setState({ isInitialChat: false })
     renderChat({
       chatHistory: [
         {
@@ -153,6 +164,7 @@ describe('Chat', () => {
   })
 
   it('verifies warning status renders warning icon', () => {
+    useChatStore.setState({ isInitialChat: false })
     renderChat({
       isProcessing: true,
       ragSteps: [
@@ -164,6 +176,7 @@ describe('Chat', () => {
   })
 
   it('renders user avatar with User icon', () => {
+    useChatStore.setState({ isInitialChat: false })
     renderChat()
 
     const userAvatars = screen.getAllByTestId('chat-avatar').filter(el => el.dataset.role === 'user')
@@ -172,6 +185,7 @@ describe('Chat', () => {
   })
 
   it('renders assistant avatar with logo', () => {
+    useChatStore.setState({ isInitialChat: false })
     renderChat()
 
     const assistantAvatars = screen.getAllByTestId('chat-avatar').filter(el => el.dataset.role === 'assistant')
@@ -180,6 +194,7 @@ describe('Chat', () => {
   })
 
   it('renders error message with red styling', () => {
+    useChatStore.setState({ isInitialChat: false })
     renderChat({
       chatHistory: [
         {
@@ -196,6 +211,7 @@ describe('Chat', () => {
   })
 
   it('renders single unified view with chat history and search input', () => {
+    useChatStore.setState({ isInitialChat: false })
     renderChat()
 
     expect(screen.getAllByTestId('chat-message').length).toBeGreaterThan(0)

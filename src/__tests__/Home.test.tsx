@@ -4,6 +4,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest'
 import type { Mock } from 'vitest'
 import Home from '../views/Home'
 import type { Article } from '../types'
+import { useChatStore } from '../store/chatStore'
 
 const MOCK_ARTICLES: Article[] = [
   {
@@ -104,6 +105,7 @@ afterEach(() => {
   cleanup()
   vi.useRealTimers()
   global.fetch = originalFetch
+  useChatStore.setState({ isInitialChat: true })
 })
 
 describe('Home', () => {

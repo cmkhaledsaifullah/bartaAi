@@ -55,7 +55,7 @@ export default function TabContainer({
 
   return (
     <div
-      className={`md:h-full md:max-h-full ${containerClassName} flex flex-col relative overflow-hidden`}
+      className={`h-full max-h-full ${containerClassName} flex flex-col relative overflow-hidden`}
       data-testid={config.testId}
       role="complementary"
       {...Object.entries(dataAttributes).reduce((acc, [key, value]) => {

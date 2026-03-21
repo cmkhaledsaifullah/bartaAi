@@ -1,9 +1,10 @@
-import type { ChangeEvent, KeyboardEvent } from 'react'
-import { CheckCircle2, Cpu, Loader2, Search, User } from 'lucide-react'
+import { useCallback, useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react'
+import { ArrowDown, CheckCircle2, Cpu, Loader2, Search, User } from 'lucide-react'
 import type { ChatProps, ChatMessage } from '../types'
 import TabContainer from '../components/TabContainer'
 import { chatConfig } from '../config/tabConfigs'
 import { APP_DISCLAIMER } from '../config/constants'
+import { useChatStore } from '../store/chatStore'
 
 export default function Chat({
   chatHistory,
@@ -16,6 +17,21 @@ export default function Chat({
   ragSteps,
   messagesEndRef,
 }: ChatProps) {
+  const isInitialChat = useChatStore((state) => state.isInitialChat)
+  const chatScrollRef = useRef<HTMLDivElement>(null)
+  const [showScrollDown, setShowScrollDown] = useState(false)
+
+  const handleChatScroll = useCallback(() => {
+    const el = chatScrollRef.current
+    if (!el) return
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight
+    setShowScrollDown(distanceFromBottom > 100)
+  }, [])
+
+  const scrollToBottom = () => {
+    chatScrollRef.current?.scrollTo({ top: chatScrollRef.current.scrollHeight, behavior: 'smooth' })
+  }
+
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     onQueryChange(event.target.value)
   }
@@ -142,22 +158,28 @@ export default function Chat({
     </div>
   )
 
-  const isInitial = chatHistory.length <= 1
-
   return (
     <TabContainer config={chatConfig}>
-      {isInitial ? (
-        <div className="flex-1 min-h-0 flex flex-col items-center justify-center px-3 sm:px-6 bg-slate-50/60">
-          <div className="w-full max-w-2xl space-y-6">
+      {isInitialChat ? (
+        <div
+          className="flex-1 min-h-0 flex flex-col items-center justify-center px-3 sm:px-6 bg-slate-50/60"
+          data-testid="chat-initial-view"
+        >
+          <div className="w-full space-y-6">
             {chatHistory.map((msg) => renderChatMessage(msg))}
-            <div className="px-4 py-4 sm:px-0">
+            <div className="w-full">
               {renderSearchInput()}
             </div>
           </div>
         </div>
       ) : (
-        <>
-          <div className="flex-1 min-h-0 overflow-y-auto px-3 py-4 sm:px-6 sm:py-6 space-y-6 bg-slate-50/60">
+        <div className="flex-1 min-h-0 flex flex-col bg-slate-50/60" data-testid="chat-conversation-view">
+          <div className="flex-1 min-h-0 relative">
+            <div
+              ref={chatScrollRef}
+              onScroll={handleChatScroll}
+              className="h-full overflow-y-auto px-3 py-4 sm:px-6 sm:py-6 space-y-6"
+            >
             {chatHistory.map((msg) => renderChatMessage(msg))}
 
             {isProcessing && (
@@ -193,12 +215,25 @@ export default function Chat({
               </div>
             )}
             <div ref={messagesEndRef} />
+            </div>
+
+            {showScrollDown && (
+              <button
+                type="button"
+                onClick={scrollToBottom}
+                aria-label="Scroll to bottom"
+                data-testid="scroll-to-bottom"
+                className="absolute right-6 bottom-4 z-10 w-9 h-9 rounded-full bg-white border border-slate-200 shadow-md flex items-center justify-center hover:bg-slate-50 transition-colors"
+              >
+                <ArrowDown size={18} className="text-slate-600" />
+              </button>
+            )}
           </div>
 
-          <div className="sticky bottom-0 px-4 py-4 sm:px-6 sm:py-5 bg-white border-t border-slate-100">
+          <div className="shrink-0 px-4 py-4 sm:px-6 sm:py-5 bg-white border-t border-slate-100">
             {renderSearchInput()}
           </div>
-        </>
+        </div>
       )}
     </TabContainer>
   )

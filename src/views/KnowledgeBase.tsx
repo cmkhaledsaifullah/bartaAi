@@ -1,4 +1,5 @@
-import { Split } from 'lucide-react'
+import { useCallback, useRef, useState } from 'react'
+import { ArrowUp, Split } from 'lucide-react'
 import { splitArticleIntoSentences } from '../utils/homeHelpers'
 import type { ChunkCardsProps, KnowledgeBaseProps } from '../types'
 import TabContainer from '../components/TabContainer'
@@ -12,6 +13,19 @@ export default function KnowledgeBase({
   onSelectArticle,
   onViewModeChange,
 }: KnowledgeBaseProps) {
+  const articleListRef = useRef<HTMLDivElement>(null)
+  const [showScrollUp, setShowScrollUp] = useState(false)
+
+  const handleArticleScroll = useCallback(() => {
+    const el = articleListRef.current
+    if (!el) return
+    setShowScrollUp(el.scrollTop > 100)
+  }, [])
+
+  const scrollToTop = () => {
+    articleListRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   const headerBadge = (
     <div className="text-sm px-2 py-1 bg-blue-100 text-blue-700 rounded-full font-medium">
       {articles.length} Articles
@@ -23,7 +37,12 @@ export default function KnowledgeBase({
       config={knowledgeBaseConfig}
       headerBadge={headerBadge}
     >
-      <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3 sm:space-y-4">
+      <div className="relative flex-1 min-h-0">
+        <div
+          ref={articleListRef}
+          onScroll={handleArticleScroll}
+          className="h-full overflow-y-auto p-4 space-y-3 sm:space-y-4"
+        >
         {articles.map((article) => {
           const isSelected = selectedArticle.id === article.id
           return (
@@ -44,8 +63,19 @@ export default function KnowledgeBase({
               <p className="font-bangla text-sm text-slate-500 line-clamp-2">{article.content}</p>
             </button>
           )
-        })}
-      </div>
+        })}        </div>
+
+        {showScrollUp && (
+          <button
+            type="button"
+            onClick={scrollToTop}
+            aria-label="Scroll to top"
+            data-testid="scroll-to-top"
+            className="absolute right-6 top-4 z-10 w-9 h-9 rounded-full bg-white border border-slate-200 shadow-md flex items-center justify-center hover:bg-slate-50 transition-colors"
+          >
+            <ArrowUp size={18} className="text-slate-600" />
+          </button>
+        )}      </div>
 
       <div className="p-4 border-t border-slate-100 bg-slate-50">
         <h3 className="text-xs font-semibold text-slate-500 mb-3 uppercase">Article Preview</h3>
