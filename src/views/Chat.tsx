@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react'
 import { ArrowDown, CheckCircle2, Cpu, Loader2, Search, User } from 'lucide-react'
 import type { ChatProps, ChatMessage } from '../types'
 import TabContainer from '../components/TabContainer'
@@ -28,6 +28,10 @@ export default function Chat({
     setShowScrollDown(distanceFromBottom > 100)
   }, [])
 
+  useEffect(() => {
+    handleChatScroll()
+  }, [chatHistory, isInitialChat, handleChatScroll])
+
   const scrollToBottom = () => {
     chatScrollRef.current?.scrollTo({ top: chatScrollRef.current.scrollHeight, behavior: 'smooth' })
   }
@@ -49,7 +53,7 @@ export default function Chat({
 
   const renderSearchInput = () => (
     <>
-      <div className="flex gap-3">
+      <div className="flex gap-2 sm:gap-3">
         <input
           type="text"
           value={query}
@@ -57,14 +61,14 @@ export default function Chat({
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           disabled={isProcessing}
-          className="flex-1 px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-bangla text-lg"
+          className="flex-1 min-w-0 px-4 py-3 sm:px-6 sm:py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-bangla text-lg"
         />
         <button
           type="button"
           onClick={onSubmit}
           disabled={isProcessing}
           aria-label="Run search"
-          className="px-5 py-4 bg-emerald-600 text-white rounded-2xl hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+          className="px-4 py-3 sm:px-5 sm:py-4 bg-emerald-600 text-white rounded-2xl hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
         >
           <Search size={22} />
         </button>

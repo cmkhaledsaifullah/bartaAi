@@ -71,7 +71,7 @@ export default function KnowledgeBase({
             onClick={scrollToTop}
             aria-label="Scroll to top"
             data-testid="scroll-to-top"
-            className="absolute right-6 top-4 z-10 w-9 h-9 rounded-full bg-white border border-slate-200 shadow-md flex items-center justify-center hover:bg-slate-50 transition-colors"
+            className="absolute right-6 bottom-4 z-10 w-9 h-9 rounded-full bg-white border border-slate-200 shadow-md flex items-center justify-center hover:bg-slate-50 transition-colors"
           >
             <ArrowUp size={18} className="text-slate-600" />
           </button>
