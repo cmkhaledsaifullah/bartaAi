@@ -1,28 +1,39 @@
 import { cleanup, render, screen, fireEvent } from '@testing-library/react'
-import type { ComponentProps } from 'react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import Header from '../views/Header'
+import { useSettingsStore } from '../store/settingsStore'
+import { useNavigationStore } from '../store/navigationStore'
+import { TAB_CHAT_ID } from '../config/constants'
 
 const createConsoleLogSpy = () => {
   return vi.spyOn(console, 'log').mockImplementation(() => {})
 }
 
-const defaultProps: ComponentProps<typeof Header> = {
-  showModels: false,
-  onToggleModels: vi.fn(),
-  apiKey: '',
-  onApiKeyChange: vi.fn(),
-  onNewSession: vi.fn(),
+type StoreOverrides = {
+  showSettings?: boolean
+  apiKey?: string
+  activeTab?: string
 }
 
-const renderHeader = (overrides: Partial<ComponentProps<typeof Header>> = {}) => {
-  const props = { ...defaultProps, ...overrides }
-  // Reset mocks for each render
-  if (!overrides.onToggleModels) props.onToggleModels = vi.fn()
-  if (!overrides.onApiKeyChange) props.onApiKeyChange = vi.fn()
-  if (!overrides.onNewSession) props.onNewSession = vi.fn()
-  return { ...render(<Header {...props} />), props }
+const renderHeader = (overrides: StoreOverrides & { onNewSession?: () => void } = {}) => {
+  const { showSettings, apiKey, activeTab, ...rest } = overrides
+
+  useSettingsStore.setState({
+    showSettings: showSettings ?? false,
+    apiKey: apiKey ?? '',
+  })
+  useNavigationStore.setState({
+    activeTab: activeTab ?? TAB_CHAT_ID,
+  })
+
+  const onNewSession = rest.onNewSession ?? vi.fn()
+  return { ...render(<Header onNewSession={onNewSession} />), onNewSession }
 }
+
+beforeEach(() => {
+  useSettingsStore.setState({ showSettings: false, apiKey: '' })
+  useNavigationStore.setState({ activeTab: TAB_CHAT_ID })
+})
 
 afterEach(() => {
   cleanup()
@@ -35,23 +46,16 @@ describe('Header', () => {
   })
 
   it('title button triggers new session and tab change', () => {
-    const onTabChange = vi.fn()
     const onNewSession = vi.fn()
-    renderHeader({ activeTab: 'knowledge', onTabChange, onNewSession })
+    renderHeader({ activeTab: 'knowledge', onNewSession })
 
     fireEvent.click(screen.getByRole('button', { name: /start new chat session/i }))
-    expect(onTabChange).toHaveBeenCalledWith('chat')
+    expect(useNavigationStore.getState().activeTab).toBe('chat')
     expect(onNewSession).toHaveBeenCalledTimes(1)
   })
 
-  it('does not render panel navigation when activeTab is not provided', () => {
-    renderHeader()
-    expect(screen.queryByRole('button', { name: /প্রম্পট/i })).not.toBeInTheDocument()
-  })
-
-  it('renders panel navigation when activeTab and onTabChange are provided', () => {
-    const onTabChange = vi.fn()
-    renderHeader({ activeTab: 'chat', onTabChange })
+  it('renders panel navigation with store-driven activeTab', () => {
+    renderHeader({ activeTab: 'chat' })
     const navigation = screen.queryByTestId('panel-nav-desktop')
     expect(navigation || true).toBeTruthy()
   })
@@ -132,9 +136,8 @@ describe('Header', () => {
     expect(sidePanel).toBeInTheDocument()
   })
 
-  it('renders with activeTab and handles tab changes', () => {
-    const onTabChange = vi.fn()
-    renderHeader({ activeTab: 'knowledge', onTabChange })
+  it('renders with activeTab from store', () => {
+    renderHeader({ activeTab: 'knowledge' })
     
     expect(screen.getByText('বার্তাAI')).toBeInTheDocument()
   })
@@ -156,87 +159,61 @@ describe('Header', () => {
     expect(overlay).toBeInTheDocument()
   })
 
-  it('does not render panel navigation when only activeTab is provided', () => {
+  it('renders navigation when activeTab is set in store', () => {
     renderHeader({ activeTab: 'chat' })
-    
-    const navigation = screen.queryByRole('navigation')
-    expect(navigation).not.toBeInTheDocument()
-  })
-
-  it('does not render panel navigation when only onTabChange is provided', () => {
-    renderHeader({ onTabChange: vi.fn() })
-    
-    const navigation = screen.queryByRole('navigation')
-    expect(navigation).not.toBeInTheDocument()
-  })
-
-  it('verifies both activeTab and onTabChange are required for navigation', () => {
-    const onTabChange = vi.fn()
-    
-    renderHeader()
-    expect(screen.queryByRole('navigation')).not.toBeInTheDocument()
-    
-    cleanup()
-    
-    renderHeader({ activeTab: 'chat', onTabChange })
     const navigation = screen.queryByRole('navigation')
     expect(navigation).toBeInTheDocument()
   })
 
   it('toggles model configuration modal via desktop Model button', () => {
-    const onToggleModels = vi.fn()
-    renderHeader({ onToggleModels })
+    renderHeader()
 
     fireEvent.click(screen.getByTestId('models-toggle'))
-    expect(onToggleModels).toHaveBeenCalledTimes(1)
+    expect(useSettingsStore.getState().showSettings).toBe(true)
   })
 
-  it('shows model configuration modal when showModels is true', () => {
-    renderHeader({ showModels: true })
+  it('shows model configuration modal when showSettings is true', () => {
+    renderHeader({ showSettings: true })
 
     expect(screen.getByText('Model Configuration')).toBeInTheDocument()
     expect(screen.getByLabelText(/Gemini API Key/i)).toBeInTheDocument()
   })
 
-  it('does not show model configuration modal when showModels is false', () => {
-    renderHeader({ showModels: false })
+  it('does not show model configuration modal when showSettings is false', () => {
+    renderHeader({ showSettings: false })
 
     expect(screen.queryByText('Model Configuration')).not.toBeInTheDocument()
   })
 
   it('updates API key input in configuration modal', () => {
-    const onApiKeyChange = vi.fn()
-    renderHeader({ showModels: true, onApiKeyChange })
+    renderHeader({ showSettings: true })
 
     const apiInput = screen.getByLabelText(/Gemini API Key/i)
     fireEvent.change(apiInput, { target: { value: 'test-key-123' } })
-    expect(onApiKeyChange).toHaveBeenCalledWith('test-key-123')
+    expect(useSettingsStore.getState().apiKey).toBe('test-key-123')
   })
 
   it('closes configuration modal via close button', () => {
-    const onToggleModels = vi.fn()
-    renderHeader({ showModels: true, onToggleModels })
+    renderHeader({ showSettings: true })
 
     fireEvent.click(screen.getByRole('button', { name: /close configuration/i }))
-    expect(onToggleModels).toHaveBeenCalledTimes(1)
+    expect(useSettingsStore.getState().showSettings).toBe(false)
   })
 
   it('closes configuration modal via backdrop click', () => {
-    const onToggleModels = vi.fn()
-    const { container } = renderHeader({ showModels: true, onToggleModels })
+    const { container } = renderHeader({ showSettings: true })
 
     // Click the modal backdrop (z-[60])
     const backdrops = container.querySelectorAll('.bg-black.bg-opacity-50')
     const modalBackdrop = Array.from(backdrops).find(el => el.classList.contains('z-\\[60\\]') || el.className.includes('z-[60]'))
     if (modalBackdrop) {
       fireEvent.click(modalBackdrop)
-      expect(onToggleModels).toHaveBeenCalled()
+      expect(useSettingsStore.getState().showSettings).toBe(false)
     }
   })
 
-  it('mobile Model button triggers onToggleModels and keeps sidebar open', () => {
-    const onToggleModels = vi.fn()
-    const { container } = renderHeader({ onToggleModels })
+  it('mobile Model button toggles settings and keeps sidebar open', () => {
+    const { container } = renderHeader()
 
     // Open sidebar
     fireEvent.click(screen.getByRole('button', { name: /open menu/i }))
@@ -246,84 +223,71 @@ describe('Header', () => {
     const mobileModelButton = modelButtons[modelButtons.length - 1]
     fireEvent.click(mobileModelButton)
 
-    expect(onToggleModels).toHaveBeenCalledTimes(1)
+    expect(useSettingsStore.getState().showSettings).toBe(true)
     // Sidebar should stay open
     const sidePanel = container.querySelector('.translate-x-0')
     expect(sidePanel).toBeInTheDocument()
   })
 
   it('closes model modal when clicking outside via mousedown', () => {
-    const onToggleModels = vi.fn()
-    renderHeader({ showModels: true, onToggleModels })
+    renderHeader({ showSettings: true })
 
     fireEvent.mouseDown(document.body)
-    expect(onToggleModels).toHaveBeenCalledTimes(1)
+    expect(useSettingsStore.getState().showSettings).toBe(false)
   })
 
   it('does not close model modal when clicking inside the modal', () => {
-    const onToggleModels = vi.fn()
-    renderHeader({ showModels: true, onToggleModels })
+    renderHeader({ showSettings: true })
 
     const apiInput = screen.getByLabelText(/Gemini API Key/i)
     fireEvent.mouseDown(apiInput)
-    expect(onToggleModels).not.toHaveBeenCalled()
+    expect(useSettingsStore.getState().showSettings).toBe(true)
   })
 
   it('removes mousedown listener on cleanup and respects dependency changes', () => {
-    const onToggleModels = vi.fn()
     const addSpy = vi.spyOn(document, 'addEventListener')
     const removeSpy = vi.spyOn(document, 'removeEventListener')
 
-    const { unmount } = renderHeader({ showModels: true, onToggleModels })
+    const { unmount } = renderHeader({ showSettings: true })
 
     // Verify listener was registered
     expect(addSpy).toHaveBeenCalledWith('mousedown', expect.any(Function))
 
     // Verify listener works before unmount
     fireEvent.mouseDown(document.body)
-    expect(onToggleModels).toHaveBeenCalledTimes(1)
+    expect(useSettingsStore.getState().showSettings).toBe(false)
 
     unmount()
 
     // Verify removeEventListener was called with 'mousedown'
     expect(removeSpy).toHaveBeenCalledWith('mousedown', expect.any(Function))
 
-    // After unmount, the listener should NOT fire
-    onToggleModels.mockClear()
-    document.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
-    expect(onToggleModels).not.toHaveBeenCalled()
-
     addSpy.mockRestore()
     removeSpy.mockRestore()
   })
 
-  it('does not call onToggleModels on outside click when showModels is false', () => {
-    const onToggleModels = vi.fn()
-    // Render with showModels false - the modelsRef and modelsButtonRef will still have DOM elements
-    // but the handler should NOT trigger because showModels is false.
-    // If the mutant changes && to ||, modelsRef.current being truthy would bypass showModels check
-    renderHeader({ showModels: false, onToggleModels })
+  it('does not toggle settings on outside click when showSettings is false', () => {
+    renderHeader({ showSettings: false })
 
-    // Click on body - should NOT trigger because showModels is false
+    // Click on body - should NOT trigger because showSettings is false
     fireEvent.mouseDown(document.body)
-    expect(onToggleModels).not.toHaveBeenCalled()
+    expect(useSettingsStore.getState().showSettings).toBe(false)
 
     // Also click on various elements to make sure
     fireEvent.mouseDown(screen.getByText('বার্তাAI'))
-    expect(onToggleModels).not.toHaveBeenCalled()
+    expect(useSettingsStore.getState().showSettings).toBe(false)
   })
 
-  it('does not call onToggleModels when clicking on the models button itself', () => {
-    const onToggleModels = vi.fn()
-    renderHeader({ showModels: true, onToggleModels })
+  it('does not close settings when clicking on the models button itself', () => {
+    renderHeader({ showSettings: true })
 
     const modelsButton = screen.getByTestId('models-toggle')
     fireEvent.mouseDown(modelsButton)
-    expect(onToggleModels).not.toHaveBeenCalled()
+    expect(useSettingsStore.getState().showSettings).toBe(true)
   })
 
-  it('applies active styling to Model button when showModels is true', () => {
-    renderHeader({ showModels: true })
+  it('applies active styling to Model button when showSettings is true', () => {
+    renderHeader({ showSettings: true })
 
     const modelsButton = screen.getByTestId('models-toggle')
     expect(modelsButton).toHaveClass('bg-emerald-600')
@@ -331,8 +295,8 @@ describe('Header', () => {
     expect(modelsButton).not.toHaveClass('bg-slate-100')
   })
 
-  it('applies inactive styling to Model button when showModels is false', () => {
-    renderHeader({ showModels: false })
+  it('applies inactive styling to Model button when showSettings is false', () => {
+    renderHeader({ showSettings: false })
 
     const modelsButton = screen.getByTestId('models-toggle')
     expect(modelsButton).toHaveClass('bg-slate-100')
@@ -340,44 +304,28 @@ describe('Header', () => {
     expect(modelsButton).not.toHaveClass('bg-emerald-600')
   })
 
-  it('calls onNewSession but not onTabChange when onTabChange is undefined', () => {
+  it('calls onNewSession and sets activeTab to chat', () => {
     const onNewSession = vi.fn()
-    renderHeader({ onNewSession })
+    renderHeader({ activeTab: 'knowledge', onNewSession })
 
     fireEvent.click(screen.getByRole('button', { name: /start new chat session/i }))
     expect(onNewSession).toHaveBeenCalledTimes(1)
-    // Should not throw even though onTabChange is undefined (optional chaining)
+    expect(useNavigationStore.getState().activeTab).toBe('chat')
   })
 
-  it('re-registers mousedown listener when showModels changes', () => {
-    const onToggleModels = vi.fn()
-    const { rerender } = render(
-      <Header
-        showModels={false}
-        onToggleModels={onToggleModels}
-        apiKey=""
-        onApiKeyChange={vi.fn()}
-        onNewSession={vi.fn()}
-      />
-    )
+  it('re-registers mousedown listener when showSettings changes', () => {
+    useSettingsStore.setState({ showSettings: false })
+    render(<Header onNewSession={vi.fn()} />)
 
-    // When showModels is false, clicking outside should not trigger
+    // When showSettings is false, clicking outside should not change state
     fireEvent.mouseDown(document.body)
-    expect(onToggleModels).not.toHaveBeenCalled()
+    expect(useSettingsStore.getState().showSettings).toBe(false)
 
-    // Re-render with showModels true
-    rerender(
-      <Header
-        showModels={true}
-        onToggleModels={onToggleModels}
-        apiKey=""
-        onApiKeyChange={vi.fn()}
-        onNewSession={vi.fn()}
-      />
-    )
+    // Update store to showSettings true
+    useSettingsStore.setState({ showSettings: true })
 
-    // Now clicking outside should trigger onToggleModels
+    // Now clicking outside should toggle showSettings
     fireEvent.mouseDown(document.body)
-    expect(onToggleModels).toHaveBeenCalledTimes(1)
+    expect(useSettingsStore.getState().showSettings).toBe(false)
   })
 })

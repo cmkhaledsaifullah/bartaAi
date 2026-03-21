@@ -1,23 +1,29 @@
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react'
 import { ArrowDown, CheckCircle2, Cpu, Loader2, Search, User } from 'lucide-react'
-import type { ChatProps, ChatMessage } from '../types'
+import type { ChatMessage } from '../types'
 import TabContainer from '../components/TabContainer'
 import { chatConfig } from '../config/tabConfigs'
 import { APP_DISCLAIMER } from '../config/constants'
 import { useChatStore } from '../store/chatStore'
+import type { MutableRefObject } from 'react'
+
+type ChatProps = {
+  onSubmit: () => void
+  messagesEndRef: MutableRefObject<HTMLDivElement | null>
+}
 
 export default function Chat({
-  chatHistory,
-  query,
-  isProcessing,
-  placeholder,
-  exampleQuestions,
-  onQueryChange,
   onSubmit,
-  ragSteps,
   messagesEndRef,
 }: ChatProps) {
-  const isInitialChat = useChatStore((state) => state.isInitialChat)
+  const isInitialChat = useChatStore((s) => s.isInitialChat)
+  const chatHistory = useChatStore((s) => s.chatHistory)
+  const query = useChatStore((s) => s.query)
+  const isProcessing = useChatStore((s) => s.isProcessing)
+  const placeholder = useChatStore((s) => s.placeholder)
+  const exampleQuestions = useChatStore((s) => s.exampleQuestions)
+  const ragSteps = useChatStore((s) => s.ragSteps)
+  const setQuery = useChatStore((s) => s.setQuery)
   const chatScrollRef = useRef<HTMLDivElement>(null)
   const [showScrollDown, setShowScrollDown] = useState(false)
 
@@ -37,7 +43,7 @@ export default function Chat({
   }
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
-    onQueryChange(event.target.value)
+    setQuery(event.target.value)
   }
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -48,7 +54,7 @@ export default function Chat({
   }
 
   const handleExampleClick = (question: string) => {
-    onQueryChange(question)
+    setQuery(question)
   }
 
   const renderSearchInput = () => (

@@ -1,11 +1,12 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
-import type { ComponentProps, MutableRefObject } from 'react'
+import type { MutableRefObject } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import Chat from '../views/Chat'
 import type { ChatMessage, RagStep } from '../types'
 import { useChatStore } from '../store/chatStore'
+import { CHAT_PLACEHOLDER, EXAMPLE_QUESTIONS } from '../config/constants'
 
-const PLACEHOLDER = 'Ask about the news (e.g., মেট্রোরেল বা ক্রিকেট সম্পর্কে কিছু বলুন)...'
+const PLACEHOLDER = CHAT_PLACEHOLDER
 
 const CHAT_HISTORY: ChatMessage[] = [
   {
@@ -41,22 +42,27 @@ const createMessagesEndRef = (): MutableRefObject<HTMLDivElement | null> => ({
   current: document.createElement('div'),
 })
 
-const renderChat = (overrides: Partial<ComponentProps<typeof Chat>> = {}) => {
-  const props: ComponentProps<typeof Chat> = {
-    chatHistory: CHAT_HISTORY,
-    query: '',
-    isProcessing: false,
-    placeholder: PLACEHOLDER,
-    exampleQuestions: ['মেট্রোরেল নিয়ে আপডেট কি?', 'How is Bangladesh doing in Cricket?'],
-    onQueryChange: vi.fn(),
-    onSubmit: vi.fn(),
-    ragSteps: [],
-    messagesEndRef: createMessagesEndRef(),
-    ...overrides,
-  }
+type StoreOverrides = {
+  chatHistory?: ChatMessage[]
+  query?: string
+  isProcessing?: boolean
+  ragSteps?: RagStep[]
+}
 
-  render(<Chat {...props} />)
-  return props
+const renderChat = (overrides: StoreOverrides = {}) => {
+  const onSubmit = vi.fn()
+
+  useChatStore.setState({
+    chatHistory: overrides.chatHistory ?? CHAT_HISTORY,
+    query: overrides.query ?? '',
+    isProcessing: overrides.isProcessing ?? false,
+    ragSteps: overrides.ragSteps ?? [],
+    placeholder: PLACEHOLDER,
+    exampleQuestions: EXAMPLE_QUESTIONS,
+  })
+
+  render(<Chat onSubmit={onSubmit} messagesEndRef={createMessagesEndRef()} />)
+  return { onSubmit }
 }
 
 beforeEach(() => {
@@ -81,20 +87,20 @@ describe('Chat', () => {
   })
 
   it('prefills the query input when an example question is selected', () => {
-    const props = renderChat()
+    renderChat()
 
     fireEvent.click(screen.getByRole('button', { name: /মেট্রোরেল নিয়ে আপডেট কি\?/i }))
 
-    expect(props.onQueryChange).toHaveBeenCalledWith('মেট্রোরেল নিয়ে আপডেট কি?')
+    expect(useChatStore.getState().query).toBe('মেট্রোরেল নিয়ে আপডেট কি?')
   })
 
   it('invokes onSubmit when pressing Enter', () => {
     useChatStore.setState({ isInitialChat: false })
-    const props = renderChat({ query: 'বঙ্গবন্ধু স্যাটেলাইট আপডেট' })
+    const { onSubmit } = renderChat({ query: 'বঙ্গবন্ধু স্যাটেলাইট আপডেট' })
 
     const input = screen.getByPlaceholderText(PLACEHOLDER)
     fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })
-    expect(props.onSubmit).toHaveBeenCalledTimes(1)
+    expect(onSubmit).toHaveBeenCalledTimes(1)
   })
 
   it('does not prevent Enter key when query is empty', () => {

@@ -13,19 +13,24 @@ import {
   API_KEY_HELP_TEXT,
   TAB_CHAT_ID,
 } from '../config/constants'
+import { useSettingsStore } from '../store/settingsStore'
+import { useNavigationStore } from '../store/navigationStore'
 
 interface HeaderProps {
-  activeTab?: string
-  onTabChange?: (tab: string) => void
-  showModels: boolean
-  onToggleModels: () => void
-  apiKey: string
-  onApiKeyChange: (key: string) => void
   onNewSession: () => void
 }
 
-export default function Header({ activeTab, onTabChange, showModels, onToggleModels, apiKey, onApiKeyChange, onNewSession }: HeaderProps) {
+export default function Header({ onNewSession }: HeaderProps) {
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(false)
+
+  const activeTab = useNavigationStore((s) => s.activeTab)
+  const setActiveTab = useNavigationStore((s) => s.setActiveTab)
+
+  const apiKey = useSettingsStore((s) => s.apiKey)
+  const setApiKey = useSettingsStore((s) => s.setApiKey)
+  const showModels = useSettingsStore((s) => s.showSettings)
+  const toggleModels = useSettingsStore((s) => s.toggleSettings)
+
   const apiKeyFieldId = 'gemini-api-key'
   const modelsRef = useRef<HTMLDivElement>(null)
   const modelsButtonRef = useRef<HTMLButtonElement>(null)
@@ -39,7 +44,7 @@ export default function Header({ activeTab, onTabChange, showModels, onToggleMod
         !modelsRef.current.contains(event.target as Node) &&
         !modelsButtonRef.current.contains(event.target as Node)
       ) {
-        onToggleModels()
+        toggleModels()
       }
     }
 
@@ -47,7 +52,7 @@ export default function Header({ activeTab, onTabChange, showModels, onToggleMod
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [showModels, onToggleModels])
+  }, [showModels, toggleModels])
 
   const handleSignIn = () => {
     // TODO: Implement sign-in functionality
@@ -55,7 +60,7 @@ export default function Header({ activeTab, onTabChange, showModels, onToggleMod
   }
 
   const handleApiKeyChange = (event: ChangeEvent<HTMLInputElement>) => {
-    onApiKeyChange(event.target.value)
+    setApiKey(event.target.value)
   }
 
   return (
@@ -63,7 +68,7 @@ export default function Header({ activeTab, onTabChange, showModels, onToggleMod
       <header className="sticky top-0 z-[65] bg-white border-b border-slate-200 px-4 sm:px-6 py-4 flex flex-row items-center justify-between gap-4">
         <button 
           onClick={() => {
-            onTabChange?.(TAB_CHAT_ID)
+            setActiveTab(TAB_CHAT_ID)
             onNewSession()
           }}
           className="flex items-center gap-2 sm:gap-3 min-w-0 hover:opacity-80 transition-opacity cursor-pointer"
@@ -75,9 +80,9 @@ export default function Header({ activeTab, onTabChange, showModels, onToggleMod
         </button>
 
         {/* Desktop Panel Buttons - Centered */}
-        {activeTab && onTabChange && (
+        {activeTab && (
           <div className="flex items-center gap-4 absolute left-1/2 transform -translate-x-1/2">
-            <TabNavigation activeTab={activeTab} onTabChange={onTabChange} variant="desktop" />
+            <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} variant="desktop" />
           </div>
         )}
 
@@ -120,7 +125,7 @@ export default function Header({ activeTab, onTabChange, showModels, onToggleMod
           {/* Mobile Menu Items */}
           <div className="p-4 space-y-3">
             <button
-              onClick={() => onToggleModels()}
+              onClick={() => toggleModels()}
               className="w-full px-6 py-3 bg-slate-100 text-slate-700 font-medium rounded-lg hover:bg-slate-200 transition-colors"
             >
               {MODEL_BUTTON_LABEL}
@@ -146,7 +151,7 @@ export default function Header({ activeTab, onTabChange, showModels, onToggleMod
           {/* Backdrop */}
           <div
             className="fixed inset-0 bg-black bg-opacity-50 z-[60] animate-in fade-in"
-            onClick={onToggleModels}
+            onClick={toggleModels}
           />
           
           {/* Modal */}
@@ -158,7 +163,7 @@ export default function Header({ activeTab, onTabChange, showModels, onToggleMod
             <div className="flex items-center justify-between p-4 border-b border-slate-200">
               <h3 className="text-lg font-semibold text-slate-800">{MODEL_CONFIG_TITLE}</h3>
               <button
-                onClick={onToggleModels}
+                onClick={toggleModels}
                 className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
                 aria-label="Close configuration"
               >

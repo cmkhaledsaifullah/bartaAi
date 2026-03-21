@@ -9,18 +9,14 @@ import {
   collectUniqueSources,
   createBanglaFontLink,
   extractSearchKeywords,
-  resetRagStepsState,
   splitArticleIntoSentences,
 } from '../utils/homeHelpers'
 import { generateMockResponse } from '../utils/mockResponses'
 import {
-  INITIAL_SYSTEM_MESSAGE,
   RAG_STEP_DELAY,
   MOCK_RESPONSE_DELAY,
   MAX_RETRIEVED_CHUNKS,
   NO_CONTEXT_MESSAGE,
-  CHAT_PLACEHOLDER,
-  EXAMPLE_QUESTIONS,
   TAB_CHAT_ID,
   TAB_KNOWLEDGE_ID,
 } from '../config/constants'
@@ -28,14 +24,13 @@ import type {
   Article,
   ViewMode,
   RetrievedChunk,
-  ChatMessage,
-  RagStep,
-  RagStatus,
   GeminiResponse,
   HomeProps,
 } from '../types'
 import Header from './Header'
 import { useChatStore } from '../store/chatStore'
+import { useSettingsStore } from '../store/settingsStore'
+import { useNavigationStore } from '../store/navigationStore'
 
 export default function Home({ articles }: HomeProps) {
   useEffect(() => {
@@ -49,52 +44,49 @@ export default function Home({ articles }: HomeProps) {
 
   const [selectedArticle, setSelectedArticle] = useState<Article>(articles[0]!)
   const [viewMode, setViewMode] = useState<ViewMode>('text')
-  const [apiKey, setApiKey] = useState('')
-  const [showSettings, setShowSettings] = useState(false)
-  const [query, setQuery] = useState('')
-  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([INITIAL_SYSTEM_MESSAGE])
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [ragSteps, setRagSteps] = useState<RagStep[]>([])
-  const [activeTab, setActiveTab] = useState<string>(TAB_CHAT_ID)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
+
+  const chatHistory = useChatStore((s) => s.chatHistory)
+  const isProcessing = useChatStore((s) => s.isProcessing)
+  const ragSteps = useChatStore((s) => s.ragSteps)
+  const setQuery = useChatStore((s) => s.setQuery)
+  const addMessage = useChatStore((s) => s.addMessage)
+  const addRagStep = useChatStore((s) => s.addRagStep)
+  const resetRagSteps = useChatStore((s) => s.resetRagSteps)
+  const setIsProcessing = useChatStore((s) => s.setIsProcessing)
+  const startConversation = useChatStore((s) => s.startConversation)
+  const resetChat = useChatStore((s) => s.resetChat)
+
+  const apiKey = useSettingsStore((s) => s.apiKey)
+
+  const activeTab = useNavigationStore((s) => s.activeTab)
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [chatHistory, isProcessing, ragSteps])
 
-  const addRagStep = (text: string, status: RagStatus) => {
-    setRagSteps((prev) => [...prev, { text, status, id: `step-${Date.now()}-${Math.random()}` }])
-  }
-
-  const resetChat = useChatStore((state) => state.resetChat)
-  const startConversation = useChatStore((state) => state.startConversation)
-
   const handleNewSession = () => {
-    setChatHistory([INITIAL_SYSTEM_MESSAGE])
-    setQuery('')
-    setIsProcessing(false)
-    setRagSteps([])
     resetChat()
   }
 
   const handleSearch = async () => {
-    if (!query.trim()) {
+    const currentQuery = useChatStore.getState().query
+    if (!currentQuery.trim()) {
       return
     }
 
     const timestamp = Date.now().toString()
-    const userMsg: ChatMessage = {
+
+    addMessage({
       id: `user-${timestamp}`,
       role: 'user',
-      content: query,
+      content: currentQuery,
       type: 'text',
-    }
-
-    setChatHistory((prev) => [...prev, userMsg])
+    })
     setQuery('')
     setIsProcessing(true)
     startConversation()
-    resetRagStepsState(setRagSteps)
+    resetRagSteps()
 
     addRagStep('Generating query embeddings...', 'processing')
     await new Promise((resolve) => setTimeout(resolve, RAG_STEP_DELAY))
@@ -102,7 +94,7 @@ export default function Home({ articles }: HomeProps) {
     addRagStep('Searching vector database (ChromaDB simulated)...', 'processing')
     await new Promise((resolve) => setTimeout(resolve, RAG_STEP_DELAY))
 
-    const searchKeywords = extractSearchKeywords(query)
+    const searchKeywords = extractSearchKeywords(currentQuery)
 
     const retrievedChunks: RetrievedChunk[] = []
 
@@ -147,7 +139,7 @@ export default function Home({ articles }: HomeProps) {
 
       if (apiKey) {
         const contextText = buildContextText(topChunks)
-        const prompt = buildGeminiPrompt(contextText, userMsg.content)
+        const prompt = buildGeminiPrompt(contextText, useChatStore.getState().chatHistory.at(-1)?.content ?? currentQuery)
         const { url, init } = buildGeminiRequest(apiKey, prompt)
 
         const response = await fetch(url, init)
@@ -165,29 +157,23 @@ export default function Home({ articles }: HomeProps) {
         answer = generateMockResponse(topChunks)
       }
 
-      setChatHistory((prev) => [
-        ...prev,
-        {
-          id: `bot-${timestamp}`,
-          role: 'assistant',
-          content: answer,
-          type: 'answer',
-          sources: uniqueSources,
-          retrieved: topChunks,
-        },
-      ])
+      addMessage({
+        id: `bot-${timestamp}`,
+        role: 'assistant',
+        content: answer,
+        type: 'answer',
+        sources: uniqueSources,
+        retrieved: topChunks,
+      })
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error occurred'
 
-      setChatHistory((prev) => [
-        ...prev,
-        {
-          id: `err-${timestamp}`,
-          role: 'assistant',
-          content: `Error: ${message}. Please check your API key.`,
-          type: 'error',
-        },
-      ])
+      addMessage({
+        id: `err-${timestamp}`,
+        role: 'assistant',
+        content: `Error: ${message}. Please check your API key.`,
+        type: 'error',
+      })
     } finally {
       setIsProcessing(false)
     }
@@ -196,28 +182,14 @@ export default function Home({ articles }: HomeProps) {
 
   return (
     <div className="h-screen overflow-hidden bg-slate-50 text-slate-900 font-sans flex flex-col">
-      <Header 
-        activeTab={activeTab} 
-        onTabChange={setActiveTab}
-        showModels={showSettings}
-        onToggleModels={() => setShowSettings((prev) => !prev)}
-        apiKey={apiKey}
-        onApiKeyChange={setApiKey}
+      <Header
         onNewSession={handleNewSession}
       />
 
       <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 md:px-8 lg:px-12 flex-1 min-h-0 overflow-hidden flex flex-col">
-        {/* Tab visibility controlled here for consistent mobile and desktop experience */}
         {activeTab === TAB_CHAT_ID && (
           <Chat
-            chatHistory={chatHistory}
-            query={query}
-            isProcessing={isProcessing}
-            placeholder={CHAT_PLACEHOLDER}
-            exampleQuestions={EXAMPLE_QUESTIONS}
-            onQueryChange={setQuery}
             onSubmit={handleSearch}
-            ragSteps={ragSteps}
             messagesEndRef={messagesEndRef}
           />
         )}
