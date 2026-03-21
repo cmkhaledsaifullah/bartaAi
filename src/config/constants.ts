@@ -3,7 +3,7 @@
  */
 
 // Initial chat message
-export const INITIAL_CHAT_MESSAGE = {
+export const INITIAL_SYSTEM_MESSAGE = {
   id: 'initial-msg',
   role: 'system' as const,
   content:
@@ -31,7 +31,7 @@ export const MOCK_RESPONSES: Record<number, string> = {
 export const GENERIC_MOCK_RESPONSE = 'সংগৃহীত তথ্যের ভিত্তিতে দেখা যাচ্ছে যে বিষয়টি খবরে উল্লেখ করা হয়েছে।'
 
 // Placeholder text
-export const PROMPT_PLACEHOLDER = 'Ask about the news...'
+export const CHAT_PLACEHOLDER = 'Ask about the news...'
 
 // Example questions
 export const EXAMPLE_QUESTIONS = [
@@ -52,11 +52,11 @@ export const API_KEY_LABEL = 'Gemini API Key (Optional)'
 export const API_KEY_PLACEHOLDER = 'Enter your API key...'
 export const API_KEY_HELP_TEXT = 'Without a key, the system will use mocked responses for demonstration purposes.'
 
-// Panel configuration
-export const PANEL_PROMPT_ID = 'prompt'
-export const PANEL_PROMPT_TITLE = 'বার্তা Prompt'
-export const PANEL_KNOWLEDGE_ID = 'knowledge'
-export const PANEL_KNOWLEDGE_TITLE = 'বার্তা ভাণ্ডার'
+// Tab configuration
+export const TAB_CHAT_ID = 'chat'
+export const TAB_CHAT_TITLE = 'বার্তা জিজ্ঞাসা'
+export const TAB_KNOWLEDGE_ID = 'knowledge'
+export const TAB_KNOWLEDGE_TITLE = 'বার্তা ভাণ্ডার'
 
 // Mock articles
 import type { Article } from '../types'

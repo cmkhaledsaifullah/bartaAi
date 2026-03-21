@@ -65,7 +65,7 @@ export type KnowledgeBaseProps = {
   onViewModeChange: (mode: ViewMode) => void
 }
 
-export type PromptProps = {
+export type ChatProps = {
   chatHistory: ChatMessage[]
   query: string
   isProcessing: boolean

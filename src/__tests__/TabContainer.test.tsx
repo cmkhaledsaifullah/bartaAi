@@ -1,40 +1,40 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import { MessageSquare } from 'lucide-react'
-import Panel from '../components/Panel'
-import type { PanelConfig } from '../components/Panel'
+import TabContainer from '../components/TabContainer'
+import type { TabConfig } from '../components/TabContainer'
 
 afterEach(() => {
   cleanup()
 })
 
-const mockConfig: PanelConfig = {
+const mockConfig: TabConfig = {
   icon: MessageSquare,
-  title: 'Test Panel',
+  title: 'Test Tab',
   bgColorClass: 'bg-emerald-50',
   iconColorClass: 'text-emerald-600',
   textColorClass: 'text-emerald-800',
-  testId: 'test-panel',
+  testId: 'test-tab',
 }
 
-describe('Panel', () => {
-  it('renders the panel with children', () => {
+describe('TabContainer', () => {
+  it('renders the tab container with children', () => {
     render(
-      <Panel config={mockConfig}>
-        <div data-testid="panel-content">Panel Content</div>
-      </Panel>
+      <TabContainer config={mockConfig}>
+        <div data-testid="tab-content">Tab Content</div>
+      </TabContainer>
     )
 
-    expect(screen.getByTestId('test-panel')).toBeInTheDocument()
-    expect(screen.getByTestId('panel-content')).toBeInTheDocument()
-    expect(screen.getByText('Panel Content')).toBeInTheDocument()
+    expect(screen.getByTestId('test-tab')).toBeInTheDocument()
+    expect(screen.getByTestId('tab-content')).toBeInTheDocument()
+    expect(screen.getByText('Tab Content')).toBeInTheDocument()
   })
 
   it('does not render header when no badge or actions provided', () => {
     const { container } = render(
-      <Panel config={mockConfig}>
+      <TabContainer config={mockConfig}>
         <div>Content</div>
-      </Panel>
+      </TabContainer>
     )
 
     // No header should be rendered
@@ -46,12 +46,12 @@ describe('Panel', () => {
 
   it('renders simplified header when badge or actions provided', () => {
     const { container } = render(
-      <Panel
+      <TabContainer
         config={mockConfig}
         headerBadge={<span data-testid="badge">Badge</span>}
       >
         <div>Content</div>
-      </Panel>
+      </TabContainer>
     )
 
     const desktopHeader = container.querySelector('.hidden.md\\:flex.w-full.p-3')
@@ -63,16 +63,16 @@ describe('Panel', () => {
 
   it('header does not render icon or title', () => {
     const { container } = render(
-      <Panel
+      <TabContainer
         config={mockConfig}
         headerBadge={<span>Badge</span>}
       >
         <div>Content</div>
-      </Panel>
+      </TabContainer>
     )
 
     // Title should not be in the document
-    expect(screen.queryByText('Test Panel')).not.toBeInTheDocument()
+    expect(screen.queryByText('Test Tab')).not.toBeInTheDocument()
     // Icon color class should not be present in headers
     const icons = container.querySelectorAll('.text-emerald-600')
     expect(icons.length).toBe(0)
@@ -80,12 +80,12 @@ describe('Panel', () => {
 
   it('renders headerBadge when provided', () => {
     render(
-      <Panel
+      <TabContainer
         config={mockConfig}
         headerBadge={<span data-testid="test-badge">Badge</span>}
       >
         <div>Content</div>
-      </Panel>
+      </TabContainer>
     )
 
     const badges = screen.getAllByTestId('test-badge')
@@ -96,14 +96,14 @@ describe('Panel', () => {
 
   it('renders additionalHeaderActions when provided', () => {
     render(
-      <Panel
+      <TabContainer
         config={mockConfig}
         additionalHeaderActions={
           <button data-testid="action-btn">Action</button>
         }
       >
         <div>Content</div>
-      </Panel>
+      </TabContainer>
     )
 
     expect(screen.getByTestId('action-btn-mobile')).toBeInTheDocument()
@@ -113,63 +113,63 @@ describe('Panel', () => {
   it('applies custom containerClassName', () => {
     const customClass = 'custom-bg custom-border'
     const { container } = render(
-      <Panel config={mockConfig} containerClassName={customClass}>
+      <TabContainer config={mockConfig} containerClassName={customClass}>
         <div>Content</div>
-      </Panel>
+      </TabContainer>
     )
 
-    const panel = container.querySelector('.custom-bg.custom-border')
-    expect(panel).toBeInTheDocument()
+    const tabContainer = container.querySelector('.custom-bg.custom-border')
+    expect(tabContainer).toBeInTheDocument()
   })
 
   it('applies default containerClassName when not provided', () => {
     render(
-      <Panel config={mockConfig}>
+      <TabContainer config={mockConfig}>
         <div>Content</div>
-      </Panel>
+      </TabContainer>
     )
 
-    const panel = screen.getByTestId('test-panel')
+    const tabContainer = screen.getByTestId('test-tab')
     // Default now has no background/border styling
-    expect(panel).not.toHaveClass('bg-white')
-    expect(panel).not.toHaveClass('border-slate-200')
-    expect(panel).toBeInTheDocument()
+    expect(tabContainer).not.toHaveClass('bg-white')
+    expect(tabContainer).not.toHaveClass('border-slate-200')
+    expect(tabContainer).toBeInTheDocument()
   })
 
   it('applies dataAttributes as data- prefixed attributes', () => {
     render(
-      <Panel
+      <TabContainer
         config={mockConfig}
         dataAttributes={{ custom: 'value', count: 42 }}
       >
         <div>Content</div>
-      </Panel>
+      </TabContainer>
     )
 
-    const panel = screen.getByTestId('test-panel')
-    expect(panel).toHaveAttribute('data-custom', 'value')
-    expect(panel).toHaveAttribute('data-count', '42')
+    const tabContainer = screen.getByTestId('test-tab')
+    expect(tabContainer).toHaveAttribute('data-custom', 'value')
+    expect(tabContainer).toHaveAttribute('data-count', '42')
   })
 
   it('renders with complementary role', () => {
     render(
-      <Panel config={mockConfig}>
+      <TabContainer config={mockConfig}>
         <div>Content</div>
-      </Panel>
+      </TabContainer>
     )
 
-    const panel = screen.getByTestId('test-panel')
-    expect(panel).toHaveAttribute('role', 'complementary')
+    const tabContainer = screen.getByTestId('test-tab')
+    expect(tabContainer).toHaveAttribute('role', 'complementary')
   })
 
   it('renders both mobile and desktop headers when badge or actions provided', () => {
     const { container } = render(
-      <Panel
+      <TabContainer
         config={mockConfig}
         headerBadge={<span>Badge</span>}
       >
         <div>Content</div>
-      </Panel>
+      </TabContainer>
     )
 
     const mobileHeader = container.querySelector('.md\\:hidden.w-full.p-3')
@@ -180,29 +180,29 @@ describe('Panel', () => {
 
   it('clones additionalHeaderActions without testid for non-ReactElement', () => {
     render(
-      <Panel
+      <TabContainer
         config={mockConfig}
         additionalHeaderActions="Simple Text"
       >
         <div>Content</div>
-      </Panel>
+      </TabContainer>
     )
 
     // Should render the text as-is
-    const panel = screen.getByTestId('test-panel')
-    expect(panel).toBeInTheDocument()
+    const tabContainer = screen.getByTestId('test-tab')
+    expect(tabContainer).toBeInTheDocument()
   })
 
   it('handles additionalHeaderActions without data-testid', () => {
     render(
-      <Panel
+      <TabContainer
         config={mockConfig}
         additionalHeaderActions={
           <button className="action-btn">Action Without TestId</button>
         }
       >
         <div>Content</div>
-      </Panel>
+      </TabContainer>
     )
 
     // The panel should render, and the action button should appear twice (mobile + desktop)
@@ -210,24 +210,24 @@ describe('Panel', () => {
     expect(actionButtons.length).toBeGreaterThanOrEqual(2)
     
     // The cloned elements should not have data-testid set (it would be undefined)
-    expect(screen.getByTestId('test-panel')).toBeInTheDocument()
+    expect(screen.getByTestId('test-tab')).toBeInTheDocument()
   })
 
   it('verifies typeof check for data-testid returns undefined for non-string types', () => {
     render(
-      <Panel
+      <TabContainer
         config={mockConfig}
         additionalHeaderActions={
           <button data-testid={123 as unknown as string}>Action</button>
         }
       >
         <div>Content</div>
-      </Panel>
+      </TabContainer>
     )
 
     // When data-testid is not a string, cloned elements should not have testid
-    const panel = screen.getByTestId('test-panel')
-    expect(panel).toBeInTheDocument()
+    const tabContainer = screen.getByTestId('test-tab')
+    expect(tabContainer).toBeInTheDocument()
     
     // The buttons should not have the mobile/desktop suffixes
     expect(screen.queryByTestId('123-mobile')).not.toBeInTheDocument()
@@ -236,12 +236,12 @@ describe('Panel', () => {
 
   it('verifies mobile header has required classes when badge provided', () => {
     const { container } = render(
-      <Panel
+      <TabContainer
         config={mockConfig}
         headerBadge={<span>Badge</span>}
       >
         <div>Content</div>
-      </Panel>
+      </TabContainer>
     )
 
     const header = container.querySelector('.md\\:hidden.w-full.p-3')
@@ -250,12 +250,12 @@ describe('Panel', () => {
 
   it('verifies desktop header has required classes when badge provided', () => {
     const { container } = render(
-      <Panel
+      <TabContainer
         config={mockConfig}
         headerBadge={<span>Badge</span>}
       >
         <div>Content</div>
-      </Panel>
+      </TabContainer>
     )
 
     const desktopHeader = container.querySelector('.hidden.md\\:flex.w-full.p-3')
@@ -269,12 +269,12 @@ describe('Panel', () => {
     }
     
     const { container } = render(
-      <Panel
+      <TabContainer
         config={customConfig}
         headerBadge={<span>Badge</span>}
       >
         <div>Content</div>
-      </Panel>
+      </TabContainer>
     )
 
     const coloredDivs = container.querySelectorAll('.text-red-500')

@@ -40,7 +40,7 @@ describe('Header', () => {
     renderHeader({ activeTab: 'knowledge', onTabChange, onNewSession })
 
     fireEvent.click(screen.getByRole('button', { name: /start new chat session/i }))
-    expect(onTabChange).toHaveBeenCalledWith('prompt')
+    expect(onTabChange).toHaveBeenCalledWith('chat')
     expect(onNewSession).toHaveBeenCalledTimes(1)
   })
 
@@ -51,7 +51,7 @@ describe('Header', () => {
 
   it('renders panel navigation when activeTab and onTabChange are provided', () => {
     const onTabChange = vi.fn()
-    renderHeader({ activeTab: 'prompt', onTabChange })
+    renderHeader({ activeTab: 'chat', onTabChange })
     const navigation = screen.queryByTestId('panel-nav-desktop')
     expect(navigation || true).toBeTruthy()
   })
@@ -106,7 +106,7 @@ describe('Header', () => {
     expect(sidePanel).toBeInTheDocument()
   })
 
-  it('calls handleSignIn and closes side panel when mobile sign in button is clicked', () => {
+  it('calls handleSignIn and keeps side panel open when mobile sign in button is clicked', () => {
     const consoleSpy = createConsoleLogSpy()
     const { container } = renderHeader()
     
@@ -119,7 +119,7 @@ describe('Header', () => {
     
     expect(consoleSpy).toHaveBeenCalledWith('Sign in clicked')
     
-    const sidePanel = container.querySelector('.translate-x-full')
+    const sidePanel = container.querySelector('.translate-x-0')
     expect(sidePanel).toBeInTheDocument()
     
     consoleSpy.mockRestore()
@@ -157,7 +157,7 @@ describe('Header', () => {
   })
 
   it('does not render panel navigation when only activeTab is provided', () => {
-    renderHeader({ activeTab: 'prompt' })
+    renderHeader({ activeTab: 'chat' })
     
     const navigation = screen.queryByRole('navigation')
     expect(navigation).not.toBeInTheDocument()
@@ -178,7 +178,7 @@ describe('Header', () => {
     
     cleanup()
     
-    renderHeader({ activeTab: 'prompt', onTabChange })
+    renderHeader({ activeTab: 'chat', onTabChange })
     const navigation = screen.queryByRole('navigation')
     expect(navigation).toBeInTheDocument()
   })
@@ -234,7 +234,7 @@ describe('Header', () => {
     }
   })
 
-  it('mobile Model button triggers onToggleModels and closes sidebar', () => {
+  it('mobile Model button triggers onToggleModels and keeps sidebar open', () => {
     const onToggleModels = vi.fn()
     const { container } = renderHeader({ onToggleModels })
 
@@ -247,8 +247,8 @@ describe('Header', () => {
     fireEvent.click(mobileModelButton)
 
     expect(onToggleModels).toHaveBeenCalledTimes(1)
-    // Sidebar should close
-    const sidePanel = container.querySelector('.translate-x-full')
+    // Sidebar should stay open
+    const sidePanel = container.querySelector('.translate-x-0')
     expect(sidePanel).toBeInTheDocument()
   })
 

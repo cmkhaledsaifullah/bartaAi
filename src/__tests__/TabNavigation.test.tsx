@@ -1,33 +1,33 @@
 import { cleanup, render, screen, fireEvent } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import PanelNavigation from '../components/PanelNavigation'
+import TabNavigation from '../components/TabNavigation'
 
 afterEach(() => {
   cleanup()
 })
 
-describe('PanelNavigation', () => {
+describe('TabNavigation', () => {
   describe('desktop variant', () => {
     it('renders buttons for all registered panels', () => {
       const onTabChange = vi.fn()
-      render(<PanelNavigation activeTab="prompt" onTabChange={onTabChange} variant="desktop" />)
+      render(<TabNavigation activeTab="chat" onTabChange={onTabChange} variant="desktop" />)
       
       // Should have buttons for prompt and knowledge panels
-      expect(screen.getByRole('button', { name: /view বার্তা prompt/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /view বার্তা জিজ্ঞাসা/i })).toBeInTheDocument()
       expect(screen.getByRole('button', { name: /view বার্তা ভাণ্ডার/i })).toBeInTheDocument()
     })
 
     it('highlights the active tab', () => {
       const onTabChange = vi.fn()
-      render(<PanelNavigation activeTab="prompt" onTabChange={onTabChange} variant="desktop" />)
+      render(<TabNavigation activeTab="chat" onTabChange={onTabChange} variant="desktop" />)
       
-      const activeButton = screen.getByRole('button', { name: /view বার্তা prompt/i })
+      const activeButton = screen.getByRole('button', { name: /view বার্তা জিজ্ঞাসা/i })
       expect(activeButton).toHaveAttribute('aria-current', 'page')
     })
 
     it('does not highlight inactive tabs', () => {
       const onTabChange = vi.fn()
-      render(<PanelNavigation activeTab="prompt" onTabChange={onTabChange} variant="desktop" />)
+      render(<TabNavigation activeTab="chat" onTabChange={onTabChange} variant="desktop" />)
       
       const inactiveButton = screen.getByRole('button', { name: /view বার্তা ভাণ্ডার/i })
       expect(inactiveButton).not.toHaveAttribute('aria-current')
@@ -35,7 +35,7 @@ describe('PanelNavigation', () => {
 
     it('calls onTabChange when a panel button is clicked', () => {
       const onTabChange = vi.fn()
-      render(<PanelNavigation activeTab="prompt" onTabChange={onTabChange} variant="desktop" />)
+      render(<TabNavigation activeTab="chat" onTabChange={onTabChange} variant="desktop" />)
       
       const knowledgeButton = screen.getByRole('button', { name: /view বার্তা ভাণ্ডার/i })
       fireEvent.click(knowledgeButton)
@@ -47,15 +47,15 @@ describe('PanelNavigation', () => {
   describe('mobile variant', () => {
     it('renders buttons for all registered panels', () => {
       const onTabChange = vi.fn()
-      render(<PanelNavigation activeTab="knowledge" onTabChange={onTabChange} variant="mobile" />)
+      render(<TabNavigation activeTab="knowledge" onTabChange={onTabChange} variant="mobile" />)
       
-      expect(screen.getByRole('button', { name: /view বার্তা prompt/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /view বার্তা জিজ্ঞাসা/i })).toBeInTheDocument()
       expect(screen.getByRole('button', { name: /view বার্তা ভাণ্ডার/i })).toBeInTheDocument()
     })
 
     it('highlights the active tab', () => {
       const onTabChange = vi.fn()
-      render(<PanelNavigation activeTab="knowledge" onTabChange={onTabChange} variant="mobile" />)
+      render(<TabNavigation activeTab="knowledge" onTabChange={onTabChange} variant="mobile" />)
       
       const activeButton = screen.getByRole('button', { name: /view বার্তা ভাণ্ডার/i })
       expect(activeButton).toHaveAttribute('aria-current', 'page')
@@ -63,12 +63,12 @@ describe('PanelNavigation', () => {
 
     it('calls onTabChange when a panel button is clicked', () => {
       const onTabChange = vi.fn()
-      render(<PanelNavigation activeTab="knowledge" onTabChange={onTabChange} variant="mobile" />)
+      render(<TabNavigation activeTab="knowledge" onTabChange={onTabChange} variant="mobile" />)
       
-      const promptButton = screen.getByRole('button', { name: /view বার্তা prompt/i })
+      const promptButton = screen.getByRole('button', { name: /view বার্তা জিজ্ঞাসা/i })
       fireEvent.click(promptButton)
       
-      expect(onTabChange).toHaveBeenCalledWith('prompt')
+      expect(onTabChange).toHaveBeenCalledWith('chat')
     })
   })
 
@@ -76,7 +76,7 @@ describe('PanelNavigation', () => {
     it('verifies variant comparison uses exact string desktop', () => {
       const onTabChange = vi.fn()
       const { container: desktopContainer } = render(
-        <PanelNavigation activeTab="prompt" onTabChange={onTabChange} variant="desktop" />
+        <TabNavigation activeTab="chat" onTabChange={onTabChange} variant="desktop" />
       )
       
       // Desktop should have smaller padding (px-4)
@@ -89,7 +89,7 @@ describe('PanelNavigation', () => {
       cleanup()
       
       const { container: mobileContainer } = render(
-        <PanelNavigation activeTab="prompt" onTabChange={onTabChange} variant="mobile" />
+        <TabNavigation activeTab="chat" onTabChange={onTabChange} variant="mobile" />
       )
       
       // Mobile should have larger padding (px-6)
@@ -103,7 +103,7 @@ describe('PanelNavigation', () => {
     it('verifies className template literal is not empty', () => {
       const onTabChange = vi.fn()
       const { container } = render(
-        <PanelNavigation activeTab="prompt" onTabChange={onTabChange} variant="desktop" />
+        <TabNavigation activeTab="chat" onTabChange={onTabChange} variant="desktop" />
       )
       
       const buttons = container.querySelectorAll('button')
@@ -116,10 +116,10 @@ describe('PanelNavigation', () => {
     it('verifies active button has color classes not empty string', () => {
       const onTabChange = vi.fn()
       render(
-        <PanelNavigation activeTab="prompt" onTabChange={onTabChange} variant="desktop" />
+        <TabNavigation activeTab="chat" onTabChange={onTabChange} variant="desktop" />
       )
       
-      const activeButton = screen.getByRole('button', { name: /view বার্তা prompt/i })
+      const activeButton = screen.getByRole('button', { name: /view বার্তা জিজ্ঞাসা/i })
       // Active button should have bg and text color classes (not empty)
       expect(activeButton.className.length).toBeGreaterThan(0)
       expect(activeButton.className).toContain('bg-sky')
@@ -127,7 +127,7 @@ describe('PanelNavigation', () => {
 
     it('verifies inactive button has default classes not empty string', () => {
       const onTabChange = vi.fn()
-      render(<PanelNavigation activeTab="prompt" onTabChange={onTabChange} variant="desktop" />)
+      render(<TabNavigation activeTab="chat" onTabChange={onTabChange} variant="desktop" />)
       
       const inactiveButton = screen.getByRole('button', { name: /view বার্তা ভাণ্ডার/i })
       // Inactive button should have text-slate-600 hover:bg-slate-50
@@ -138,7 +138,7 @@ describe('PanelNavigation', () => {
     it('verifies isDesktop is false when variant is not desktop', () => {
       const onTabChange = vi.fn()
       const { container } = render(
-        <PanelNavigation activeTab="prompt" onTabChange={onTabChange} variant="mobile" />
+        <TabNavigation activeTab="chat" onTabChange={onTabChange} variant="mobile" />
       )
       
       // Mobile buttons should have px-6 (not px-4)
@@ -154,7 +154,7 @@ describe('PanelNavigation', () => {
       
       // Render with desktop variant
       const { unmount } = render(
-        <PanelNavigation activeTab="prompt" onTabChange={onTabChange} variant="desktop" />
+        <TabNavigation activeTab="chat" onTabChange={onTabChange} variant="desktop" />
       )
       
       const desktopNav = screen.getByRole('navigation')
@@ -164,7 +164,7 @@ describe('PanelNavigation', () => {
       
       // Render with mobile variant  
       render(
-        <PanelNavigation activeTab="prompt" onTabChange={onTabChange} variant="mobile" />
+        <TabNavigation activeTab="chat" onTabChange={onTabChange} variant="mobile" />
       )
       
       const mobileNav = screen.getByRole('navigation')
@@ -174,7 +174,7 @@ describe('PanelNavigation', () => {
     it('verifies inactive icon has text-slate-500 class not empty string', () => {
       const onTabChange = vi.fn()
       const { container } = render(
-        <PanelNavigation activeTab="prompt" onTabChange={onTabChange} variant="desktop" />
+        <TabNavigation activeTab="chat" onTabChange={onTabChange} variant="desktop" />
       )
       
       // Get all icons (SVGs)

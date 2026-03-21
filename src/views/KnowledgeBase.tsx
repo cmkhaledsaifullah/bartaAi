@@ -1,8 +1,8 @@
 import { Split } from 'lucide-react'
 import { splitArticleIntoSentences } from '../utils/homeHelpers'
 import type { ChunkCardsProps, KnowledgeBaseProps } from '../types'
-import Panel from '../components/Panel'
-import { knowledgeBaseConfig } from '../config/panelConfigs'
+import TabContainer from '../components/TabContainer'
+import { knowledgeBaseConfig } from '../config/tabConfigs'
 
 export default function KnowledgeBase({
   articles,
@@ -19,7 +19,7 @@ export default function KnowledgeBase({
   )
 
   return (
-    <Panel
+    <TabContainer
       config={knowledgeBaseConfig}
       headerBadge={headerBadge}
     >
@@ -90,7 +90,7 @@ export default function KnowledgeBase({
           </div>
         </div>
       </div>
-    </Panel>
+    </TabContainer>
   )
 }
 

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import '../styles/App.css'
 import KnowledgeBase from './KnowledgeBase'
-import Prompt from './Prompt'
+import Chat from './Chat'
 import {
   buildContextText,
   buildGeminiPrompt,
@@ -14,15 +14,15 @@ import {
 } from '../utils/homeHelpers'
 import { generateMockResponse } from '../utils/mockResponses'
 import {
-  INITIAL_CHAT_MESSAGE,
+  INITIAL_SYSTEM_MESSAGE,
   RAG_STEP_DELAY,
   MOCK_RESPONSE_DELAY,
   MAX_RETRIEVED_CHUNKS,
   NO_CONTEXT_MESSAGE,
-  PROMPT_PLACEHOLDER,
+  CHAT_PLACEHOLDER,
   EXAMPLE_QUESTIONS,
-  PANEL_PROMPT_ID,
-  PANEL_KNOWLEDGE_ID,
+  TAB_CHAT_ID,
+  TAB_KNOWLEDGE_ID,
 } from '../config/constants'
 import type {
   Article,
@@ -51,10 +51,10 @@ export default function Home({ articles }: HomeProps) {
   const [apiKey, setApiKey] = useState('')
   const [showSettings, setShowSettings] = useState(false)
   const [query, setQuery] = useState('')
-  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([INITIAL_CHAT_MESSAGE])
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([INITIAL_SYSTEM_MESSAGE])
   const [isProcessing, setIsProcessing] = useState(false)
   const [ragSteps, setRagSteps] = useState<RagStep[]>([])
-  const [activeTab, setActiveTab] = useState<string>(PANEL_PROMPT_ID)
+  const [activeTab, setActiveTab] = useState<string>(TAB_CHAT_ID)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -66,7 +66,7 @@ export default function Home({ articles }: HomeProps) {
   }
 
   const handleNewSession = () => {
-    setChatHistory([INITIAL_CHAT_MESSAGE])
+    setChatHistory([INITIAL_SYSTEM_MESSAGE])
     setQuery('')
     setIsProcessing(false)
     setRagSteps([])
@@ -202,12 +202,12 @@ export default function Home({ articles }: HomeProps) {
 
       <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 md:px-8 lg:px-12 flex-1">
         {/* Tab visibility controlled here for consistent mobile and desktop experience */}
-        {activeTab === PANEL_PROMPT_ID && (
-          <Prompt
+        {activeTab === TAB_CHAT_ID && (
+          <Chat
             chatHistory={chatHistory}
             query={query}
             isProcessing={isProcessing}
-            placeholder={PROMPT_PLACEHOLDER}
+            placeholder={CHAT_PLACEHOLDER}
             exampleQuestions={EXAMPLE_QUESTIONS}
             onQueryChange={setQuery}
             onSubmit={handleSearch}
@@ -216,7 +216,7 @@ export default function Home({ articles }: HomeProps) {
           />
         )}
 
-        {activeTab === PANEL_KNOWLEDGE_ID && (
+        {activeTab === TAB_KNOWLEDGE_ID && (
           <KnowledgeBase
             articles={articles}
             selectedArticle={selectedArticle}

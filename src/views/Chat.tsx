@@ -1,11 +1,11 @@
 import type { ChangeEvent, KeyboardEvent } from 'react'
 import { CheckCircle2, Cpu, Loader2, Search, User } from 'lucide-react'
-import type { PromptProps, ChatMessage } from '../types'
-import Panel from '../components/Panel'
-import { promptConfig } from '../config/panelConfigs'
+import type { ChatProps, ChatMessage } from '../types'
+import TabContainer from '../components/TabContainer'
+import { chatConfig } from '../config/tabConfigs'
 import { APP_DISCLAIMER } from '../config/constants'
 
-export default function Prompt({
+export default function Chat({
   chatHistory,
   query,
   isProcessing,
@@ -15,7 +15,7 @@ export default function Prompt({
   onSubmit,
   ragSteps,
   messagesEndRef,
-}: PromptProps) {
+}: ChatProps) {
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     onQueryChange(event.target.value)
   }
@@ -145,7 +145,7 @@ export default function Prompt({
   const isInitial = chatHistory.length <= 1
 
   return (
-    <Panel config={promptConfig}>
+    <TabContainer config={chatConfig}>
       {isInitial ? (
         <div className="flex-1 min-h-0 flex flex-col items-center justify-center px-3 sm:px-6 bg-slate-50/60">
           <div className="w-full max-w-2xl space-y-6">
@@ -200,6 +200,6 @@ export default function Prompt({
           </div>
         </>
       )}
-    </Panel>
+    </TabContainer>
   )
 }

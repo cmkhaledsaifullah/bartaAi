@@ -5,7 +5,7 @@ import {
   closeDriver,
   openApp,
   switchToKnowledgeTab,
-  switchToPromptTab,
+  switchToChatTab,
   SELECTORS,
   DEFAULT_WAIT_MS,
   DESKTOP_VIEWPORT,
@@ -41,7 +41,7 @@ describe('Desktop - Tab Navigation and Settings', () => {
     expect(chatPanels.length === 0 || !(await chatPanels[0]?.isDisplayed())).toBe(true)
 
     // Switch back to prompt tab
-    await switchToPromptTab(driver)
+    await switchToChatTab(driver)
 
     // Verify prompt panel is visible again (re-query to get fresh element)
     chatPanel = await driver.findElement(By.css(SELECTORS.chatPanel))
@@ -59,7 +59,7 @@ describe('Desktop - Tab Navigation and Settings', () => {
     const chatPanel = await driver.findElement(By.css(SELECTORS.chatPanel))
     await driver.wait(until.elementIsVisible(chatPanel), DEFAULT_WAIT_MS)
 
-    // Find settings button (with desktop suffix from Panel component)
+    // Find settings button (with desktop suffix from TabContainer component)
     const settingsButton = await driver.findElement(By.css(SELECTORS.settingsToggleDesktop))
     await settingsButton.click()
 
@@ -84,11 +84,11 @@ describe('Desktop - Tab Navigation and Settings', () => {
   it('verifies active tab styling on desktop', async () => {
     await openApp(driver, DESKTOP_VIEWPORT)
 
-    // Get the prompt tab button
-    const promptTabButton = await driver.findElement(By.css(SELECTORS.promptTabButton))
+    // Get the chat tab button
+    const chatTabButton = await driver.findElement(By.css(SELECTORS.chatTabButton))
     
     // Check that it has active styling (aria-current should be "page")
-    const ariaCurrent = await promptTabButton.getAttribute('aria-current')
+    const ariaCurrent = await chatTabButton.getAttribute('aria-current')
     expect(ariaCurrent).toBe('page')
 
     // Switch to knowledge tab
@@ -102,8 +102,8 @@ describe('Desktop - Tab Navigation and Settings', () => {
     const knowledgeAriaCurrent = await knowledgeTabButton.getAttribute('aria-current')
     expect(knowledgeAriaCurrent).toBe('page')
 
-    // Verify prompt tab is no longer active
-    const promptAriaCurrentAfter = await promptTabButton.getAttribute('aria-current')
-    expect(promptAriaCurrentAfter).toBeNull()
+    // Verify chat tab is no longer active
+    const chatAriaCurrentAfter = await chatTabButton.getAttribute('aria-current')
+    expect(chatAriaCurrentAfter).toBeNull()
   })
 })

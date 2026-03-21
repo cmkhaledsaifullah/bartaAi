@@ -1,7 +1,7 @@
 import type { ChangeEvent } from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { Menu, X } from 'lucide-react'
-import PanelNavigation from '../components/PanelNavigation'
+import TabNavigation from '../components/TabNavigation'
 import {
   APP_NAME,
   COPYRIGHT_TEXT,
@@ -11,7 +11,7 @@ import {
   API_KEY_LABEL,
   API_KEY_PLACEHOLDER,
   API_KEY_HELP_TEXT,
-  PANEL_PROMPT_ID,
+  TAB_CHAT_ID,
 } from '../config/constants'
 
 interface HeaderProps {
@@ -63,7 +63,7 @@ export default function Header({ activeTab, onTabChange, showModels, onToggleMod
       <header className="sticky top-0 z-[65] bg-white border-b border-slate-200 px-4 sm:px-6 py-4 flex flex-row items-center justify-between gap-4">
         <button 
           onClick={() => {
-            onTabChange?.(PANEL_PROMPT_ID)
+            onTabChange?.(TAB_CHAT_ID)
             onNewSession()
           }}
           className="flex items-center gap-2 sm:gap-3 min-w-0 hover:opacity-80 transition-opacity cursor-pointer"
@@ -77,7 +77,7 @@ export default function Header({ activeTab, onTabChange, showModels, onToggleMod
         {/* Desktop Panel Buttons - Centered */}
         {activeTab && onTabChange && (
           <div className="flex items-center gap-4 absolute left-1/2 transform -translate-x-1/2">
-            <PanelNavigation activeTab={activeTab} onTabChange={onTabChange} variant="desktop" />
+            <TabNavigation activeTab={activeTab} onTabChange={onTabChange} variant="desktop" />
           </div>
         )}
 

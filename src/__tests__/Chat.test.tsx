@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import type { ComponentProps, MutableRefObject } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import Prompt from '../views/Prompt'
+import Chat from '../views/Chat'
 import type { ChatMessage, RagStep } from '../types'
 
 const PLACEHOLDER = 'Ask about the news (e.g., মেট্রোরেল বা ক্রিকেট সম্পর্কে কিছু বলুন)...'
@@ -40,8 +40,8 @@ const createMessagesEndRef = (): MutableRefObject<HTMLDivElement | null> => ({
   current: document.createElement('div'),
 })
 
-const renderPrompt = (overrides: Partial<ComponentProps<typeof Prompt>> = {}) => {
-  const props: ComponentProps<typeof Prompt> = {
+const renderChat = (overrides: Partial<ComponentProps<typeof Chat>> = {}) => {
+  const props: ComponentProps<typeof Chat> = {
     chatHistory: CHAT_HISTORY,
     query: '',
     isProcessing: false,
@@ -54,7 +54,7 @@ const renderPrompt = (overrides: Partial<ComponentProps<typeof Prompt>> = {}) =>
     ...overrides,
   }
 
-  render(<Prompt {...props} />)
+  render(<Chat {...props} />)
   return props
 }
 
@@ -62,9 +62,9 @@ afterEach(() => {
   cleanup()
 })
 
-describe('Prompt', () => {
+describe('Chat', () => {
   it('renders chat history and retrieval context bubbles', () => {
-    renderPrompt()
+    renderChat()
 
     expect(screen.getByText('স্বাগতম! বার্তাAI প্রস্তুত।')).toBeInTheDocument()
     expect(screen.getByText('মেট্রোরেল আপডেট দিন')).toBeInTheDocument()
@@ -75,7 +75,7 @@ describe('Prompt', () => {
   })
 
   it('prefills the query input when an example question is selected', () => {
-    const props = renderPrompt()
+    const props = renderChat()
 
     fireEvent.click(screen.getByRole('button', { name: /মেট্রোরেল নিয়ে আপডেট কি\?/i }))
 
@@ -83,7 +83,7 @@ describe('Prompt', () => {
   })
 
   it('invokes onSubmit when pressing Enter', () => {
-    const props = renderPrompt({ query: 'বঙ্গবন্ধু স্যাটেলাইট আপডেট' })
+    const props = renderChat({ query: 'বঙ্গবন্ধু স্যাটেলাইট আপডেট' })
 
     const input = screen.getByPlaceholderText(PLACEHOLDER)
     fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })
@@ -91,19 +91,19 @@ describe('Prompt', () => {
   })
 
   it('does not prevent Enter key when query is empty', () => {
-    renderPrompt()
+    renderChat()
     const input = screen.getByPlaceholderText(PLACEHOLDER) as HTMLInputElement
     expect(input.value).toBe('')
   })
 
   it('disables input while a search is running', () => {
-    renderPrompt({ query: 'Ready', isProcessing: true })
+    renderChat({ query: 'Ready', isProcessing: true })
     const input = screen.getByPlaceholderText(PLACEHOLDER) as HTMLInputElement
     expect(input.disabled).toBe(true)
   })
 
   it('shows rag steps when processing is active', () => {
-    renderPrompt({ isProcessing: true, ragSteps: RAG_STEPS })
+    renderChat({ isProcessing: true, ragSteps: RAG_STEPS })
 
     const ragPanel = screen.getByTestId('rag-steps-panel')
     expect(within(ragPanel).getAllByTestId('rag-step')).toHaveLength(2)
@@ -111,7 +111,7 @@ describe('Prompt', () => {
   })
 
   it('verifies data-sources uses pipe separator', () => {
-    renderPrompt({
+    renderChat({
       chatHistory: [
         {
           id: 'msg-1',
@@ -131,7 +131,7 @@ describe('Prompt', () => {
   })
 
   it('verifies retrieved chunk keys are unique', () => {
-    renderPrompt({
+    renderChat({
       chatHistory: [
         {
           id: 'msg-1',
@@ -153,7 +153,7 @@ describe('Prompt', () => {
   })
 
   it('verifies warning status renders warning icon', () => {
-    renderPrompt({
+    renderChat({
       isProcessing: true,
       ragSteps: [
         { id: '1', text: 'Warning step', status: 'warning' as const },
@@ -164,7 +164,7 @@ describe('Prompt', () => {
   })
 
   it('renders user avatar with User icon', () => {
-    renderPrompt()
+    renderChat()
 
     const userAvatars = screen.getAllByTestId('chat-avatar').filter(el => el.dataset.role === 'user')
     expect(userAvatars.length).toBeGreaterThan(0)
@@ -172,7 +172,7 @@ describe('Prompt', () => {
   })
 
   it('renders assistant avatar with logo', () => {
-    renderPrompt()
+    renderChat()
 
     const assistantAvatars = screen.getAllByTestId('chat-avatar').filter(el => el.dataset.role === 'assistant')
     expect(assistantAvatars.length).toBeGreaterThan(0)
@@ -180,7 +180,7 @@ describe('Prompt', () => {
   })
 
   it('renders error message with red styling', () => {
-    renderPrompt({
+    renderChat({
       chatHistory: [
         {
           id: 'err-1',
@@ -196,14 +196,14 @@ describe('Prompt', () => {
   })
 
   it('renders single unified view with chat history and search input', () => {
-    renderPrompt()
+    renderChat()
 
     expect(screen.getAllByTestId('chat-message').length).toBeGreaterThan(0)
     expect(screen.getByPlaceholderText(PLACEHOLDER)).toBeInTheDocument()
   })
 
   it('renders example questions as buttons', () => {
-    renderPrompt()
+    renderChat()
 
     const exampleButtons = screen.getAllByRole('button').filter(btn =>
       btn.textContent?.includes('Example'),

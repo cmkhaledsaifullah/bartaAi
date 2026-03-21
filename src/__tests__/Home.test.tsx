@@ -980,10 +980,10 @@ describe('Home', () => {
     })
   })
 
-  it('shows both prompt and knowledge panels when activeTab conditionals are true', () => {
+  it('shows both chat and knowledge tabs when activeTab conditionals are true', () => {
     renderHome()
 
-    // Initially prompt is visible
+    // Initially chat is visible
     expect(screen.getByTestId('chat-panel')).toBeInTheDocument()
     expect(screen.queryByTestId('knowledge-base')).not.toBeInTheDocument()
 
@@ -993,9 +993,9 @@ describe('Home', () => {
     expect(screen.getByTestId('knowledge-base')).toBeInTheDocument()
     expect(screen.queryByTestId('chat-panel')).not.toBeInTheDocument()
 
-    // Switch back to prompt
-    const promptButton = screen.getAllByRole('button', { name: /বার্তা Prompt/i })[0]
-    fireEvent.click(promptButton)
+    // Switch back to chat
+    const chatButton = screen.getAllByRole('button', { name: /বার্তা জিজ্ঞাসা/i })[0]
+    fireEvent.click(chatButton)
     expect(screen.getByTestId('chat-panel')).toBeInTheDocument()
     expect(screen.queryByTestId('knowledge-base')).not.toBeInTheDocument()
   })

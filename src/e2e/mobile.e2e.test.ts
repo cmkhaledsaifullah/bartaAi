@@ -261,7 +261,7 @@ describe('Mobile View', () => {
   it('stacks knowledge panel below chat on mobile viewports', async () => {
     await openApp(driver, MOBILE_VIEWPORT)
 
-    // Verify we start on prompt tab
+    // Verify we start on chat tab
     const chatPanel = await driver.findElement(By.css(SELECTORS.chatPanel))
     expect(await chatPanel.isDisplayed()).toBe(true)
 
