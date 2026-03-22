@@ -13,7 +13,7 @@ export const SELECTORS = {
   chatPanel: '[data-testid="chat-panel"]',
   knowledgeBase: '[data-testid="knowledge-base"]',
   knowledgeTabButton: 'button[aria-label="View বার্তা ভাণ্ডার"]',
-  promptTabButton: 'button[aria-label="View বার্তা Prompt"]',
+  chatTabButton: 'button[aria-label="View বার্তা জিজ্ঞাসা"]',
   queryInput: 'input[placeholder*="Ask about the news"]',
   submitButton: 'button[aria-label="Run search"]',
   ragStep: '[data-testid="rag-step"]',
@@ -26,7 +26,10 @@ export const SELECTORS = {
   viewToggleChunks: '[data-testid="view-toggle-chunks"]',
   viewToggleText: '[data-testid="view-toggle-text"]',
   chunkVisualizer: '[data-testid="chunk-visualizer"]',
-  settingsToggleDesktop: '[data-testid="models-toggle"]',
+  menuButton: 'button[aria-label="Open menu"]',
+  sidePanel: '.fixed.top-0.right-0.h-full.w-64',
+  closeSidePanel: 'button[aria-label="Close side panel"]',
+  closeConfigModal: 'button[aria-label="Close configuration"]',
   apiKeyInput: 'input[type="password"][placeholder*="API key"]',
 } as const
 
@@ -78,7 +81,7 @@ export async function openApp(
 ): Promise<void> {
   await setViewport(driver, viewport)
   await driver.get(BASE_URL)
-  // Wait for the chat panel (prompt tab) to load - this is the default view
+  // Wait for the chat panel (chat tab) to load - this is the default view
   await driver.wait(until.elementLocated(By.css(SELECTORS.chatPanel)), DEFAULT_WAIT_MS)
 }
 
@@ -99,13 +102,13 @@ export async function switchToKnowledgeTab(driver: WebDriver): Promise<void> {
 }
 
 /**
- * Switch to prompt/chat tab and wait for it to load
+ * Switch to chat tab and wait for it to load
  */
-export async function switchToPromptTab(driver: WebDriver): Promise<void> {
-  const promptTabButton = await driver.findElement(By.css(SELECTORS.promptTabButton))
-  await promptTabButton.click()
+export async function switchToChatTab(driver: WebDriver): Promise<void> {
+  const chatTabButton = await driver.findElement(By.css(SELECTORS.chatTabButton))
+  await chatTabButton.click()
   
-  // Verify prompt panel is visible
+  // Verify chat panel is visible
   const chatPanel = await driver.wait(
     until.elementLocated(By.css(SELECTORS.chatPanel)),
     DEFAULT_WAIT_MS,

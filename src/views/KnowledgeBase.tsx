@@ -1,8 +1,9 @@
-import { Split } from 'lucide-react'
+import { useCallback, useRef, useState } from 'react'
+import { ArrowUp, Split } from 'lucide-react'
 import { splitArticleIntoSentences } from '../utils/homeHelpers'
 import type { ChunkCardsProps, KnowledgeBaseProps } from '../types'
-import Panel from '../components/Panel'
-import { knowledgeBaseConfig } from '../config/panelConfigs'
+import TabContainer from '../components/TabContainer'
+import { knowledgeBaseConfig } from '../config/tabConfigs'
 
 export default function KnowledgeBase({
   articles,
@@ -12,18 +13,36 @@ export default function KnowledgeBase({
   onSelectArticle,
   onViewModeChange,
 }: KnowledgeBaseProps) {
+  const articleListRef = useRef<HTMLDivElement>(null)
+  const [showScrollUp, setShowScrollUp] = useState(false)
+
+  const handleArticleScroll = useCallback(() => {
+    const el = articleListRef.current
+    if (!el) return
+    setShowScrollUp(el.scrollTop > 100)
+  }, [])
+
+  const scrollToTop = () => {
+    articleListRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   const headerBadge = (
-    <div className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full font-medium">
+    <div className="text-sm px-2 py-1 bg-blue-100 text-blue-700 rounded-full font-medium">
       {articles.length} Articles
     </div>
   )
 
   return (
-    <Panel
+    <TabContainer
       config={knowledgeBaseConfig}
       headerBadge={headerBadge}
     >
-      <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3 sm:space-y-4">
+      <div className="relative flex-1 min-h-0">
+        <div
+          ref={articleListRef}
+          onScroll={handleArticleScroll}
+          className="h-full overflow-y-auto p-4 space-y-3 sm:space-y-4"
+        >
         {articles.map((article) => {
           const isSelected = selectedArticle.id === article.id
           return (
@@ -40,12 +59,23 @@ export default function KnowledgeBase({
                 <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{article.source}</span>
                 <span className="text-[10px] text-slate-400">{article.date}</span>
               </div>
-              <h3 className="font-bangla font-semibold text-slate-800 mb-2 leading-snug">{article.title}</h3>
-              <p className="font-bangla text-xs text-slate-500 line-clamp-2">{article.content}</p>
+              <h3 className="font-bangla font-semibold text-lg text-slate-800 mb-2 leading-snug">{article.title}</h3>
+              <p className="font-bangla text-sm text-slate-500 line-clamp-2">{article.content}</p>
             </button>
           )
-        })}
-      </div>
+        })}        </div>
+
+        {showScrollUp && (
+          <button
+            type="button"
+            onClick={scrollToTop}
+            aria-label="Scroll to top"
+            data-testid="scroll-to-top"
+            className="absolute right-6 bottom-4 z-10 w-9 h-9 rounded-full bg-white border border-slate-200 shadow-md flex items-center justify-center hover:bg-slate-50 transition-colors"
+          >
+            <ArrowUp size={18} className="text-slate-600" />
+          </button>
+        )}      </div>
 
       <div className="p-4 border-t border-slate-100 bg-slate-50">
         <h3 className="text-xs font-semibold text-slate-500 mb-3 uppercase">Article Preview</h3>
@@ -83,14 +113,14 @@ export default function KnowledgeBase({
           </div>
           <div data-testid="article-preview-body">
             {viewMode === 'text' ? (
-              <p className="font-bangla text-sm text-slate-700 leading-relaxed">{selectedArticle.content}</p>
+              <p className="font-bangla text-lg text-slate-700 leading-relaxed">{selectedArticle.content}</p>
             ) : (
               <ChunkCards text={selectedArticle.content} highlightKeywords={highlightKeywords} />
             )}
           </div>
         </div>
       </div>
-    </Panel>
+    </TabContainer>
   )
 }
 
@@ -111,7 +141,7 @@ export function ChunkCards({ text, highlightKeywords = [] }: ChunkCardsProps) {
         return (
           <div
             key={`chunk-${idx}`}
-            className={`p-3 text-sm rounded border ${
+            className={`p-3 text-lg rounded border ${
               isRelevant ? 'bg-emerald-50 border-emerald-200 shadow-sm' : 'bg-white border-slate-100'
             }`}
             data-testid="chunk-card"

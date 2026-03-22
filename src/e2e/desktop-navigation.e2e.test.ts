@@ -5,7 +5,7 @@ import {
   closeDriver,
   openApp,
   switchToKnowledgeTab,
-  switchToPromptTab,
+  switchToChatTab,
   SELECTORS,
   DEFAULT_WAIT_MS,
   DESKTOP_VIEWPORT,
@@ -41,7 +41,7 @@ describe('Desktop - Tab Navigation and Settings', () => {
     expect(chatPanels.length === 0 || !(await chatPanels[0]?.isDisplayed())).toBe(true)
 
     // Switch back to prompt tab
-    await switchToPromptTab(driver)
+    await switchToChatTab(driver)
 
     // Verify prompt panel is visible again (re-query to get fresh element)
     chatPanel = await driver.findElement(By.css(SELECTORS.chatPanel))
@@ -59,22 +59,29 @@ describe('Desktop - Tab Navigation and Settings', () => {
     const chatPanel = await driver.findElement(By.css(SELECTORS.chatPanel))
     await driver.wait(until.elementIsVisible(chatPanel), DEFAULT_WAIT_MS)
 
-    // Find settings button (with desktop suffix from Panel component)
-    const settingsButton = await driver.findElement(By.css(SELECTORS.settingsToggleDesktop))
-    await settingsButton.click()
+    // Open hamburger menu to access settings
+    const menuButton = await driver.findElement(By.css(SELECTORS.menuButton))
+    await menuButton.click()
+    await driver.sleep(300) // Wait for side panel animation
 
-    // Wait for settings panel to appear
-    await driver.sleep(500) // Wait for animation
+    // Click 'Model' button in side panel to open settings modal
+    const modelButton = await driver.wait(
+      until.elementLocated(By.xpath('//button[text()="Model"]')),
+      DEFAULT_WAIT_MS,
+    )
+    await modelButton.click()
+    await driver.sleep(300) // Wait for modal animation
 
-    // Verify settings panel is visible by checking for API key input
+    // Verify settings modal is visible by checking for API key input
     const apiKeyInput = await driver.findElement(By.css(SELECTORS.apiKeyInput))
     expect(await apiKeyInput.isDisplayed()).toBe(true)
 
-    // Click settings button again to close
-    await settingsButton.click()
-    await driver.sleep(500) // Wait for animation
+    // Close the settings modal
+    const closeButton = await driver.findElement(By.css(SELECTORS.closeConfigModal))
+    await closeButton.click()
+    await driver.sleep(300) // Wait for animation
 
-    // Verify settings panel is hidden
+    // Verify settings modal is hidden
     const settingsPanels = await driver.findElements(By.css(SELECTORS.apiKeyInput))
     if (settingsPanels.length > 0) {
       expect(await settingsPanels[0].isDisplayed()).toBe(false)
@@ -84,11 +91,11 @@ describe('Desktop - Tab Navigation and Settings', () => {
   it('verifies active tab styling on desktop', async () => {
     await openApp(driver, DESKTOP_VIEWPORT)
 
-    // Get the prompt tab button
-    const promptTabButton = await driver.findElement(By.css(SELECTORS.promptTabButton))
+    // Get the chat tab button
+    const chatTabButton = await driver.findElement(By.css(SELECTORS.chatTabButton))
     
     // Check that it has active styling (aria-current should be "page")
-    const ariaCurrent = await promptTabButton.getAttribute('aria-current')
+    const ariaCurrent = await chatTabButton.getAttribute('aria-current')
     expect(ariaCurrent).toBe('page')
 
     // Switch to knowledge tab
@@ -102,8 +109,8 @@ describe('Desktop - Tab Navigation and Settings', () => {
     const knowledgeAriaCurrent = await knowledgeTabButton.getAttribute('aria-current')
     expect(knowledgeAriaCurrent).toBe('page')
 
-    // Verify prompt tab is no longer active
-    const promptAriaCurrentAfter = await promptTabButton.getAttribute('aria-current')
-    expect(promptAriaCurrentAfter).toBeNull()
+    // Verify chat tab is no longer active
+    const chatAriaCurrentAfter = await chatTabButton.getAttribute('aria-current')
+    expect(chatAriaCurrentAfter).toBeNull()
   })
 })

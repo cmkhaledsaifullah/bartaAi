@@ -118,11 +118,11 @@ describe('Mobile View', () => {
     await openApp(driver, MOBILE_VIEWPORT)
 
     // Submit first question
-    const queryInput = await driver.findElement(By.css(SELECTORS.queryInput))
+    let queryInput = await driver.findElement(By.css(SELECTORS.queryInput))
     await queryInput.clear()
     await queryInput.sendKeys('First question')
 
-    const submitButton = await driver.findElement(By.css(SELECTORS.submitButton))
+    let submitButton = await driver.findElement(By.css(SELECTORS.submitButton))
     await submitButton.click()
 
     // Wait for first response
@@ -130,6 +130,10 @@ describe('Mobile View', () => {
       until.elementLocated(By.css(SELECTORS.assistantReply)),
       DEFAULT_WAIT_MS,
     )
+
+    // Re-find input and button (DOM may have changed after initial→conversation transition)
+    queryInput = await driver.findElement(By.css(SELECTORS.queryInput))
+    submitButton = await driver.findElement(By.css(SELECTORS.submitButton))
 
     // Submit second question
     await queryInput.clear()
@@ -193,14 +197,17 @@ describe('Mobile View', () => {
   it('disables input while processing on mobile', async () => {
     await openApp(driver, MOBILE_VIEWPORT)
 
-    const queryInput = await driver.findElement(By.css(SELECTORS.queryInput))
+    let queryInput = await driver.findElement(By.css(SELECTORS.queryInput))
     await queryInput.clear()
     await queryInput.sendKeys('Processing test')
 
     const submitButton = await driver.findElement(By.css(SELECTORS.submitButton))
     await submitButton.click()
 
-    // Check if input is disabled immediately after submission
+    // Re-find input after initial→conversation transition (DOM element is recreated)
+    queryInput = await driver.findElement(By.css(SELECTORS.queryInput))
+
+    // Check if input is disabled while processing
     const isDisabled = await queryInput.getAttribute('disabled')
     expect(isDisabled).toBeTruthy()
 
@@ -210,6 +217,8 @@ describe('Mobile View', () => {
       DEFAULT_WAIT_MS,
     )
 
+    // Re-find input to check enabled state
+    queryInput = await driver.findElement(By.css(SELECTORS.queryInput))
     // Input should be enabled again
     const isEnabledAfter = await queryInput.isEnabled()
     expect(isEnabledAfter).toBe(true)
@@ -242,26 +251,31 @@ describe('Mobile View', () => {
   it('applies mobile-specific styling and layout', async () => {
     await openApp(driver, MOBILE_VIEWPORT)
 
-    const mainGrid = await driver.findElement(By.css('.grid'))
-    
-    // Get computed styles
+    // Verify the app renders with a single-column flex layout on mobile
     const layoutInfo = (await driver.executeScript(
-      'return { width: window.innerWidth, gridCols: window.getComputedStyle(arguments[0]).gridTemplateColumns }',
-      mainGrid,
+      'return { width: window.innerWidth, height: window.innerHeight }',
     )) as {
       width: number
-      gridCols: string
+      height: number
     }
 
     expect(layoutInfo.width).toBeLessThanOrEqual(600)
-    // On mobile, grid should be single column (not multi-column with panel width)
-    expect(layoutInfo.gridCols).not.toContain('360px')
+
+    // Verify only one tab panel is visible at a time (tab-based, not side-by-side grid)
+    const chatPanels = await driver.findElements(By.css(SELECTORS.chatPanel))
+    const knowledgePanels = await driver.findElements(By.css(SELECTORS.knowledgeBase))
+    const visiblePanels = [
+      ...(chatPanels.length > 0 ? [await chatPanels[0].isDisplayed()] : []),
+      ...(knowledgePanels.length > 0 ? [await knowledgePanels[0].isDisplayed()] : []),
+    ]
+    const visibleCount = visiblePanels.filter(Boolean).length
+    expect(visibleCount).toBe(1)
   })
 
   it('stacks knowledge panel below chat on mobile viewports', async () => {
     await openApp(driver, MOBILE_VIEWPORT)
 
-    // Verify we start on prompt tab
+    // Verify we start on chat tab
     const chatPanel = await driver.findElement(By.css(SELECTORS.chatPanel))
     expect(await chatPanel.isDisplayed()).toBe(true)
 

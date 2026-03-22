@@ -1,5 +1,3 @@
-import type { MutableRefObject } from 'react'
-
 export type Article = {
   id: number
   source: string
@@ -63,18 +61,6 @@ export type KnowledgeBaseProps = {
   highlightKeywords?: string[]
   onSelectArticle: (article: Article) => void
   onViewModeChange: (mode: ViewMode) => void
-}
-
-export type PromptProps = {
-  chatHistory: ChatMessage[]
-  query: string
-  isProcessing: boolean
-  placeholder: string
-  exampleQuestions: string[]
-  onQueryChange: (value: string) => void
-  onSubmit: () => void
-  ragSteps: RagStep[]
-  messagesEndRef: MutableRefObject<HTMLDivElement | null>
 }
 
 export type HomeProps = {

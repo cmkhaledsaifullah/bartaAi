@@ -3,7 +3,7 @@ import { cloneElement, isValidElement } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import '../styles/App.css'
 
-export type PanelConfig = {
+export type TabConfig = {
   icon: LucideIcon
   title: string
   bgColorClass: string
@@ -12,8 +12,8 @@ export type PanelConfig = {
   testId: string
 }
 
-export type PanelProps = {
-  config: PanelConfig
+export type TabContainerProps = {
+  config: TabConfig
   additionalHeaderActions?: ReactNode
   headerBadge?: ReactNode
   children: ReactNode
@@ -21,14 +21,14 @@ export type PanelProps = {
   dataAttributes?: Record<string, string | boolean | number>
 }
 
-export default function Panel({
+export default function TabContainer({
   config,
   additionalHeaderActions,
   headerBadge,
   children,
   containerClassName = '',
   dataAttributes = {},
-}: PanelProps) {
+}: TabContainerProps) {
   // Helper to safely get data-testid from props
   // This helper assumes element is a valid ReactElement (caller must verify first)
   const getDataTestId = (element: ReactElement): string | undefined => {
@@ -55,7 +55,7 @@ export default function Panel({
 
   return (
     <div
-      className={`md:h-full md:max-h-full ${containerClassName} flex flex-col relative overflow-hidden`}
+      className={`h-full max-h-full ${containerClassName} flex flex-col relative overflow-hidden`}
       data-testid={config.testId}
       role="complementary"
       {...Object.entries(dataAttributes).reduce((acc, [key, value]) => {
@@ -80,7 +80,7 @@ export default function Panel({
         </>
       )}
 
-      {/* Panel content */}
+      {/* Tab content */}
       {children}
     </div>
   )
