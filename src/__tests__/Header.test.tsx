@@ -1,4 +1,4 @@
-import { cleanup, render, screen, fireEvent } from '@testing-library/react'
+import { cleanup, render, screen, fireEvent, act } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import Header from '../views/Header'
 import { useSettingsStore } from '../store/settingsStore'
@@ -165,10 +165,12 @@ describe('Header', () => {
     expect(navigation).toBeInTheDocument()
   })
 
-  it('toggles model configuration modal via desktop Model button', () => {
+  it('toggles model configuration modal via Model button in side panel', () => {
     renderHeader()
 
-    fireEvent.click(screen.getByTestId('models-toggle'))
+    fireEvent.click(screen.getByRole('button', { name: /open menu/i }))
+    const modelButtons = screen.getAllByRole('button', { name: /model/i })
+    fireEvent.click(modelButtons[modelButtons.length - 1])
     expect(useSettingsStore.getState().showSettings).toBe(true)
   })
 
@@ -278,30 +280,32 @@ describe('Header', () => {
     expect(useSettingsStore.getState().showSettings).toBe(false)
   })
 
-  it('does not close settings when clicking on the models button itself', () => {
+  it('does not close settings when clicking inside the modal content', () => {
     renderHeader({ showSettings: true })
 
-    const modelsButton = screen.getByTestId('models-toggle')
-    fireEvent.mouseDown(modelsButton)
+    const configTitle = screen.getByText('Model Configuration')
+    fireEvent.mouseDown(configTitle)
     expect(useSettingsStore.getState().showSettings).toBe(true)
   })
 
-  it('applies active styling to Model button when showSettings is true', () => {
-    renderHeader({ showSettings: true })
+  it('applies consistent styling to Model button in side panel', () => {
+    renderHeader()
 
-    const modelsButton = screen.getByTestId('models-toggle')
-    expect(modelsButton).toHaveClass('bg-emerald-600')
-    expect(modelsButton).toHaveClass('text-white')
-    expect(modelsButton).not.toHaveClass('bg-slate-100')
+    fireEvent.click(screen.getByRole('button', { name: /open menu/i }))
+    const modelButtons = screen.getAllByRole('button', { name: /model/i })
+    const sideMenuModelButton = modelButtons[modelButtons.length - 1]
+    expect(sideMenuModelButton).toHaveClass('bg-slate-100')
+    expect(sideMenuModelButton).toHaveClass('text-slate-700')
   })
 
-  it('applies inactive styling to Model button when showSettings is false', () => {
+  it('renders Model button in side panel with expected classes', () => {
     renderHeader({ showSettings: false })
 
-    const modelsButton = screen.getByTestId('models-toggle')
-    expect(modelsButton).toHaveClass('bg-slate-100')
-    expect(modelsButton).toHaveClass('text-slate-700')
-    expect(modelsButton).not.toHaveClass('bg-emerald-600')
+    fireEvent.click(screen.getByRole('button', { name: /open menu/i }))
+    const modelButtons = screen.getAllByRole('button', { name: /model/i })
+    const sideMenuModelButton = modelButtons[modelButtons.length - 1]
+    expect(sideMenuModelButton).toHaveClass('font-medium')
+    expect(sideMenuModelButton).toHaveClass('rounded-lg')
   })
 
   it('calls onNewSession and sets activeTab to chat', () => {
@@ -322,10 +326,40 @@ describe('Header', () => {
     expect(useSettingsStore.getState().showSettings).toBe(false)
 
     // Update store to showSettings true
-    useSettingsStore.setState({ showSettings: true })
+    act(() => {
+      useSettingsStore.setState({ showSettings: true })
+    })
 
     // Now clicking outside should toggle showSettings
     fireEvent.mouseDown(document.body)
     expect(useSettingsStore.getState().showSettings).toBe(false)
+  })
+
+  it('reflects the API key from the store in the configuration modal', () => {
+    useSettingsStore.setState({ apiKey: 'my-test-key' })
+    renderHeader({ showSettings: true, apiKey: 'my-test-key' })
+    const apiInput = screen.getByLabelText(/Gemini API Key/i) as HTMLInputElement
+    expect(apiInput.value).toBe('my-test-key')
+  })
+
+  it('closes modal via outside click only when showModels is true (not OR)', () => {
+    // This verifies the && logic: showModels must be true AND click outside modal
+    renderHeader({ showSettings: false })
+    fireEvent.mouseDown(document.body)
+    // Should remain false — && means both conditions needed
+    expect(useSettingsStore.getState().showSettings).toBe(false)
+
+    // Now set to true and verify outside click closes
+    act(() => {
+      useSettingsStore.setState({ showSettings: true })
+    })
+    fireEvent.mouseDown(document.body)
+    expect(useSettingsStore.getState().showSettings).toBe(false)
+  })
+
+  it('shows Close menu aria-label when side panel is open', () => {
+    renderHeader()
+    fireEvent.click(screen.getByRole('button', { name: /open menu/i }))
+    expect(screen.getByRole('button', { name: /close menu/i })).toBeInTheDocument()
   })
 })

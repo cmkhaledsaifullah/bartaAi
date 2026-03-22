@@ -97,8 +97,14 @@ const submitQuery = (value: string) => {
   fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })
 }
 
+const openModelSettings = () => {
+  fireEvent.click(screen.getByRole('button', { name: /open menu/i }))
+  const modelButtons = screen.getAllByRole('button', { name: /model/i })
+  fireEvent.click(modelButtons[modelButtons.length - 1])
+}
+
 const setApiKey = (key: string) => {
-  fireEvent.click(screen.getByTestId('models-toggle'))
+  openModelSettings()
   const apiInput = screen.getByLabelText(/Gemini API Key/i)
   fireEvent.change(apiInput, { target: { value: key } })
   fireEvent.click(screen.getByRole('button', { name: /close configuration/i }))
@@ -263,10 +269,9 @@ describe('Home', () => {
   it('toggles the settings panel and button styles', () => {
     renderHome()
 
-    const modelsButton = screen.getByTestId('models-toggle')
     expect(screen.queryByText('Model Configuration')).not.toBeInTheDocument()
 
-    fireEvent.click(modelsButton)
+    openModelSettings()
 
     expect(screen.getByText('Model Configuration')).toBeInTheDocument()
     expect(screen.getByLabelText(/Gemini API Key/i)).toBeInTheDocument()
@@ -501,7 +506,7 @@ describe('Home', () => {
 
     renderHome()
 
-    fireEvent.click(screen.getByTestId('models-toggle'))
+    openModelSettings()
     const apiInput = screen.getByLabelText(/Gemini API Key/i)
     fireEvent.change(apiInput, { target: { value: 'fake-key' } })
     // Close modal before submitting
@@ -541,7 +546,7 @@ describe('Home', () => {
 
     renderHome()
 
-    fireEvent.click(screen.getByTestId('models-toggle'))
+    openModelSettings()
     fireEvent.change(screen.getByLabelText(/Gemini API Key/i), { target: { value: 'bad-key' } })
     fireEvent.click(screen.getByRole('button', { name: /close configuration/i }))
 
@@ -572,7 +577,7 @@ describe('Home', () => {
 
     renderHome()
 
-    fireEvent.click(screen.getByTestId('models-toggle'))
+    openModelSettings()
     fireEvent.change(screen.getByLabelText(/Gemini API Key/i), { target: { value: 'key-123' } })
     fireEvent.click(screen.getByRole('button', { name: /close configuration/i }))
 
@@ -1125,6 +1130,285 @@ describe('Home', () => {
       const bubble = within(assistant!).getByTestId('chat-bubble')
       expect(bubble.textContent).not.toContain('Stryker was here')
       expect(bubble.textContent!.length).toBeGreaterThan(0)
+    })
+  })
+
+  it('uses currentQuery as fallback when chatHistory has no last message content', async () => {
+    vi.useFakeTimers()
+
+    const mockResponse = {
+      candidates: [{ content: { parts: [{ text: 'Gemini fallback test' }] } }],
+    }
+    global.fetch = vi.fn().mockResolvedValue({
+      json: async () => mockResponse,
+    }) as typeof fetch
+
+    // Set chatHistory to empty so .at(-1)?.content is undefined
+    useChatStore.setState({ chatHistory: [] })
+    // Override addMessage to keep chatHistory empty (no-op for user message)
+    const originalAddMessage = useChatStore.getState().addMessage
+    useChatStore.setState({
+      addMessage: () => {
+        /* no-op: keeps chatHistory empty so ?? fallback is used */
+      },
+    })
+
+    renderHome()
+    setApiKey('test-key')
+
+    const input = screen.getByPlaceholderText(QUESTION_PLACEHOLDER)
+    fireEvent.change(input, { target: { value: 'fallback query' } })
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })
+
+    await advanceAllTimers()
+    vi.useRealTimers()
+
+    await waitFor(() => expect(global.fetch).toHaveBeenCalled())
+
+    const [, options] = (global.fetch as Mock).mock.calls[0]
+    const payload = JSON.parse((options?.body as string) ?? '{}')
+    // The prompt should contain the currentQuery as fallback
+    expect(payload?.contents?.[0]?.parts?.[0]?.text).toContain('fallback query')
+
+    // Restore addMessage
+    useChatStore.setState({ addMessage: originalAddMessage })
+  })
+
+  it('re-enables the submit input after search completes (finally block)', async () => {
+    vi.useFakeTimers()
+    renderHome()
+
+    submitQuery('মেট্রোরেল আপডেট')
+
+    // During processing, input should be disabled
+    await act(async () => { await vi.advanceTimersByTimeAsync(100) })
+    expect(useChatStore.getState().isProcessing).toBe(true)
+
+    await advanceAllTimers()
+    vi.useRealTimers()
+
+    // After completion, isProcessing must be false (finally block sets it)
+    await waitFor(() => {
+      expect(useChatStore.getState().isProcessing).toBe(false)
+    })
+  })
+
+  it('initializes answer to empty string not a stale value', async () => {
+    vi.useFakeTimers()
+    renderHome()
+
+    submitQuery('মেট্রোরেল')
+
+    await advanceAllTimers()
+    vi.useRealTimers()
+
+    // The response should NOT start with "Stryker was here!"
+    await waitFor(() => {
+      const assistant = screen
+        .getAllByTestId('chat-message')
+        .find((n) => n.dataset.role === 'assistant')
+      const bubble = within(assistant!).getByTestId('chat-bubble')
+      expect(bubble.textContent).not.toMatch(/^Stryker/)
+    })
+  })
+
+  it('reads chatHistory from store to display messages', async () => {
+    vi.useFakeTimers()
+    renderHome()
+
+    submitQuery('মেট্রোরেল আপডেট')
+    await advanceAllTimers()
+    vi.useRealTimers()
+
+    await waitFor(() => {
+      // chatHistory must have messages; if selector returned undefined, this would fail
+      const messages = screen.getAllByTestId('chat-message')
+      expect(messages.length).toBeGreaterThan(1)
+    })
+  })
+
+  it('reads isProcessing from store to disable input', async () => {
+    vi.useFakeTimers()
+    renderHome()
+
+    submitQuery('মেট্রোরেল')
+
+    // During search, isProcessing=true should disable input
+    await act(async () => { await vi.advanceTimersByTimeAsync(100) })
+    const input = screen.getByPlaceholderText(QUESTION_PLACEHOLDER) as HTMLInputElement
+    expect(input.disabled).toBe(true)
+
+    await advanceAllTimers()
+    vi.useRealTimers()
+  })
+
+  it('reads ragSteps from store to display processing steps', async () => {
+    vi.useFakeTimers()
+    renderHome()
+
+    submitQuery('মেট্রোরেল')
+
+    await act(async () => { await vi.advanceTimersByTimeAsync(900) })
+
+    // ragSteps should be populated. If selector returned undefined, steps wouldn't render
+    const steps = screen.getAllByTestId('rag-step')
+    expect(steps.length).toBeGreaterThan(0)
+
+    await advanceAllTimers()
+    vi.useRealTimers()
+  })
+
+  it('uses .at(-1) to get the last chat message for Gemini prompt', async () => {
+    vi.useFakeTimers()
+
+    global.fetch = vi.fn().mockResolvedValue({
+      json: async () => ({
+        candidates: [{ content: { parts: [{ text: 'Response from Gemini' }] } }],
+      }),
+    }) as typeof fetch
+
+    renderHome()
+    setApiKey('test-key')
+
+    submitQuery('unique-query-for-at-test')
+
+    await advanceAllTimers()
+    vi.useRealTimers()
+
+    await waitFor(() => expect(global.fetch).toHaveBeenCalled())
+
+    // Verify the prompt contains the user's query (last message via .at(-1))
+    // With .at(+1) mutant, it would get the system welcome message instead
+    const [, options] = (global.fetch as Mock).mock.calls[0]
+    const payload = JSON.parse((options?.body as string) ?? '{}')
+    const promptText = payload?.contents?.[0]?.parts?.[0]?.text as string
+    expect(promptText).toContain('unique-query-for-at-test')
+    // Verify it does NOT contain the system message (which would be .at(1))
+    expect(promptText).not.toContain('স্বাগতম')
+  })
+
+  it('answer variable starts empty so mock response is clean', async () => {
+    vi.useFakeTimers()
+    renderHome()
+
+    submitQuery('ক্রিকেট')
+
+    await advanceAllTimers()
+    vi.useRealTimers()
+
+    await waitFor(() => {
+      const assistantMsgs = screen
+        .getAllByTestId('chat-message')
+        .filter((n) => n.dataset.role === 'assistant')
+      expect(assistantMsgs.length).toBeGreaterThan(0)
+      const bubble = within(assistantMsgs[0]).getByTestId('chat-bubble')
+      // If answer started as "Stryker was here!", it would be prepended
+      expect(bubble.textContent).not.toContain('Stryker')
+      expect(bubble.textContent!.length).toBeGreaterThan(0)
+    })
+  })
+
+  it('scrolls when chatHistory changes in isolation (kills chatHistory selector mutant)', async () => {
+    const mockScrollIntoView = vi.fn()
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+      value: mockScrollIntoView,
+      writable: true,
+      configurable: true,
+    })
+
+    // Must be in conversation mode for messagesEndRef to be mounted
+    useChatStore.setState({ isInitialChat: false })
+    renderHome()
+    const callsAfterMount = mockScrollIntoView.mock.calls.length
+
+    // Directly add to chatHistory without changing isProcessing or ragSteps
+    act(() => {
+      useChatStore.setState({
+        chatHistory: [
+          ...useChatStore.getState().chatHistory,
+          { id: 'direct-1', role: 'user', content: 'test', type: 'text' },
+        ],
+      })
+    })
+
+    await waitFor(() => {
+      expect(mockScrollIntoView.mock.calls.length).toBeGreaterThan(callsAfterMount)
+    })
+  })
+
+  it('scrolls when isProcessing changes in isolation (kills isProcessing selector mutant)', async () => {
+    const mockScrollIntoView = vi.fn()
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+      value: mockScrollIntoView,
+      writable: true,
+      configurable: true,
+    })
+
+    useChatStore.setState({ isInitialChat: false })
+    renderHome()
+    const callsAfterMount = mockScrollIntoView.mock.calls.length
+
+    act(() => {
+      useChatStore.setState({ isProcessing: true })
+    })
+
+    await waitFor(() => {
+      expect(mockScrollIntoView.mock.calls.length).toBeGreaterThan(callsAfterMount)
+    })
+  })
+
+  it('scrolls when ragSteps changes in isolation (kills ragSteps selector mutant)', async () => {
+    const mockScrollIntoView = vi.fn()
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+      value: mockScrollIntoView,
+      writable: true,
+      configurable: true,
+    })
+
+    useChatStore.setState({ isInitialChat: false })
+    renderHome()
+    const callsAfterMount = mockScrollIntoView.mock.calls.length
+
+    act(() => {
+      useChatStore.setState({
+        ragSteps: [{ id: 'step-1', text: 'test step', status: 'success' as const }],
+      })
+    })
+
+    await waitFor(() => {
+      expect(mockScrollIntoView.mock.calls.length).toBeGreaterThan(callsAfterMount)
+    })
+  })
+
+  it('handles API response with missing parts gracefully (optional chaining)', async () => {
+    vi.useFakeTimers()
+
+    // Set API key directly via store instead of UI
+    useSettingsStore.setState({ apiKey: 'test-key-parts' })
+
+    // Mock fetch to return response with no parts in content
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        candidates: [{ content: {} }],
+      }),
+    })
+
+    renderHome()
+    submitQuery('মেট্রোরেল')
+    await advanceAllTimers()
+    vi.useRealTimers()
+
+    // Should use NO_CONTEXT_MESSAGE fallback, not crash
+    await waitFor(() => {
+      const assistantMsgs = screen
+        .getAllByTestId('chat-message')
+        .filter((n) => n.dataset.role === 'assistant')
+      expect(assistantMsgs.length).toBeGreaterThan(0)
+      // If ?.parts[0] became .parts[0], accessing undefined[0] would throw
+      // and the error handler would catch it, producing different output
+      const bubble = within(assistantMsgs[0]).getByTestId('chat-bubble')
+      expect(bubble.textContent).not.toContain('Error')
     })
   })
 })

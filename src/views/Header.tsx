@@ -33,16 +33,13 @@ export default function Header({ onNewSession }: HeaderProps) {
 
   const apiKeyFieldId = 'gemini-api-key'
   const modelsRef = useRef<HTMLDivElement>(null)
-  const modelsButtonRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
         showModels &&
         modelsRef.current &&
-        modelsButtonRef.current &&
-        !modelsRef.current.contains(event.target as Node) &&
-        !modelsButtonRef.current.contains(event.target as Node)
+        !modelsRef.current.contains(event.target as Node)
       ) {
         toggleModels()
       }

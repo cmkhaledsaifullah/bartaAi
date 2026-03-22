@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import type { MutableRefObject } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import Chat from '../views/Chat'
@@ -231,5 +231,167 @@ describe('Chat', () => {
       btn.textContent?.includes('Example'),
     )
     expect(exampleButtons).toHaveLength(2)
+  })
+
+  it('shows scroll-to-bottom button and scrolls when clicked', () => {
+    useChatStore.setState({ isInitialChat: false })
+    renderChat()
+
+    const scrollContainer = document.querySelector('[data-testid="chat-conversation-view"] .overflow-y-auto')!
+    Object.defineProperty(scrollContainer, 'scrollHeight', { value: 1000, configurable: true })
+    Object.defineProperty(scrollContainer, 'scrollTop', { value: 0, configurable: true })
+    Object.defineProperty(scrollContainer, 'clientHeight', { value: 400, configurable: true })
+    scrollContainer.scrollTo = vi.fn()
+
+    fireEvent.scroll(scrollContainer)
+
+    const scrollBtn = screen.getByTestId('scroll-to-bottom')
+    expect(scrollBtn).toBeInTheDocument()
+
+    fireEvent.click(scrollBtn)
+    expect(scrollContainer.scrollTo).toHaveBeenCalledWith({ top: 1000, behavior: 'smooth' })
+  })
+
+  it('does not show scroll-to-bottom button when near bottom', () => {
+    useChatStore.setState({ isInitialChat: false })
+    renderChat()
+
+    const scrollContainer = document.querySelector('[data-testid="chat-conversation-view"] .overflow-y-auto')!
+    Object.defineProperty(scrollContainer, 'scrollHeight', { value: 500, configurable: true })
+    Object.defineProperty(scrollContainer, 'scrollTop', { value: 450, configurable: true })
+    Object.defineProperty(scrollContainer, 'clientHeight', { value: 400, configurable: true })
+
+    fireEvent.scroll(scrollContainer)
+
+    expect(screen.queryByTestId('scroll-to-bottom')).not.toBeInTheDocument()
+  })
+
+  it('reads isInitialChat from store to switch between initial and conversation view', () => {
+    useChatStore.setState({ isInitialChat: true })
+    renderChat()
+    expect(screen.getByTestId('chat-initial-view')).toBeInTheDocument()
+    expect(screen.queryByTestId('chat-conversation-view')).not.toBeInTheDocument()
+  })
+
+  it('reads query from store and renders it in input', () => {
+    renderChat({ query: 'test-query-value' })
+    const input = screen.getByPlaceholderText(PLACEHOLDER) as HTMLInputElement
+    expect(input.value).toBe('test-query-value')
+  })
+
+  it('uses scroll-to-bottom initially hidden (false) not shown (true)', () => {
+    useChatStore.setState({ isInitialChat: false })
+    renderChat()
+    // Initially, scroll button should NOT be visible (useState(false))
+    expect(screen.queryByTestId('scroll-to-bottom')).not.toBeInTheDocument()
+  })
+
+  it('data-sources attribute is empty string when sources is undefined', () => {
+    useChatStore.setState({ isInitialChat: false })
+    renderChat({
+      chatHistory: [
+        { id: 'msg-no-sources', role: 'assistant', content: 'test', type: 'text' },
+      ],
+    })
+    const msg = screen.getByTestId('chat-message')
+    expect(msg.getAttribute('data-sources')).toBe('')
+  })
+
+  it('renders multiple retrieved chunks with unique keys', () => {
+    useChatStore.setState({ isInitialChat: false })
+    renderChat({
+      chatHistory: [
+        {
+          id: 'msg-multi',
+          role: 'assistant',
+          content: 'Answer',
+          type: 'answer',
+          retrieved: [
+            { text: 'Chunk A', score: 1, source: 'S1', sourceId: 1 },
+            { text: 'Chunk B', score: 2, source: 'S2', sourceId: 2 },
+            { text: 'Chunk C', score: 3, source: 'S3', sourceId: 3 },
+          ],
+        },
+      ],
+    })
+    const chunks = screen.getAllByTestId('retrieved-chunk')
+    expect(chunks).toHaveLength(3)
+    // All 3 chunks rendered means keys are unique (empty keys would deduplicate)
+    expect(chunks[0].textContent).toContain('Chunk A')
+    expect(chunks[1].textContent).toContain('Chunk B')
+    expect(chunks[2].textContent).toContain('Chunk C')
+  })
+
+  it('only shows warning icon when status is warning, not unconditionally', () => {
+    useChatStore.setState({ isInitialChat: false })
+    renderChat({
+      isProcessing: true,
+      ragSteps: [
+        { id: '1', text: 'Processing step', status: 'processing' as const },
+      ],
+    })
+    expect(screen.queryByTestId('rag-icon-warning')).not.toBeInTheDocument()
+    expect(screen.getByTestId('rag-icon-processing')).toBeInTheDocument()
+  })
+
+  it('does not show scroll button at exactly 100 distance (strict greater-than)', () => {
+    useChatStore.setState({ isInitialChat: false })
+    renderChat()
+
+    const scrollContainer = document.querySelector('[data-testid="chat-conversation-view"] .overflow-y-auto')!
+    // distance = 500 - 0 - 400 = 100 (exactly 100, not > 100)
+    Object.defineProperty(scrollContainer, 'scrollHeight', { value: 500, configurable: true })
+    Object.defineProperty(scrollContainer, 'scrollTop', { value: 0, configurable: true })
+    Object.defineProperty(scrollContainer, 'clientHeight', { value: 400, configurable: true })
+
+    fireEvent.scroll(scrollContainer)
+
+    expect(screen.queryByTestId('scroll-to-bottom')).not.toBeInTheDocument()
+  })
+
+  it('shows scroll button when distance is 101 (just above threshold)', () => {
+    useChatStore.setState({ isInitialChat: false })
+    renderChat()
+
+    const scrollContainer = document.querySelector('[data-testid="chat-conversation-view"] .overflow-y-auto')!
+    // distance = 501 - 0 - 400 = 101
+    Object.defineProperty(scrollContainer, 'scrollHeight', { value: 501, configurable: true })
+    Object.defineProperty(scrollContainer, 'scrollTop', { value: 0, configurable: true })
+    Object.defineProperty(scrollContainer, 'clientHeight', { value: 400, configurable: true })
+
+    fireEvent.scroll(scrollContainer)
+
+    expect(screen.getByTestId('scroll-to-bottom')).toBeInTheDocument()
+  })
+
+  it('useEffect triggers handleChatScroll on chatHistory change', async () => {
+    useChatStore.setState({ isInitialChat: false })
+    renderChat()
+
+    // First set the scroll position so button shows
+    const scrollContainer = document.querySelector('[data-testid="chat-conversation-view"] .overflow-y-auto')!
+    Object.defineProperty(scrollContainer, 'scrollHeight', { value: 1000, configurable: true })
+    Object.defineProperty(scrollContainer, 'scrollTop', { value: 0, configurable: true })
+    Object.defineProperty(scrollContainer, 'clientHeight', { value: 400, configurable: true })
+    fireEvent.scroll(scrollContainer)
+    expect(screen.getByTestId('scroll-to-bottom')).toBeInTheDocument()
+
+    // Now scroll near bottom and trigger chatHistory change
+    Object.defineProperty(scrollContainer, 'scrollTop', { value: 550, configurable: true })
+    // distance = 1000 - 550 - 400 = 50 < 100, so button should hide
+
+    // The useEffect on chatHistory should call handleChatScroll
+    useChatStore.setState({
+      chatHistory: [
+        ...CHAT_HISTORY,
+        { id: 'new-msg', role: 'assistant' as const, content: 'new message', type: 'text' as const },
+      ],
+    })
+
+    // After re-render triggered by chatHistory change, the useEffect runs handleChatScroll
+    // The same DOM element is reused (React doesn't unmount the scroll container)
+    await waitFor(() => {
+      expect(screen.queryByTestId('scroll-to-bottom')).not.toBeInTheDocument()
+    })
   })
 })

@@ -79,10 +79,10 @@ describe('TabNavigation', () => {
         <TabNavigation activeTab="chat" onTabChange={onTabChange} variant="desktop" />
       )
       
-      // Desktop should have smaller padding (px-4)
+      // Desktop should have smaller padding (px-3)
       const desktopButtons = desktopContainer.querySelectorAll('button')
       const hasDesktopPadding = Array.from(desktopButtons).some(btn => 
-        btn.className.includes('px-4')
+        btn.className.includes('px-3')
       )
       expect(hasDesktopPadding).toBe(true)
       
@@ -92,10 +92,10 @@ describe('TabNavigation', () => {
         <TabNavigation activeTab="chat" onTabChange={onTabChange} variant="mobile" />
       )
       
-      // Mobile should have larger padding (px-6)
+      // Mobile should have larger padding (px-4)
       const mobileButtons = mobileContainer.querySelectorAll('button')
       const hasMobilePadding = Array.from(mobileButtons).some(btn => 
-        btn.className.includes('px-6')
+        btn.className.includes('px-4')
       )
       expect(hasMobilePadding).toBe(true)
     })
@@ -141,10 +141,10 @@ describe('TabNavigation', () => {
         <TabNavigation activeTab="chat" onTabChange={onTabChange} variant="mobile" />
       )
       
-      // Mobile buttons should have px-6 (not px-4)
+      // Mobile buttons should have px-4 (not px-3)
       const buttons = container.querySelectorAll('button')
       const hasMobilePadding = Array.from(buttons).some(btn =>
-        btn.className.includes('px-6')
+        btn.className.includes('px-4')
       )
       expect(hasMobilePadding).toBe(true)
     })

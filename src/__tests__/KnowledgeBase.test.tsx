@@ -86,6 +86,64 @@ describe('KnowledgeBase', () => {
     expect(screen.getByTestId('knowledge-base')).toBeInTheDocument()
   })
 
+  it('shows scroll-to-top button after scrolling down and scrolls when clicked', () => {
+    renderPanel()
+
+    const scrollContainer = document.querySelector('.overflow-y-auto')!
+    Object.defineProperty(scrollContainer, 'scrollTop', { value: 200, configurable: true })
+    scrollContainer.scrollTo = vi.fn()
+
+    fireEvent.scroll(scrollContainer)
+
+    const scrollBtn = screen.getByTestId('scroll-to-top')
+    expect(scrollBtn).toBeInTheDocument()
+
+    fireEvent.click(scrollBtn)
+    expect(scrollContainer.scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' })
+  })
+
+  it('hides scroll-to-top button when scrolled near the top', () => {
+    renderPanel()
+
+    const scrollContainer = document.querySelector('.overflow-y-auto')!
+    Object.defineProperty(scrollContainer, 'scrollTop', { value: 50, configurable: true })
+
+    fireEvent.scroll(scrollContainer)
+
+    expect(screen.queryByTestId('scroll-to-top')).not.toBeInTheDocument()
+  })
+
+  it('handles scroll when articleListRef is null', () => {
+    renderPanel()
+
+    const scrollContainer = document.querySelector('.overflow-y-auto')!
+
+    // Get the React fiber to access the ref
+    const fiberKey = Object.keys(scrollContainer).find(k => k.startsWith('__reactFiber$'))
+    if (fiberKey) {
+      let fiber = (scrollContainer as unknown as Record<string, unknown>)[fiberKey] as { ref?: { current: unknown }; return?: unknown }
+      // Walk up the fiber tree to find the ref
+      while (fiber) {
+        if (fiber.ref && typeof fiber.ref === 'object' && 'current' in fiber.ref) {
+          // Temporarily set ref.current to null
+          const originalCurrent = fiber.ref.current
+          fiber.ref.current = null
+
+          // Fire scroll — handleArticleScroll will see null ref and early-return
+          fireEvent.scroll(scrollContainer)
+
+          // Restore
+          fiber.ref.current = originalCurrent
+          break
+        }
+        fiber = fiber.return as typeof fiber
+      }
+    }
+
+    // showScrollUp should remain false (no crash)
+    expect(screen.queryByTestId('scroll-to-top')).not.toBeInTheDocument()
+  })
+
   it('verifies article list keys are unique and non-empty', () => {
     render(
       <KnowledgeBase
@@ -269,5 +327,85 @@ describe('ChunkCards', () => {
       expect(chunk.getAttribute('data-relevant')).toBe('false')
     })
     expect(screen.getByTestId('chunk-visualizer')).toHaveAttribute('data-keyword-count', '0')
+  })
+
+  it('does not show scroll-to-top at exactly scrollTop=100 (strict >)', () => {
+    renderPanel()
+
+    const scrollContainer = document.querySelector('.overflow-y-auto')!
+    Object.defineProperty(scrollContainer, 'scrollTop', { value: 100, configurable: true })
+
+    fireEvent.scroll(scrollContainer)
+
+    // scrollTop must be > 100, not >= 100, so exactly 100 should NOT show button
+    expect(screen.queryByTestId('scroll-to-top')).not.toBeInTheDocument()
+  })
+
+  it('renders all article cards when keys contain article id (not empty)', () => {
+    const manyArticles = [
+      { id: 100, source: 'A', date: '2023-01-01', title: 'Title 100', content: 'Content A.', url: '#' },
+      { id: 200, source: 'B', date: '2023-01-02', title: 'Title 200', content: 'Content B.', url: '#' },
+      { id: 300, source: 'C', date: '2023-01-03', title: 'Title 300', content: 'Content C.', url: '#' },
+      { id: 400, source: 'D', date: '2023-01-04', title: 'Title 400', content: 'Content D.', url: '#' },
+    ]
+
+    render(
+      <KnowledgeBase
+        articles={manyArticles}
+        selectedArticle={manyArticles[0]!}
+        viewMode="text"
+        onSelectArticle={vi.fn()}
+        onViewModeChange={vi.fn()}
+      />
+    )
+
+    // If key was empty string (``) React would deduplicate, only rendering 1
+    expect(screen.getByTestId('article-card-100')).toBeInTheDocument()
+    expect(screen.getByTestId('article-card-200')).toBeInTheDocument()
+    expect(screen.getByTestId('article-card-300')).toBeInTheDocument()
+    expect(screen.getByTestId('article-card-400')).toBeInTheDocument()
+  })
+
+  it('renders all chunk cards when keys contain index (not empty)', () => {
+    render(
+      <ChunkCards
+        text="One sentence here। Two sentence here? Three sentence here! Four sentence here।"
+        highlightKeywords={[]}
+      />
+    )
+
+    const chunks = screen.getAllByTestId('chunk-card')
+    // If key was empty string, React would only render 1 item
+    expect(chunks).toHaveLength(4)
+  })
+
+  it('does not crash when scrollToTop is called with null ref', () => {
+    renderPanel()
+
+    const scrollContainer = document.querySelector('.overflow-y-auto')!
+    Object.defineProperty(scrollContainer, 'scrollTop', { value: 200, configurable: true })
+    scrollContainer.scrollTo = vi.fn()
+
+    fireEvent.scroll(scrollContainer)
+
+    // Button should be visible now
+    const scrollBtn = screen.getByTestId('scroll-to-top')
+
+    // Null out the ref via React fiber before clicking
+    const fiberKey = Object.keys(scrollContainer).find(k => k.startsWith('__reactFiber$'))
+    if (fiberKey) {
+      let fiber = (scrollContainer as unknown as Record<string, unknown>)[fiberKey] as { ref?: { current: unknown }; return?: unknown }
+      while (fiber) {
+        if (fiber.ref && typeof fiber.ref === 'object' && 'current' in fiber.ref) {
+          fiber.ref.current = null
+          break
+        }
+        fiber = fiber.return as typeof fiber
+      }
+    }
+
+    // Should not throw — the ?. prevents crash when ref is null
+    // With .scrollTo mutant, this would throw TypeError: null.scrollTo()
+    expect(() => fireEvent.click(scrollBtn)).not.toThrow()
   })
 })

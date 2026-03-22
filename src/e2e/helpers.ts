@@ -26,7 +26,10 @@ export const SELECTORS = {
   viewToggleChunks: '[data-testid="view-toggle-chunks"]',
   viewToggleText: '[data-testid="view-toggle-text"]',
   chunkVisualizer: '[data-testid="chunk-visualizer"]',
-  settingsToggleDesktop: '[data-testid="models-toggle"]',
+  menuButton: 'button[aria-label="Open menu"]',
+  sidePanel: '.fixed.top-0.right-0.h-full.w-64',
+  closeSidePanel: 'button[aria-label="Close side panel"]',
+  closeConfigModal: 'button[aria-label="Close configuration"]',
   apiKeyInput: 'input[type="password"][placeholder*="API key"]',
 } as const
 
